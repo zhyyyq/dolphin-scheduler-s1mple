@@ -9,6 +9,5 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 # allow python gateway
 COPY application.yaml /opt/dolphinscheduler/conf
 
-
-# java libs for database like db2 mysql hive
-COPY ./jars/*.jar /opt/dolphinscheduler/libs/
+# copy libs
+COPY ./libs/*.jar /opt/dolphinscheduler/libs/

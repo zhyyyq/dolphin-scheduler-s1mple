@@ -68,7 +68,7 @@ services:
       - dolphinscheduler
 
   dolphinscheduler-api:
-    image: ${HUB}/dolphinscheduler-api:${TAG}
+    build: ./api
     ports:
       - "12345:12345"
       - "25333:25333"
