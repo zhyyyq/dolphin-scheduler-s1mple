@@ -1,9 +1,7 @@
-from pydolphinscheduler.models import Tenant
+from fastapi import FastAPI
 
-def main():
-    Tenant.get_tenant()
-    print("Hello from backend!")
+app = FastAPI()
 
-
-if __name__ == "__main__":
-    main()
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to the Task Scheduler API"}
