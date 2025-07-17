@@ -1,4 +1,7 @@
+from pydolphinscheduler.models import Tenant
+
 def main():
+    Tenant.get_tenant()
     print("Hello from backend!")
 
 
