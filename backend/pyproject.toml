@@ -7,7 +7,7 @@ dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "pydantic",
-    "apache-dolphinscheduler>=4.1.0",
+    "apache-dolphinscheduler==3.1.2",
 ]
 
 [tool.uv.pip]
