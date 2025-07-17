@@ -1,5 +1,6 @@
 from pydolphinscheduler.core.process_definition import ProcessDefinition
 from pydolphinscheduler.tasks.python import Python
+from pydolphinscheduler.tasks.shell import Shell
 
 def create_ds_task(name: str, task_type: str, description: str):
     with ProcessDefinition(
