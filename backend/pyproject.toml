@@ -2,12 +2,11 @@
 name = "backend"
 version = "0.1.0"
 description = "FastAPI backend for the scheduler"
-requires-python = ">=3.10"
 dependencies = [
     "fastapi",
     "uvicorn[standard]",
     "pydantic",
-    "apache-dolphinscheduler==3.1.2",
+    "apache-dolphinscheduler",
 ]
 
 [tool.uv.pip]
