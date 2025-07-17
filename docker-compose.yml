@@ -125,7 +125,7 @@ services:
       - dolphinscheduler
 
   dolphinscheduler-worker:
-    image: worker
+    build: ./worker
     profiles: ["all"]
     env_file: .env
     healthcheck:
