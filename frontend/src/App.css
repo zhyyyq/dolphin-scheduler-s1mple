@@ -56,6 +56,11 @@ body {
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
 }
 
+.ant-layout-sider-trigger {
+  background: #096dd9 !important;
+  color: #fff !important;
+}
+
 .ant-layout-header {
   padding: 0 24px !important;
   background: var(--card-background) !important;

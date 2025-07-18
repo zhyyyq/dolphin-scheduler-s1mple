@@ -38,7 +38,7 @@ const App: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible>
+      <Sider collapsible style={{ background: '#1677ff' }}>
         <div className="logo" style={{ height: '32px', margin: '16px', background: 'rgba(255, 255, 255, 0.2)' }} />
         <Menu
           theme="dark"
@@ -48,8 +48,8 @@ const App: React.FC = () => {
         />
       </Sider>
       <Layout className="site-layout">
-        <Header className="site-layout-background" style={{ padding: '0 16px' }}>
-          <Title level={3} style={{ color: 'white', lineHeight: '64px', float: 'left' }}>极简任务调度平台</Title>
+        <Header className="site-layout-background" style={{ padding: '0 24px', display: 'flex', alignItems: 'center' }}>
+          <Title level={3} style={{ margin: 0 }}>极简任务调度平台</Title>
         </Header>
         <Content style={{ margin: '16px' }}>
           <Routes>
@@ -77,10 +77,11 @@ const AppWrapper: React.FC = () => (
       },
       components: {
         Menu: {
-          darkItemColor: '#91caff',
+          darkItemBg: '#1677ff',
+          darkItemColor: 'rgba(255, 255, 255, 0.85)',
           darkItemHoverColor: '#ffffff',
           darkItemSelectedColor: '#ffffff',
-          darkItemSelectedBg: '#1677ff',
+          darkItemSelectedBg: '#096dd9',
         },
       },
     }}
