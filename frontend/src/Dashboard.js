@@ -10,6 +10,14 @@ const COLORS = {
   other: '#108ee9',
 };
 
+const STATE_MAP = {
+  SUCCESS: '成功',
+  FAILURE: '失败',
+  RUNNING_EXECUTION: '运行中',
+  STOP: '停止',
+  KILL: '终止',
+};
+
 function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,17 +50,22 @@ function Dashboard() {
   }
 
   const pieData = [
-    { name: 'Success', value: stats.success },
-    { name: 'Failure', value: stats.failure },
-    { name: 'Running', value: stats.running },
-    { name: 'Other', value: stats.other },
+    { name: '成功', value: stats.success },
+    { name: '失败', value: stats.failure },
+    { name: '运行中', value: stats.running },
+    { name: '其他', value: stats.other },
   ];
 
   const recentInstancesColumns = [
-    { title: 'Name', dataIndex: 'name', key: 'name' },
-    { title: 'State', dataIndex: 'state', key: 'state', render: state => <Tag color={COLORS[state.toLowerCase()] || 'default'}>{state}</Tag> },
-    { title: 'Start Time', dataIndex: 'startTime', key: 'startTime' },
-    { title: 'End Time', dataIndex: 'endTime', key: 'endTime' },
+    { title: '名称', dataIndex: 'name', key: 'name' },
+    { title: '状态', dataIndex: 'state', key: 'state', render: state => {
+        const stateText = STATE_MAP[state] || state;
+        const stateColor = state === 'SUCCESS' ? 'success' : state.includes('FAIL') ? 'error' : 'processing';
+        return <Tag color={stateColor}>{stateText}</Tag>;
+      }
+    },
+    { title: '开始时间', dataIndex: 'startTime', key: 'startTime' },
+    { title: '结束时间', dataIndex: 'endTime', key: 'endTime' },
   ];
 
   return (
@@ -60,33 +73,33 @@ function Dashboard() {
       <Row gutter={16}>
         <Col span={6}>
           <Card>
-            <Statistic title="Successful" value={stats.success} prefix={<CheckCircleOutlined />} valueStyle={{ color: COLORS.success }} />
+            <Statistic title="成功" value={stats.success} prefix={<CheckCircleOutlined />} valueStyle={{ color: COLORS.success }} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Failed" value={stats.failure} prefix={<CloseCircleOutlined />} valueStyle={{ color: COLORS.failure }} />
+            <Statistic title="失败" value={stats.failure} prefix={<CloseCircleOutlined />} valueStyle={{ color: COLORS.failure }} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Running" value={stats.running} prefix={<SyncOutlined spin />} valueStyle={{ color: COLORS.running }} />
+            <Statistic title="运行中" value={stats.running} prefix={<SyncOutlined spin />} valueStyle={{ color: COLORS.running }} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
-            <Statistic title="Total" value={stats.total} />
+            <Statistic title="总计" value={stats.total} />
           </Card>
         </Col>
       </Row>
       <Row gutter={16} style={{ marginTop: '24px' }}>
         <Col span={8}>
-          <Card title="Execution Status Distribution">
+          <Card title="执行状态分布">
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label>
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase()]} />
+                    <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase().replace(' ', '')]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -96,7 +109,7 @@ function Dashboard() {
           </Card>
         </Col>
         <Col span={16}>
-          <Card title="Recent Workflow Instances">
+          <Card title="最近工作流实例">
             <Table
               columns={recentInstancesColumns}
               dataSource={stats.recent_instances}

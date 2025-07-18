@@ -30,38 +30,38 @@ function Home() {
 
   const columns = [
     {
-      title: 'Workflow Name',
+      title: '工作流名称',
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: 'Project',
+      title: '所属项目',
       dataIndex: 'projectName',
       key: 'projectName',
     },
     {
-      title: 'State',
+      title: '状态',
       dataIndex: 'releaseState',
       key: 'releaseState',
       render: state => (
         <Tag color={state === 'ONLINE' ? 'green' : 'volcano'} key={state}>
-          {state}
+          {state === 'ONLINE' ? '在线' : '离线'}
         </Tag>
       ),
     },
     {
-      title: 'Last updated',
+      title: '最后更新时间',
       dataIndex: 'updateTime',
       key: 'updateTime',
     },
     {
-      title: 'Actions',
+      title: '操作',
       key: 'actions',
       render: (_, record) => (
         <Space size="middle">
-          <Link to={`/project/${record.projectCode}/workflow/${record.code}`}>View</Link>
-          <Link to={`/upload?projectCode=${record.projectCode}&workflowCode=${record.code}`}>Edit</Link>
-          <Button type="link" danger onClick={() => handleDelete(record)}>Delete</Button>
+          <Link to={`/project/${record.projectCode}/workflow/${record.code}`}>查看</Link>
+          <Link to={`/upload?projectCode=${record.projectCode}&workflowCode=${record.code}`}>修改</Link>
+          <Button type="link" danger onClick={() => handleDelete(record)}>删除</Button>
         </Space>
       ),
     },
@@ -96,11 +96,11 @@ function Home() {
   }
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '24px', background: '#fff', borderRadius: '8px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <Title level={2} style={{ margin: 0 }}>All Workflows</Title>
+        <Title level={2} style={{ margin: 0 }}>所有工作流</Title>
         <Link to="/upload">
-          <Button type="primary">New Workflow</Button>
+          <Button type="primary">新建工作流</Button>
         </Link>
       </div>
       <Table 

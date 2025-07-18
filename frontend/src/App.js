@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useSearchParams, Link, useLocation } from 'react-router-dom';
-import { Upload, Button, Layout, message, Typography, Modal, Switch, Input, Spin, Menu } from 'antd';
+import { Upload, Button, Layout, message, Typography, Modal, Switch, Input, Spin, Menu, ConfigProvider } from 'antd';
 import { InboxOutlined, CodeOutlined, ApartmentOutlined, PlusOutlined, DashboardOutlined } from '@ant-design/icons';
+import zhCN from 'antd/locale/zh_CN';
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-python';
@@ -71,13 +72,13 @@ function WorkflowEditor() {
     onChange(info) {
       const { status, response } = info.file;
       if (status === 'done') {
-        message.success(`${info.file.name} file uploaded and parsed successfully.`);
+        message.success(`文件 ${info.file.name} 上传并解析成功。`);
         setPreview(response.preview);
         setEditedCode(response.content);
         setUploadedFile(response.filename);
         setIsEditorVisible(true); // Automatically open the editor on upload
       } else if (status === 'error') {
-        message.error(`${info.file.name} file upload failed.`);
+        message.error(`文件 ${info.file.name} 上传失败。`);
       }
     },
   };
@@ -92,18 +93,18 @@ function WorkflowEditor() {
       if (response.ok) {
         const result = await response.json();
         setPreview(result.preview);
-        message.success('Code re-parsed and DAG updated.');
+        message.success('代码已重新解析，DAG 图已更新。');
       } else {
-        message.error('Failed to re-parse code.');
+        message.error('重新解析代码失败。');
       }
     } catch (error) {
-      message.error('An error occurred while re-parsing.');
+      message.error('重新解析时发生错误。');
     }
   };
 
   const handleSubmit = async () => {
     if (!uploadedFile) {
-      message.warning('Please upload a file first.');
+      message.warning('请先上传一个文件。');
       return;
     }
     
@@ -122,15 +123,15 @@ function WorkflowEditor() {
       if (response.ok && result.returncode === 0) {
         setExecutionResult(result);
         setTimeout(() => {
-          message.success(result.message || 'Task executed successfully.');
+          message.success(result.message || '任务提交成功。');
         }, 0);
       } else {
-        const errorMessage = result.detail?.message || result.message || 'Failed to submit task for execution.';
+        const errorMessage = result.detail?.message || result.message || '提交任务执行失败。';
         message.error(errorMessage);
         setExecutionResult(result.detail || result);
       }
     } catch (error) {
-      message.error('An error occurred while submitting the task.');
+      message.error('提交任务时发生错误。');
       setExecutionResult({ stderr: error.toString() });
     } finally {
       setIsExecuting(false);
@@ -154,7 +155,7 @@ function WorkflowEditor() {
         const newCode = editedCode.replace(regex, `$1'${newCommand}'`);
         setEditedCode(newCode);
     } else {
-        message.error("Could not find the task command in the code to update it.");
+        message.error("无法在代码中找到需要更新的任务命令。");
     }
     
     setEditingNode(null);
@@ -199,7 +200,7 @@ function WorkflowEditor() {
           draggable
           footer={[
               <Button key="reparse" onClick={handleReparse}>
-                  Update DAG
+                  更新 DAG
               </Button>,
           ]}
       >
@@ -223,7 +224,7 @@ function WorkflowEditor() {
           onOk={handleNodeEditSave}
           onCancel={() => setEditingNode(null)}
       >
-          <p>Command:</p>
+          <p>命令:</p>
           <TextArea 
               rows={4} 
               value={nodeCommand} 
@@ -231,24 +232,24 @@ function WorkflowEditor() {
           />
       </Modal>
       <Modal
-          title="Execution Result"
+          title="执行结果"
           open={!!executionResult}
           onCancel={() => setExecutionResult(null)}
           footer={[
               <Button key="back" onClick={() => setExecutionResult(null)}>
-                  Close
+                  关闭
               </Button>,
           ]}
       >
           {isExecuting ? <Spin /> : (
               <div>
-                  <h4>Standard Output:</h4>
+                  <h4>标准输出:</h4>
                   <pre style={{ background: '#f5f5f5', padding: '10px', borderRadius: '4px' }}>
-                      {executionResult?.stdout || '(empty)'}
+                      {executionResult?.stdout || '(空)'}
                   </pre>
-                  <h4>Standard Error:</h4>
+                  <h4>标准错误:</h4>
                   <pre style={{ background: '#fffbe6', color: '#d4380d', padding: '10px', borderRadius: '4px' }}>
-                      {executionResult?.stderr || '(empty)'}
+                      {executionResult?.stderr || '(空)'}
                   </pre>
               </div>
           )}
@@ -266,13 +267,13 @@ function App() {
         <div className="logo" style={{ height: '32px', margin: '16px', background: 'rgba(255, 255, 255, 0.2)' }} />
         <Menu theme="dark" selectedKeys={[location.pathname]} mode="inline">
           <Menu.Item key="/dashboard" icon={<DashboardOutlined />}>
-            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/dashboard">仪表盘</Link>
           </Menu.Item>
           <Menu.Item key="/" icon={<ApartmentOutlined />}>
-            <Link to="/">Workflows</Link>
+            <Link to="/">工作流</Link>
           </Menu.Item>
           <Menu.Item key="/upload" icon={<PlusOutlined />}>
-            <Link to="/upload">New Workflow</Link>
+            <Link to="/upload">新建工作流</Link>
           </Menu.Item>
         </Menu>
       </Sider>
@@ -296,9 +297,11 @@ function App() {
 // We need to wrap App with Router to use useLocation hook
 function AppWrapper() {
   return (
-    <Router>
-      <App />
-    </Router>
+    <ConfigProvider locale={zhCN}>
+      <Router>
+        <App />
+      </Router>
+    </ConfigProvider>
   );
 }
 
