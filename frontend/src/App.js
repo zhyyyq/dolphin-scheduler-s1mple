@@ -130,12 +130,11 @@ function App() {
         <Title level={3} style={{ color: 'white', lineHeight: '64px', float: 'left' }}>极简任务调度平台</Title>
         {renderAppbar()}
       </Header>
-      <Content style={{ padding: '0', height: 'calc(100vh - 64px)', background: '#f0f2f5' }}>
-        {preview ? (
-            <DagGraph data={preview} onNodeDoubleClick={handleNodeDoubleClick} />
-        ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                <Dragger {...props} style={{ width: '800px', padding: '64px' }}>
+      <Content style={{ padding: '0', height: 'calc(100vh - 64px)', background: '#f0f2f5', position: 'relative' }}>
+        <DagGraph data={preview} onNodeDoubleClick={handleNodeDoubleClick} />
+        {!preview && (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}>
+                <Dragger {...props} style={{ width: '800px', padding: '64px', background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
                     <p className="ant-upload-drag-icon"><InboxOutlined /></p>
                     <p className="ant-upload-text">请上传你的任务配置文件</p>
                     <p className="ant-upload-hint">支持拖拽或点击上传</p>

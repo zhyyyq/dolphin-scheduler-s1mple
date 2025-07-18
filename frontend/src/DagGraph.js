@@ -115,9 +115,9 @@ const DagGraph = ({ data, onNodeDoubleClick }) => {
   // Effect for updating the graph with new data
   useEffect(() => {
     const graph = graphRef.current;
-    if (!graph || !data) return;
+    if (!graph) return;
 
-    if (!data.tasks || data.tasks.length === 0) {
+    if (!data || !data.tasks || data.tasks.length === 0) {
       graph.clearCells();
       return;
     }
