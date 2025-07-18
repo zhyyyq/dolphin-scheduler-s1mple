@@ -72,16 +72,12 @@ const DagGraph: React.FC<DagGraphProps> = ({ data, onNodeDoubleClick }) => {
     if (graphRef.current && data) {
       const { nodes, edges } = transformData(data);
       
-      const dagreLayout = new DagreLayout({
-        type: 'dagre',
-        rankdir: 'TB',
-        align: 'UL',
-        nodesep: 25,
-        ranksep: 50,
-      });
+      const dagreLayout = new DagreLayout({});
 
       const model = { nodes, edges };
-      const newModel = dagreLayout.layout(model);
+      // The layout method is available on the instance despite the type error,
+      // which is likely due to an issue with the type definitions in the beta version.
+      const newModel = (dagreLayout as any).layout(model);
       
       graphRef.current.fromJSON(newModel);
       graphRef.current.centerContent();
