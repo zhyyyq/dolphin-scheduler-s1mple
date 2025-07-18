@@ -10,9 +10,9 @@ import logging
 import httpx
 from .parser import parse_workflow
 
-# Define project root and uploads directory consistently
+# Define project root and workflow repo directory consistently
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-UPLOAD_DIR = os.path.join(BACKEND_DIR, "uploads")
+WORKFLOW_REPO_DIR = os.path.join(BACKEND_DIR, "workflow_repo")
 
 # --- Start of new logging configuration ---
 # Configure logging to write to a file
@@ -40,6 +40,35 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def git_commit(file_path, message):
+    """Commits a file to the git repository."""
+    # Use the relative path for the file inside the repo
+    try:
+        # Check if there are changes to commit
+        status_result = subprocess.run(
+            ["git", "status", "--porcelain", "--", file_path], 
+            cwd=WORKFLOW_REPO_DIR, 
+            check=True, 
+            capture_output=True, 
+            text=True
+        )
+        # If git status is not empty, there are changes
+        if status_result.stdout.strip():
+            logger.info(f"Changes detected for {file_path}. Committing...")
+            # Add and commit
+            subprocess.run(["git", "add", file_path], cwd=WORKFLOW_REPO_DIR, check=True)
+            subprocess.run(["git", "commit", "-m", message], cwd=WORKFLOW_REPO_DIR, check=True)
+            logger.info(f"Committed '{file_path}' with message: '{message}'")
+        else:
+            logger.info(f"No changes to commit for {file_path}")
+
+    except subprocess.CalledProcessError as e:
+        # git commit can fail if there's nothing to commit after adding (e.g. only whitespace changes)
+        # We can log this as a warning and continue.
+        logger.warning(f"Git operation warning for {file_path}: {e}\nSTDOUT: {e.stdout}\nSTDERR: {e.stderr}")
+    except FileNotFoundError:
+        logger.error("Git command not found. Please ensure Git is installed and in the system's PATH.")
 
 async def run_script_in_subprocess_async(script_path: str) -> (int, str, str):
     """
@@ -76,7 +105,7 @@ async def read_root():
 @app.post("/api/parse")
 async def parse_python_file(file: UploadFile = File(...)):
     """
-    Parses the uploaded Python file to extract task information.
+    Parses the uploaded Python file, saves it to the repo, and commits it.
     """
     try:
         content = await file.read()
@@ -84,11 +113,14 @@ async def parse_python_file(file: UploadFile = File(...)):
         
         parsed_data = parse_workflow(content_str)
 
-        # Save the file for the execution step
-        os.makedirs(UPLOAD_DIR, exist_ok=True)
-        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        # Save the file to the version-controlled repository
+        os.makedirs(WORKFLOW_REPO_DIR, exist_ok=True)
+        file_path = os.path.join(WORKFLOW_REPO_DIR, file.filename)
         with open(file_path, "wb") as buffer:
             buffer.write(content)
+        
+        # Initial commit for the new workflow
+        git_commit(file.filename, f"Create workflow: {file.filename}")
 
         return {
             "filename": file.filename,
@@ -248,6 +280,62 @@ async def delete_workflow(project_code: int, workflow_code: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/workflow/{workflow_name}/history")
+async def get_workflow_history(workflow_name: str):
+    """Gets the commit history for a specific workflow file."""
+    try:
+        file_path = os.path.join(WORKFLOW_REPO_DIR, workflow_name)
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Workflow file not found.")
+
+        # Using a custom format for easier parsing
+        log_format = "--format=%H%x1f%an%x1f%at%x1f%s"
+        result = subprocess.run(
+            ["git", "log", log_format, "--", workflow_name],
+            cwd=WORKFLOW_REPO_DIR,
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding='utf-8'
+        )
+        
+        history = []
+        for line in result.stdout.strip().split('\n'):
+            if not line: continue
+            parts = line.split('\x1f')
+            history.append({
+                "hash": parts[0],
+                "author": parts[1],
+                "timestamp": int(parts[2]),
+                "message": parts[3],
+            })
+        return history
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Git log failed for {workflow_name}: {e.stderr}")
+        return [] # Return empty list if no history or an error
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="Git command not found.")
+
+@app.get("/api/workflow/{workflow_name}/commit/{commit_hash}")
+async def get_workflow_commit_diff(workflow_name: str, commit_hash: str):
+    """Gets the diff for a specific commit of a workflow file."""
+    try:
+        result = subprocess.run(
+            ["git", "show", commit_hash, "--", workflow_name],
+            cwd=WORKFLOW_REPO_DIR,
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding='utf-8'
+        )
+        return {"diff": result.stdout}
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Git show failed for {workflow_name} at {commit_hash}: {e.stderr}")
+        raise HTTPException(status_code=404, detail="Commit or file not found.")
+    except FileNotFoundError:
+        raise HTTPException(status_code=500, detail="Git command not found.")
+
+
 @app.put("/api/project/{project_code}/workflow/{workflow_code}")
 async def update_workflow(project_code: int, workflow_code: int, body: dict):
     code = body.get("code")
@@ -341,16 +429,19 @@ async def execute_task(body: dict):
     code = body.get("code")
     logger.info(f"Received request to /api/execute for file: {filename}")
     
-    # Save the potentially modified code back to the file before execution
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-    file_path = os.path.join(UPLOAD_DIR, filename)
+    # Save the potentially modified code back to the repo before execution
+    os.makedirs(WORKFLOW_REPO_DIR, exist_ok=True)
+    file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
     with open(file_path, "w", encoding='utf-8') as f:
         f.write(code)
     logger.info(f"Saved code to {file_path}")
 
+    # Commit the changes before execution
+    git_commit(filename, f"Update and execute workflow: {filename}")
+
     try:
         # The script path for `uv run` should be relative to the cwd (BACKEND_DIR)
-        script_path_for_run = os.path.join("uploads", filename)
+        script_path_for_run = os.path.join("workflow_repo", filename)
         
         logger.info(f"Executing {script_path_for_run} asynchronously.")
         returncode, stdout, stderr = await run_script_in_subprocess_async(script_path_for_run)
