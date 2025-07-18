@@ -4,6 +4,9 @@
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
+    "@antv/layout": "^1.2.14-beta.8",
+    "@antv/x6": "^2.18.1",
+    "@antv/x6-react-shape": "^2.2.3",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",

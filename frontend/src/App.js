@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, Button, Layout, Row, Col, Card, message, Typography } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
+import DagGraph from './DagGraph';
 import './App.css';
 
 const { Header, Content } = Layout;
@@ -82,20 +83,12 @@ function App() {
                 {preview ? (
                   <div>
                     <Title level={5}>任务依赖 (DAG)</Title>
-                    <div style={{ border: '1px solid #d9d9d9', padding: '10px', borderRadius: '4px', background: 'white' }}>
-                      <img src={preview.dag_image_url} alt="DAG Preview" style={{ maxWidth: '100%' }}/>
+                    <div style={{ height: '250px', border: '1px solid #d9d9d9', borderRadius: '4px' }}>
+                      <DagGraph data={preview} />
                     </div>
                     <Title level={5} style={{marginTop: '20px'}}>调度信息</Title>
                      <div style={{ border: '1px solid #d9d9d9', padding: '10px', borderRadius: '4px', background: 'white' }}>
                         <p><Text strong>Crontab:</Text> {preview.crontab}</p>
-                        <Title level={5} style={{marginTop: '10px'}}>任务列表</Title>
-                        <ul>
-                          {preview.tasks.map(task => <li key={task}><Text>{task}</Text></li>)}
-                        </ul>
-                        <Title level={5} style={{marginTop: '10px'}}>任务关系</Title>
-                        <ul>
-                          {preview.relations.map((rel, i) => <li key={i}><Text>{rel.from} → {rel.to}</Text></li>)}
-                        </ul>
                      </div>
                   </div>
                 ) : (
