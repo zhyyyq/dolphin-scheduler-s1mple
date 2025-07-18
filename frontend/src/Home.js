@@ -61,6 +61,7 @@ function Home() {
         <Space size="middle">
           <Link to={`/project/${record.projectCode}/workflow/${record.code}`}>查看</Link>
           <Link to={`/upload?projectCode=${record.projectCode}&workflowCode=${record.code}`}>修改</Link>
+          <Link to={`/workflow/${record.name}.py/history`}>历史</Link>
           <Button type="link" danger onClick={() => handleDelete(record)}>删除</Button>
         </Space>
       ),
