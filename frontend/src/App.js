@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Upload, Button, Layout, message, Typography, Modal, Switch, Input } from 'antd';
 import { InboxOutlined, CodeOutlined } from '@ant-design/icons';
 import Editor from 'react-simple-code-editor';
@@ -33,6 +33,7 @@ function App() {
         setPreview(response.preview);
         setEditedCode(response.content);
         setUploadedFile(response.filename);
+        setIsEditorVisible(true); // Automatically open the editor on upload
       } else if (status === 'error') {
         message.error(`${info.file.name} file upload failed.`);
       }
@@ -82,10 +83,10 @@ function App() {
     }
   };
 
-  const handleNodeDoubleClick = (node) => {
+  const handleNodeDoubleClick = useCallback((node) => {
     setEditingNode(node);
     setNodeCommand(node.command);
-  };
+  }, []);
 
   const handleNodeEditSave = () => {
     if (!editingNode) return;

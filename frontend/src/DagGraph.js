@@ -73,7 +73,7 @@ const DagGraph = ({ data, onNodeDoubleClick }) => {
   const containerRef = useRef(null);
   const graphRef = useRef(null);
 
-  // Effect for initializing the graph instance once
+  // Effect for initializing and cleaning up the graph
   useEffect(() => {
     if (containerRef.current && !graphRef.current) {
       const graph = new Graph({
@@ -89,20 +89,26 @@ const DagGraph = ({ data, onNodeDoubleClick }) => {
         },
       });
       graphRef.current = graph;
-
-      graph.on('node:dblclick', ({ node }) => {
-        if (onNodeDoubleClick) {
-          onNodeDoubleClick(node.getData());
-        }
-      });
     }
     
-    // Cleanup when the component unmounts
     return () => {
       if (graphRef.current) {
         graphRef.current.dispose();
         graphRef.current = null;
       }
+    };
+  }, []);
+
+  // Effect for handling events
+  useEffect(() => {
+    const graph = graphRef.current;
+    if (!graph || !onNodeDoubleClick) return;
+
+    const handler = ({ node }) => onNodeDoubleClick(node.getData());
+    graph.on('node:dblclick', handler);
+
+    return () => {
+      graph.off('node:dblclick', handler);
     };
   }, [onNodeDoubleClick]);
 
