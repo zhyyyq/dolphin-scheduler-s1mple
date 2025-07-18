@@ -2,6 +2,8 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
+import subprocess
+import sys
 from .parser import parse_workflow
 
 app = FastAPI()
@@ -72,21 +74,39 @@ async def reparse_code(body: dict):
 async def execute_task(body: dict):
     filename = body.get("filename")
     code = body.get("code")
-    """
-    Executes the python script.
-    For now, this is a mock implementation.
-    """
-    # Security warning: In a real-world application, executing arbitrary
-    # user-uploaded code is extremely dangerous. This should be done in a
-    # sandboxed environment.
     
     # Save the potentially modified code back to the file before execution
-    file_path = os.path.join("uploads", filename)
-    with open(file_path, "w") as f:
+    upload_dir = "uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, filename)
+    with open(file_path, "w", encoding='utf-8') as f:
         f.write(code)
 
-    # In a real app, you would trigger the execution via a proper scheduler
-    # or a sandboxed subprocess.
-    print(f"Executing {file_path}...")
-    
-    return {"message": f"Task {filename} submitted for execution."}
+    try:
+        # Execute the python script in a separate process
+        # This uses the same Python interpreter that runs the FastAPI app
+        python_executable = sys.executable
+        result = subprocess.run(
+            [python_executable, file_path],
+            capture_output=True,
+            text=True,
+            check=True,
+            encoding='utf-8'
+        )
+        
+        return {
+            "message": f"Task {filename} executed successfully.",
+            "stdout": result.stdout,
+            "stderr": result.stderr
+        }
+    except subprocess.CalledProcessError as e:
+        raise HTTPException(
+            status_code=500, 
+            detail={
+                "message": f"Failed to execute task {filename}.",
+                "stdout": e.stdout,
+                "stderr": e.stderr
+            }
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

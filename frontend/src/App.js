@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, Button, Layout, message, Typography, Modal, Switch, Input } from 'antd';
+import { Upload, Button, Layout, message, Typography, Modal, Switch, Input, Spin } from 'antd';
 import { InboxOutlined, CodeOutlined } from '@ant-design/icons';
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
@@ -20,6 +20,8 @@ function App() {
   const [isEditorVisible, setIsEditorVisible] = useState(false);
   const [editingNode, setEditingNode] = useState(null);
   const [nodeCommand, setNodeCommand] = useState('');
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executionResult, setExecutionResult] = useState(null);
 
   const props = {
     name: 'file',
@@ -65,6 +67,9 @@ function App() {
       return;
     }
     
+    setIsExecuting(true);
+    setExecutionResult(null);
+
     try {
       const response = await fetch('http://127.0.0.1:8000/api/execute', {
         method: 'POST',
@@ -72,14 +77,20 @@ function App() {
         body: JSON.stringify({ filename: uploadedFile, code: editedCode }),
       });
 
+      const result = await response.json();
+
       if (response.ok) {
-        const result = await response.json();
         message.success(result.message);
+        setExecutionResult(result);
       } else {
-        message.error('Failed to submit task for execution.');
+        message.error(result.detail.message || 'Failed to submit task for execution.');
+        setExecutionResult(result.detail);
       }
     } catch (error) {
       message.error('An error occurred while submitting the task.');
+      setExecutionResult({ stderr: error.toString() });
+    } finally {
+      setIsExecuting(false);
     }
   };
 
@@ -118,7 +129,7 @@ function App() {
                     checked={isEditorVisible}
                     onChange={setIsEditorVisible}
                 />
-                <Button type="primary" size="large" onClick={handleSubmit}>提交</Button>
+                <Button type="primary" size="large" onClick={handleSubmit} loading={isExecuting}>提交</Button>
             </>
         )}
     </div>
@@ -181,6 +192,29 @@ function App() {
                 value={nodeCommand} 
                 onChange={(e) => setNodeCommand(e.target.value)} 
             />
+        </Modal>
+        <Modal
+            title="Execution Result"
+            open={!!executionResult}
+            onCancel={() => setExecutionResult(null)}
+            footer={[
+                <Button key="back" onClick={() => setExecutionResult(null)}>
+                    Close
+                </Button>,
+            ]}
+        >
+            {isExecuting ? <Spin /> : (
+                <div>
+                    <h4>Standard Output:</h4>
+                    <pre style={{ background: '#f5f5f5', padding: '10px', borderRadius: '4px' }}>
+                        {executionResult?.stdout || '(empty)'}
+                    </pre>
+                    <h4>Standard Error:</h4>
+                    <pre style={{ background: '#fffbe6', color: '#d4380d', padding: '10px', borderRadius: '4px' }}>
+                        {executionResult?.stderr || '(empty)'}
+                    </pre>
+                </div>
+            )}
         </Modal>
       </Content>
     </Layout>
