@@ -309,6 +309,17 @@ function AppWrapper() {
       theme={{
         token: {
           colorPrimary: '#1677ff',
+          colorLink: '#1677ff',
+          colorLinkHover: '#4096ff',
+          colorLinkActive: '#0958d9',
+        },
+        components: {
+          Menu: {
+            darkItemColor: '#91caff',
+            darkItemHoverColor: '#ffffff',
+            darkItemSelectedColor: '#ffffff',
+            darkItemSelectedBg: '#1677ff',
+          },
         },
       }}
     >
