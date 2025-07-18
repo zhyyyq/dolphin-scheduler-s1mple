@@ -119,38 +119,219 @@ async def reparse_code(body: dict):
         logger.error(f"Error in /api/reparse: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to re-parse code: {e}")
 
-@app.get("/api/projects")
-async def get_projects():
+@app.get("/api/workflows")
+async def get_workflows():
     # Hardcoded credentials from user input
     ds_url = "http://localhost:12345/dolphinscheduler"
     token = "8b6c34a254ca718549ac877b10804235"
-    
-    projects_url = f"{ds_url.rstrip('/')}/projects"
     headers = {"token": token}
+    
+    all_workflows = []
 
     try:
         async with httpx.AsyncClient() as client:
-            # Get the list of projects
-            response = await client.get(
-                projects_url,
-                headers=headers,
-                params={"pageNo": 1, "pageSize": 100} # Fetch up to 100 projects
+            # 1. Get all projects
+            projects_url = f"{ds_url.rstrip('/')}/projects"
+            projects_response = await client.get(
+                projects_url, headers=headers, params={"pageNo": 1, "pageSize": 100}
             )
-            response.raise_for_status()
-            data = response.json()
-
-            if data.get("code") != 0:
-                logger.error(f"DolphinScheduler API error: {data.get('msg')}")
-                raise HTTPException(status_code=500, detail=f"DolphinScheduler API error: {data.get('msg')}")
+            projects_response.raise_for_status()
+            projects_data = projects_response.json()
+            if projects_data.get("code") != 0:
+                raise HTTPException(status_code=500, detail=f"DS API error (projects): {projects_data.get('msg')}")
             
-            project_list = data.get("data", {}).get("totalList", [])
-            return project_list
+            project_list = projects_data.get("data", {}).get("totalList", [])
+
+            # 2. For each project, get its workflows
+            for project in project_list:
+                project_code = project.get("code")
+                workflows_url = f"{ds_url.rstrip('/')}/projects/{project_code}/process-definition"
+                workflows_response = await client.get(
+                    workflows_url, headers=headers, params={"pageNo": 1, "pageSize": 100}
+                )
+                workflows_response.raise_for_status()
+                workflows_data = workflows_response.json()
+
+                if workflows_data.get("code") != 0:
+                    logger.warning(f"Could not fetch workflows for project {project_code}: {workflows_data.get('msg')}")
+                    continue # Skip to the next project
+
+                project_workflows = workflows_data.get("data", {}).get("totalList", [])
+                # Add project name to each workflow for context
+                for wf in project_workflows:
+                    wf['projectName'] = project.get('name')
+                all_workflows.extend(project_workflows)
+
+            return all_workflows
 
     except httpx.RequestError as e:
         logger.error(f"Could not connect to DolphinScheduler: {e}", exc_info=True)
         raise HTTPException(status_code=502, detail=f"Could not connect to DolphinScheduler: {e}")
     except Exception as e:
-        logger.error(f"Error fetching projects from DolphinScheduler: {e}", exc_info=True)
+        logger.error(f"Error fetching workflows from DolphinScheduler: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/project/{project_code}/workflow/{workflow_code}")
+async def get_workflow_details(project_code: int, workflow_code: int):
+    """
+    Fetches the detailed structure of a specific workflow from DolphinScheduler
+    and transforms it into a format suitable for the frontend DAG graph.
+    """
+    ds_url = "http://localhost:12345/dolphinscheduler"
+    token = "8b6c34a254ca718549ac877b10804235"
+    headers = {"token": token}
+    
+    url = f"{ds_url.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}"
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            data = response.json().get("data", {})
+
+            if not data:
+                raise HTTPException(status_code=404, detail="Workflow not found in DolphinScheduler.")
+
+            # Create a mapping from task code to task name for relation lookup
+            task_code_map = {task['code']: task['name'] for task in data.get("taskDefinitionList", [])}
+
+            # Transform tasks into the format expected by the frontend
+            frontend_tasks = []
+            for task_def in data.get("taskDefinitionList", []):
+                task_params = task_def.get("taskParams", {})
+                frontend_tasks.append({
+                    "name": task_def.get("name"),
+                    "type": task_def.get("taskType"),
+                    "command": task_params.get("rawScript", "# Command not found"),
+                })
+
+            # Transform relations
+            frontend_relations = []
+            for rel in data.get("processTaskRelationList", []):
+                pre_task_name = task_code_map.get(rel.get("preTaskCode"))
+                post_task_name = task_code_map.get(rel.get("postTaskCode"))
+                if pre_task_name and post_task_name:
+                    frontend_relations.append({"from": pre_task_name, "to": post_task_name})
+
+            return {
+                "name": data.get("processDefinition", {}).get("name"),
+                "tasks": frontend_tasks,
+                "relations": frontend_relations,
+            }
+
+    except httpx.RequestError as e:
+        logger.error(f"Could not connect to DolphinScheduler: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail=f"Could not connect to DolphinScheduler: {e}")
+    except Exception as e:
+        logger.error(f"Error fetching workflow details: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/project/{project_code}/workflow/{workflow_code}")
+async def delete_workflow(project_code: int, workflow_code: int):
+    ds_url = "http://localhost:12345/dolphinscheduler"
+    token = "8b6c34a254ca718549ac877b10804235"
+    headers = {"token": token}
+    url = f"{ds_url.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}"
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.delete(url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            if data.get("code") != 0:
+                raise HTTPException(status_code=500, detail=f"DS API error (delete): {data.get('msg')}")
+            return {"message": "Workflow deleted successfully."}
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=502, detail=f"Could not connect to DolphinScheduler: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/project/{project_code}/workflow/{workflow_code}")
+async def update_workflow(project_code: int, workflow_code: int, body: dict):
+    code = body.get("code")
+    ds_url = "http://localhost:12345/dolphinscheduler"
+    token = "8b6c34a254ca718549ac877b10804235"
+    headers = {"token": token}
+    
+    # This is a simplified update. A real implementation would parse the code
+    # and construct a proper update request for the DS API.
+    # For now, we just log the intent.
+    logger.info(f"Attempting to update workflow {workflow_code} in project {project_code}.")
+    logger.info(f"New code:\n{code}")
+    
+    # Placeholder: In a real scenario, you would call the DS API to update the process definition.
+    # The DS API for updating is complex, so we'll simulate success.
+    return {"message": "Workflow update simulated successfully."}
+
+
+@app.get("/api/dashboard/stats")
+async def get_dashboard_stats():
+    ds_url = "http://localhost:12345/dolphinscheduler"
+    token = "8b6c34a254ca718549ac877b10804235"
+    headers = {"token": token}
+    
+    # Note: The generic /process-instances endpoint might not exist. 
+    # A robust solution would iterate through projects.
+    # For this example, we assume a general endpoint or target a specific project.
+    # We will try to get instances for the first project found.
+    
+    stats = {
+        "success": 0,
+        "failure": 0,
+        "running": 0,
+        "other": 0,
+        "total": 0,
+        "recent_instances": []
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            # First, get projects to find a project code
+            projects_url = f"{ds_url.rstrip('/')}/projects"
+            projects_response = await client.get(projects_url, headers=headers, params={"pageNo": 1, "pageSize": 1})
+            projects_response.raise_for_status()
+            projects_data = projects_response.json()
+            if projects_data.get("code") != 0 or not projects_data.get("data", {}).get("totalList"):
+                raise HTTPException(status_code=500, detail="Could not find any projects in DolphinScheduler.")
+            
+            # Use the first project found
+            project_code = projects_data["data"]["totalList"][0]["code"]
+            
+            # Now, get process instances for that project
+            instances_url = f"{ds_url.rstrip('/')}/projects/{project_code}/process-instances"
+            response = await client.get(
+                instances_url, headers=headers, params={"pageNo": 1, "pageSize": 100}
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            if data.get("code") != 0:
+                raise HTTPException(status_code=500, detail=f"DS API error (process-instances): {data.get('msg')}")
+
+            instance_list = data.get("data", {}).get("totalList", [])
+            stats["total"] = data.get("data", {}).get("total", len(instance_list))
+
+            for instance in instance_list:
+                state = instance.get("state")
+                if state == "SUCCESS":
+                    stats["success"] += 1
+                elif state in ["FAILURE", "STOP", "KILL"]:
+                    stats["failure"] += 1
+                elif state == "RUNNING_EXECUTION":
+                    stats["running"] += 1
+                else:
+                    stats["other"] += 1
+            
+            stats["recent_instances"] = instance_list
+            return stats
+
+    except httpx.RequestError as e:
+        logger.error(f"Could not connect to DolphinScheduler: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail=f"Could not connect to DolphinScheduler: {e}")
+    except Exception as e:
+        logger.error(f"Error fetching dashboard stats: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

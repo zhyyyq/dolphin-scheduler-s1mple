@@ -1,21 +1,24 @@
-import React, { useState, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Upload, Button, Layout, message, Typography, Modal, Switch, Input, Spin } from 'antd';
-import { InboxOutlined, CodeOutlined } from '@ant-design/icons';
+import React, { useState, useCallback, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useSearchParams, Link, useLocation } from 'react-router-dom';
+import { Upload, Button, Layout, message, Typography, Modal, Switch, Input, Spin, Menu } from 'antd';
+import { InboxOutlined, CodeOutlined, ApartmentOutlined, PlusOutlined, DashboardOutlined } from '@ant-design/icons';
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-python';
 import 'prismjs/themes/prism.css';
 import DagGraph from './DagGraph';
 import Home from './Home';
+import WorkflowViewer from './WorkflowViewer';
+import Dashboard from './Dashboard';
 import './App.css';
 
-const { Header, Content } = Layout;
+const { Header, Content, Sider } = Layout;
 const { Dragger } = Upload;
 const { Title } = Typography;
 const { TextArea } = Input;
 
 function WorkflowEditor() {
+  const [searchParams] = useSearchParams();
   const [uploadedFile, setUploadedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [editedCode, setEditedCode] = useState('');
@@ -24,6 +27,41 @@ function WorkflowEditor() {
   const [nodeCommand, setNodeCommand] = useState('');
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionResult, setExecutionResult] = useState(null);
+  const [isLoadingWorkflow, setIsLoadingWorkflow] = useState(false);
+
+  useEffect(() => {
+    const projectCode = searchParams.get('projectCode');
+    const workflowCode = searchParams.get('workflowCode');
+    if (projectCode && workflowCode) {
+      const fetchWorkflowForEdit = async () => {
+        setIsLoadingWorkflow(true);
+        try {
+          const response = await fetch(`http://127.0.0.1:8000/api/project/${projectCode}/workflow/${workflowCode}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch workflow for editing.');
+          }
+          const data = await response.json();
+          // We need to reconstruct the python code from the parsed data.
+          // This is a simplification. A real implementation would be more complex.
+          let reconstructedCode = `from pydolphinscheduler.tasks import Shell\nfrom pydolphinscheduler.workflow import Workflow\n\n`;
+          reconstructedCode += `with Workflow(name='${data.name}', schedule='0 0 0 * * ? *') as wf:\n`;
+          for (const task of data.tasks) {
+            reconstructedCode += `    ${task.name} = Shell(name='${task.name}', command='${task.command}')\n`;
+          }
+          // Note: Reconstructing relations (<<) is complex and omitted here for brevity.
+          
+          setEditedCode(reconstructedCode);
+          setPreview(data);
+          setIsEditorVisible(true);
+        } catch (error) {
+          message.error(error.message);
+        } finally {
+          setIsLoadingWorkflow(false);
+        }
+      };
+      fetchWorkflowForEdit();
+    }
+  }, [searchParams]);
 
   const props = {
     name: 'file',
@@ -220,21 +258,51 @@ function WorkflowEditor() {
 }
 
 function App() {
+  const location = useLocation();
+
   return (
-    <Router>
-      <Layout className="layout">
-        <Header>
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider collapsible>
+        <div className="logo" style={{ height: '32px', margin: '16px', background: 'rgba(255, 255, 255, 0.2)' }} />
+        <Menu theme="dark" selectedKeys={[location.pathname]} mode="inline">
+          <Menu.Item key="/dashboard" icon={<DashboardOutlined />}>
+            <Link to="/dashboard">Dashboard</Link>
+          </Menu.Item>
+          <Menu.Item key="/" icon={<ApartmentOutlined />}>
+            <Link to="/">Workflows</Link>
+          </Menu.Item>
+          <Menu.Item key="/upload" icon={<PlusOutlined />}>
+            <Link to="/upload">New Workflow</Link>
+          </Menu.Item>
+        </Menu>
+      </Sider>
+      <Layout className="site-layout">
+        <Header className="site-layout-background" style={{ padding: '0 16px' }}>
           <Title level={3} style={{ color: 'white', lineHeight: '64px', float: 'left' }}>极简任务调度平台</Title>
         </Header>
-        <Content style={{ padding: '0', height: 'calc(100vh - 64px)', background: '#f0f2f5', position: 'relative' }}>
+        <Content style={{ margin: '16px' }}>
           <Routes>
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/" element={<Home />} />
-            <Route path="/project/:projectCode" element={<WorkflowEditor />} />
+            <Route path="/upload" element={<WorkflowEditor />} />
+            <Route path="/project/:projectCode/workflow/:workflowCode" element={<WorkflowViewer />} />
           </Routes>
         </Content>
       </Layout>
+    </Layout>
+  );
+}
+
+// We need to wrap App with Router to use useLocation hook
+function AppWrapper() {
+  return (
+    <Router>
+      <App />
     </Router>
   );
 }
 
-export default App;
+export default AppWrapper;
+
+// The default export is now the wrapper
+// export default App;
