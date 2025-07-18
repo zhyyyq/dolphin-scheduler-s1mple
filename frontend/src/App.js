@@ -160,20 +160,6 @@ function WorkflowEditor() {
       setEditedCode(result.new_code);
       message.success(`节点 ${taskName} 的命令已更新。`);
       
-      // Optimistically update the preview to reflect the change
-      setPreview(currentPreview => {
-        if (!currentPreview) return null;
-        const newTasks = currentPreview.tasks.map(task => {
-          if (task.name === taskName) {
-            return { ...task, command: newCommand };
-          }
-          return task;
-        });
-        return { ...currentPreview, tasks: newTasks };
-      });
-
-      // We can still reparse in the background to ensure full consistency,
-      // but the UI has already updated.
       handleReparse(result.new_code);
 
     } catch (error) {
