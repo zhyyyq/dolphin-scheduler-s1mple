@@ -1,4 +1,5 @@
 import { Graph, Node } from '@antv/x6';
+import '@antv/x6-react-shape';
 import { ShellIcon } from './ShellIcon';
 import React from 'react';
 
