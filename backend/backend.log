@@ -50,3 +50,167 @@ Traceback (most recent call last):
   File "D:\scheduler\backend\src\backend\main.py", line 149, in execute_task
     raise HTTPException(
 fastapi.exceptions.HTTPException: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'Traceback (most recent call last):\n  File "D:\\scheduler\\backend\\uploads\\tutorial.py", line 35, in <module>\n    from pydolphinscheduler.core.workflow import Workflow\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\core\\__init__.py", line 20, in <module>\n    from pydolphinscheduler.core.engine import Engine\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\core\\engine.py", line 24, in <module>\n    from pydolphinscheduler.core.task import BatchTask\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\core\\task.py", line 29, in <module>\n    from pydolphinscheduler import configuration\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\configuration.py", line 26, in <module>\n    from pydolphinscheduler.utils.yaml_parser import YamlParser\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\utils\\yaml_parser.py", line 25, in <module>\n    from ruamel.yaml import YAML\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\ruamel\\yaml\\__init__.py", line 43, in <module>\n    from .cyaml import *  # NOQA\n    ^^^^^^^^^^^^^^^^^^^^\n  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load\n  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked\n  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked\n  File "<frozen importlib._bootstrap_external>", line 995, in exec_module\n  File "<frozen importlib._bootstrap_external>", line 1091, in get_code\n  File "<frozen importlib._bootstrap_external>", line 1190, in get_data\nKeyboardInterrupt\n'}
+2025-07-18 14:16:56,160 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:16:56,161 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:16:56,161 - src.backend.main - INFO - Executing uploads\tutorial.py asynchronously.
+2025-07-18 14:16:56,161 - src.backend.main - INFO - Attempting to run script asynchronously: uploads\tutorial.py
+2025-07-18 14:16:56,161 - src.backend.main - ERROR - Unexpected error in async subprocess: 
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 49, in run_script_in_subprocess_async
+    proc = await asyncio.create_subprocess_exec(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\subprocess.py", line 224, in create_subprocess_exec
+    transport, protocol = await loop.subprocess_exec(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_events.py", line 1756, in subprocess_exec
+    transport = await self._make_subprocess_transport(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_events.py", line 528, in _make_subprocess_transport
+    raise NotImplementedError
+NotImplementedError
+2025-07-18 14:16:56,162 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py.
+2025-07-18 14:16:56,162 - src.backend.main - WARNING - Execution failed for tutorial.py with return code -1.
+2025-07-18 14:16:56,162 - src.backend.main - WARNING - STDOUT: 
+2025-07-18 14:16:56,162 - src.backend.main - WARNING - STDERR: An unexpected error occurred: 
+2025-07-18 14:16:56,162 - src.backend.main - ERROR - Unhandled exception in /api/execute for file tutorial.py: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'An unexpected error occurred: '}
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 146, in execute_task
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'An unexpected error occurred: '}
+2025-07-18 14:17:11,079 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:17:11,080 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:17:11,080 - src.backend.main - INFO - Executing uploads\tutorial.py asynchronously.
+2025-07-18 14:17:11,080 - src.backend.main - INFO - Attempting to run script asynchronously: uploads\tutorial.py
+2025-07-18 14:17:11,080 - src.backend.main - ERROR - Unexpected error in async subprocess: 
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 49, in run_script_in_subprocess_async
+    proc = await asyncio.create_subprocess_exec(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\subprocess.py", line 224, in create_subprocess_exec
+    transport, protocol = await loop.subprocess_exec(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_events.py", line 1756, in subprocess_exec
+    transport = await self._make_subprocess_transport(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_events.py", line 528, in _make_subprocess_transport
+    raise NotImplementedError
+NotImplementedError
+2025-07-18 14:17:11,081 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py.
+2025-07-18 14:17:11,081 - src.backend.main - WARNING - Execution failed for tutorial.py with return code -1.
+2025-07-18 14:17:11,081 - src.backend.main - WARNING - STDOUT: 
+2025-07-18 14:17:11,081 - src.backend.main - WARNING - STDERR: An unexpected error occurred: 
+2025-07-18 14:17:11,081 - src.backend.main - ERROR - Unhandled exception in /api/execute for file tutorial.py: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'An unexpected error occurred: '}
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 146, in execute_task
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'An unexpected error occurred: '}
+2025-07-18 14:17:26,838 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:17:26,839 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:17:26,839 - src.backend.main - INFO - Executing uploads\tutorial.py asynchronously.
+2025-07-18 14:17:26,839 - src.backend.main - INFO - Attempting to run script asynchronously: uploads\tutorial.py
+2025-07-18 14:17:26,839 - src.backend.main - ERROR - Unexpected error in async subprocess: 
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 49, in run_script_in_subprocess_async
+    proc = await asyncio.create_subprocess_exec(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\subprocess.py", line 224, in create_subprocess_exec
+    transport, protocol = await loop.subprocess_exec(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_events.py", line 1756, in subprocess_exec
+    transport = await self._make_subprocess_transport(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_events.py", line 528, in _make_subprocess_transport
+    raise NotImplementedError
+NotImplementedError
+2025-07-18 14:17:26,839 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py.
+2025-07-18 14:17:26,839 - src.backend.main - WARNING - Execution failed for tutorial.py with return code -1.
+2025-07-18 14:17:26,839 - src.backend.main - WARNING - STDOUT: 
+2025-07-18 14:17:26,839 - src.backend.main - WARNING - STDERR: An unexpected error occurred: 
+2025-07-18 14:17:26,839 - src.backend.main - ERROR - Unhandled exception in /api/execute for file tutorial.py: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'An unexpected error occurred: '}
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 146, in execute_task
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'An unexpected error occurred: '}
+2025-07-18 14:18:18,479 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:18:18,479 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:18:18,479 - src.backend.main - INFO - Executing uploads\tutorial.py asynchronously.
+2025-07-18 14:18:18,479 - src.backend.main - INFO - Attempting to run script asynchronously: uploads\tutorial.py
+2025-07-18 14:18:18,479 - src.backend.main - ERROR - Unexpected error in async subprocess: 
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 49, in run_script_in_subprocess_async
+    proc = await asyncio.create_subprocess_exec(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\subprocess.py", line 224, in create_subprocess_exec
+    transport, protocol = await loop.subprocess_exec(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_events.py", line 1756, in subprocess_exec
+    transport = await self._make_subprocess_transport(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_events.py", line 528, in _make_subprocess_transport
+    raise NotImplementedError
+NotImplementedError
+2025-07-18 14:18:18,480 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py.
+2025-07-18 14:18:18,480 - src.backend.main - WARNING - Execution failed for tutorial.py with return code -1.
+2025-07-18 14:18:18,480 - src.backend.main - WARNING - STDOUT: 
+2025-07-18 14:18:18,480 - src.backend.main - WARNING - STDERR: An unexpected error occurred: 
+2025-07-18 14:18:18,480 - src.backend.main - ERROR - Unhandled exception in /api/execute for file tutorial.py: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'An unexpected error occurred: '}
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 146, in execute_task
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'An unexpected error occurred: '}
+2025-07-18 14:19:28,547 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-18 14:19:28,547 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-18 14:19:28,547 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:109]
+2025-07-18 14:19:28,547 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-18 14:19:28,547 - python_multipart.multipart - DEBUG - Calling on_header_field with data[111:123]
+2025-07-18 14:19:28,547 - python_multipart.multipart - DEBUG - Calling on_header_value with data[125:138]
+2025-07-18 14:19:28,547 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-18 14:19:28,547 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-18 14:19:28,547 - python_multipart.multipart - DEBUG - Calling on_part_data with data[142:3036]
+2025-07-18 14:19:28,547 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-18 14:19:28,548 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-18 14:19:30,229 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:19:30,229 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:19:30,229 - src.backend.main - INFO - Executing uploads\tutorial.py asynchronously.
+2025-07-18 14:19:30,229 - src.backend.main - INFO - Attempting to run script asynchronously: uploads\tutorial.py
+2025-07-18 14:19:30,229 - src.backend.main - ERROR - Unexpected error in async subprocess: 
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 49, in run_script_in_subprocess_async
+    proc = await asyncio.create_subprocess_exec(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\subprocess.py", line 224, in create_subprocess_exec
+    transport, protocol = await loop.subprocess_exec(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_events.py", line 1756, in subprocess_exec
+    transport = await self._make_subprocess_transport(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\zhyyy\AppData\Roaming\uv\python\cpython-3.12.11-windows-x86_64-none\Lib\asyncio\base_events.py", line 528, in _make_subprocess_transport
+    raise NotImplementedError
+NotImplementedError
+2025-07-18 14:19:30,240 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py.
+2025-07-18 14:19:30,240 - src.backend.main - WARNING - Execution failed for tutorial.py with return code -1.
+2025-07-18 14:19:30,240 - src.backend.main - WARNING - STDOUT: 
+2025-07-18 14:19:30,240 - src.backend.main - WARNING - STDERR: An unexpected error occurred: 
+2025-07-18 14:19:30,240 - src.backend.main - ERROR - Unhandled exception in /api/execute for file tutorial.py: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'An unexpected error occurred: '}
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 146, in execute_task
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'An unexpected error occurred: '}
+2025-07-18 14:20:33,920 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-18 14:20:33,921 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-18 14:20:33,921 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:109]
+2025-07-18 14:20:33,921 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-18 14:20:33,921 - python_multipart.multipart - DEBUG - Calling on_header_field with data[111:123]
+2025-07-18 14:20:33,921 - python_multipart.multipart - DEBUG - Calling on_header_value with data[125:138]
+2025-07-18 14:20:33,921 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-18 14:20:33,921 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-18 14:20:33,921 - python_multipart.multipart - DEBUG - Calling on_part_data with data[142:3036]
+2025-07-18 14:20:33,921 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-18 14:20:33,921 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-18 14:20:40,214 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:20:40,214 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:20:40,214 - src.backend.main - INFO - Executing uploads\tutorial.py asynchronously.
+2025-07-18 14:20:40,214 - src.backend.main - INFO - Attempting to run script asynchronously: uploads\tutorial.py
+2025-07-18 14:20:40,664 - src.backend.main - INFO - Script uploads\tutorial.py finished with return code 0.
+2025-07-18 14:20:40,664 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py.
+2025-07-18 14:20:40,664 - src.backend.main - INFO - Execution successful for tutorial.py.
