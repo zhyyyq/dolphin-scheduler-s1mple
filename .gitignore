@@ -3,3 +3,4 @@ node_modules
 dist
 .vscode
 backend.log
+backend/backend.log
