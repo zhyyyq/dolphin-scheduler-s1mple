@@ -8,6 +8,10 @@ from .parser import parse_workflow
 
 app = FastAPI()
 
+# Define project root and uploads directory consistently
+BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+UPLOAD_DIR = os.path.join(BACKEND_DIR, "uploads")
+
 # CORS configuration
 origins = [
     "http://localhost:3000",
@@ -37,9 +41,8 @@ async def parse_python_file(file: UploadFile = File(...)):
         parsed_data = parse_workflow(content_str)
 
         # Save the file for the execution step
-        upload_dir = "uploads"
-        os.makedirs(upload_dir, exist_ok=True)
-        file_path = os.path.join(upload_dir, file.filename)
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
         with open(file_path, "wb") as buffer:
             buffer.write(content)
 
@@ -76,28 +79,22 @@ async def execute_task(body: dict):
     code = body.get("code")
     
     # Save the potentially modified code back to the file before execution
-    upload_dir = "uploads"
-    os.makedirs(upload_dir, exist_ok=True)
-    file_path = os.path.join(upload_dir, filename)
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    file_path = os.path.join(UPLOAD_DIR, filename)
     with open(file_path, "w", encoding='utf-8') as f:
         f.write(code)
 
     try:
-        # Execute the python script using `uv run`
-        # We need to make sure the command points to the correct relative path from where `uv run` is executed.
-        # Assuming `uv run` is executed from the `backend` directory.
-        relative_path = os.path.join("src", "backend", "uploads", filename)
-        
-        # Since we are in `src/backend`, we need to go up two levels to the `backend` directory.
-        backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        # The script path for `uv run` should be relative to the cwd (BACKEND_DIR)
+        script_path_for_run = os.path.join("uploads", filename)
         
         result = subprocess.run(
-            ["uv", "run", os.path.join("uploads", filename)],
+            ["uv", "run", script_path_for_run],
             capture_output=True,
             text=True,
             check=True,
             encoding='utf-8',
-            cwd=backend_dir # Run from the `backend` directory
+            cwd=BACKEND_DIR # Run from the `backend` directory
         )
         
         return {
