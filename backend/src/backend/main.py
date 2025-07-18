@@ -159,7 +159,7 @@ async def execute_task(body: dict):
             "message": f"Task {filename} executed successfully.",
             "stdout": stdout,
             "stderr": stderr,
-            "returncode": returncode
+            "returncode": 0
         }
     except Exception as e:
         logger.error(f"Unhandled exception in /api/execute for file {filename}: {e}", exc_info=True)

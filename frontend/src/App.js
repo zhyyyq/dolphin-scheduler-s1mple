@@ -79,12 +79,13 @@ function App() {
 
       const result = await response.json();
 
-      if (response.ok) {
-        message.success(result.message);
+      if (response.ok && result.returncode === 0) {
+        message.success(result.message || 'Task executed successfully.');
         setExecutionResult(result);
       } else {
-        message.error(result.detail.message || 'Failed to submit task for execution.');
-        setExecutionResult(result.detail);
+        const errorMessage = result.detail?.message || result.message || 'Failed to submit task for execution.';
+        message.error(errorMessage);
+        setExecutionResult(result.detail || result);
       }
     } catch (error) {
       message.error('An error occurred while submitting the task.');
