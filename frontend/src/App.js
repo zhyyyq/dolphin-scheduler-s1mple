@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, Button, Layout, message, Typography, Modal, Switch } from 'antd';
+import { Upload, Button, Layout, message, Typography, Modal, Switch, Input } from 'antd';
 import { InboxOutlined, CodeOutlined } from '@ant-design/icons';
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
@@ -11,12 +11,15 @@ import './App.css';
 const { Header, Content } = Layout;
 const { Dragger } = Upload;
 const { Title } = Typography;
+const { TextArea } = Input;
 
 function App() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [editedCode, setEditedCode] = useState('');
   const [isEditorVisible, setIsEditorVisible] = useState(false);
+  const [editingNode, setEditingNode] = useState(null);
+  const [nodeCommand, setNodeCommand] = useState('');
 
   const props = {
     name: 'file',
@@ -30,7 +33,6 @@ function App() {
         setPreview(response.preview);
         setEditedCode(response.content);
         setUploadedFile(response.filename);
-        setIsEditorVisible(true);
       } else if (status === 'error') {
         message.error(`${info.file.name} file upload failed.`);
       }
@@ -80,6 +82,31 @@ function App() {
     }
   };
 
+  const handleNodeDoubleClick = (node) => {
+    setEditingNode(node);
+    setNodeCommand(node.command);
+  };
+
+  const handleNodeEditSave = () => {
+    if (!editingNode) return;
+
+    const taskName = editingNode.name;
+    const oldCommand = editingNode.command;
+    const newCommand = nodeCommand;
+
+    // This is a simplified way to replace the command.
+    // A more robust solution would use a proper code parser/manipulator.
+    const regex = new RegExp(`(${taskName}\\s*=\\s*Shell\\([^)]*command=)('${oldCommand}'|"${oldCommand}")`);
+    if (regex.test(editedCode)) {
+        const newCode = editedCode.replace(regex, `$1'${newCommand}'`);
+        setEditedCode(newCode);
+    } else {
+        message.error("Could not find the task command in the code to update it.");
+    }
+    
+    setEditingNode(null);
+  };
+
   const renderAppbar = () => (
     <div style={{ position: 'absolute', top: 12, right: 24, zIndex: 10, display: 'flex', gap: '16px', alignItems: 'center' }}>
         {preview && (
@@ -104,7 +131,7 @@ function App() {
       </Header>
       <Content style={{ padding: '0', height: 'calc(100vh - 64px)', background: '#f0f2f5' }}>
         {preview ? (
-            <DagGraph data={preview} />
+            <DagGraph data={preview} onNodeDoubleClick={handleNodeDoubleClick} />
         ) : (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <Dragger {...props} style={{ width: '800px', padding: '64px' }}>
@@ -120,7 +147,7 @@ function App() {
             onCancel={() => setIsEditorVisible(false)}
             width="60%"
             styles={{ body: { height: '70vh' } }}
-            destroyOnClose
+            destroyOnHidden
             draggable
             footer={[
                 <Button key="reparse" onClick={handleReparse}>
@@ -140,6 +167,19 @@ function App() {
                     overflow: 'auto',
                     border: '1px solid #d9d9d9'
                 }}
+            />
+        </Modal>
+        <Modal
+            title={`编辑节点: ${editingNode?.name}`}
+            open={!!editingNode}
+            onOk={handleNodeEditSave}
+            onCancel={() => setEditingNode(null)}
+        >
+            <p>Command:</p>
+            <TextArea 
+                rows={4} 
+                value={nodeCommand} 
+                onChange={(e) => setNodeCommand(e.target.value)} 
             />
         </Modal>
       </Content>

@@ -69,7 +69,7 @@ const simpleLayout = (data) => {
 };
 
 
-const DagGraph = ({ data }) => {
+const DagGraph = ({ data, onNodeDoubleClick }) => {
   const containerRef = useRef(null);
   const graphRef = useRef(null);
 
@@ -98,6 +98,12 @@ const DagGraph = ({ data }) => {
     });
     graphRef.current = graph;
 
+    graph.on('node:dblclick', ({ node }) => {
+      if (onNodeDoubleClick) {
+        onNodeDoubleClick(node.getData());
+      }
+    });
+
     const laidOutNodes = simpleLayout(data);
 
     const model = {
@@ -121,11 +127,12 @@ const DagGraph = ({ data }) => {
 
     return () => {
       if (graphRef.current) {
+        graphRef.current.off('node:dblclick');
         graphRef.current.dispose();
         graphRef.current = null;
       }
     };
-  }, [data]);
+  }, [data, onNodeDoubleClick]);
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
 };

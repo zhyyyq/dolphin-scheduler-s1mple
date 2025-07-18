@@ -1,47 +1,51 @@
 import React from 'react';
-import { Node } from '@antv/x6';
-import '@antv/x6-react-shape';
-import { Card, Typography } from 'antd';
-import { ShellIcon } from './ShellIcon'; // A simple SVG icon component
+import { register } from '@antv/x6-react-shape';
+import { ShellIcon } from './ShellIcon';
 
-const { Title, Text } = Typography;
-
-const TaskNode = ({ node }) => {
+const TaskNodeComponent = ({ node }) => {
   const data = node.getData();
   const { name, type, command } = data;
 
   return (
-    <Card
-      size="small"
-      title={
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <ShellIcon />
-          <Title level={5} style={{ margin: '0 0 0 8px' }}>{name}</Title>
-        </div>
-      }
+    <div
       style={{
         width: '100%',
         height: '100%',
         border: '1px solid #d9d9d9',
         borderRadius: '4px',
         background: 'white',
+        padding: '8px',
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <Text type="secondary" style={{ fontSize: '12px' }}>Type: {type}</Text>
-      <br />
-      <Text strong style={{ fontFamily: 'monospace', fontSize: '12px' }}>
-        {command}
-      </Text>
-    </Card>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+        <ShellIcon />
+        <span style={{ marginLeft: '8px', fontWeight: 'bold', fontSize: '14px' }}>{name}</span>
+      </div>
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        <p style={{ margin: '0', color: '#888', fontSize: '12px' }}>Type: {type}</p>
+        <p
+          style={{
+            margin: '4px 0 0 0',
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-all',
+            color: '#333',
+          }}
+          title={command}
+        >
+          {command}
+        </p>
+      </div>
+    </div>
   );
 };
 
-// Register the custom React component with X6
-Node.registry.register('custom-react-node', {
-  inherit: 'react-shape',
+register({
+  shape: 'custom-react-node',
   width: 250,
   height: 100,
-  component: <TaskNode />,
+  component: TaskNodeComponent,
 });
-
-export default TaskNode;
