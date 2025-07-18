@@ -96,9 +96,9 @@ function App() {
                     checked={isPreviewVisible}
                     onChange={setIsPreviewVisible}
                 />
+                <Button type="primary" size="large" onClick={handleSubmit}>提交</Button>
             </>
         )}
-        <Button type="primary" size="large" onClick={handleSubmit}>提交</Button>
     </div>
   );
 
@@ -124,7 +124,7 @@ function App() {
             />
         ) : (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                <Dragger {...props} style={{ width: '50%', padding: '48px' }}>
+                <Dragger {...props} style={{ width: '800px', padding: '64px' }}>
                     <p className="ant-upload-drag-icon"><InboxOutlined /></p>
                     <p className="ant-upload-text">请上传你的任务配置文件</p>
                     <p className="ant-upload-hint">支持拖拽或点击上传</p>
