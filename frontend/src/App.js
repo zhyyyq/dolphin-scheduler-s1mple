@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useSearchParams, Link, useLocation } from 'react-router-dom';
-import { Upload, Button, Layout, message, Typography, Modal, Switch, Input, Spin, Menu, ConfigProvider, Card } from 'antd';
+import { App as AntApp, Upload, Button, Layout, Typography, Modal, Switch, Input, Spin, Menu, ConfigProvider, Card } from 'antd';
 import { InboxOutlined, CodeOutlined, ApartmentOutlined, PlusOutlined, DashboardOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import Editor from 'react-simple-code-editor';
@@ -20,6 +20,7 @@ const { Title } = Typography;
 const { TextArea } = Input;
 
 function WorkflowEditor() {
+  const { message } = AntApp.useApp();
   const [searchParams] = useSearchParams();
   const [uploadedFile, setUploadedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -220,7 +221,7 @@ function WorkflowEditor() {
             </div>
           )
         }
-        bodyStyle={{ height: 'calc(100vh - 220px)', overflow: 'auto' }}
+        styles={{ body: { height: 'calc(100vh - 220px)', overflow: 'auto' } }}
       >
         {renderContent()}
       </Card>
@@ -272,17 +273,28 @@ function App() {
     <Layout style={{ minHeight: '100vh' }}>
       <Sider collapsible>
         <div className="logo" style={{ height: '32px', margin: '16px', background: 'rgba(255, 255, 255, 0.2)' }} />
-        <Menu theme="dark" selectedKeys={[location.pathname]} mode="inline">
-          <Menu.Item key="/dashboard" icon={<DashboardOutlined />}>
-            <Link to="/dashboard">仪表盘</Link>
-          </Menu.Item>
-          <Menu.Item key="/" icon={<ApartmentOutlined />}>
-            <Link to="/">工作流</Link>
-          </Menu.Item>
-          <Menu.Item key="/upload" icon={<PlusOutlined />}>
-            <Link to="/upload">新建工作流</Link>
-          </Menu.Item>
-        </Menu>
+        <Menu
+          theme="dark"
+          selectedKeys={[location.pathname]}
+          mode="inline"
+          items={[
+            {
+              key: '/dashboard',
+              icon: <DashboardOutlined />,
+              label: <Link to="/dashboard">仪表盘</Link>,
+            },
+            {
+              key: '/',
+              icon: <ApartmentOutlined />,
+              label: <Link to="/">工作流</Link>,
+            },
+            {
+              key: '/upload',
+              icon: <PlusOutlined />,
+              label: <Link to="/upload">新建工作流</Link>,
+            },
+          ]}
+        />
       </Sider>
       <Layout className="site-layout">
         <Header className="site-layout-background" style={{ padding: '0 16px' }}>
@@ -324,7 +336,9 @@ function AppWrapper() {
       }}
     >
       <Router>
-        <App />
+        <AntApp>
+          <App />
+        </AntApp>
       </Router>
     </ConfigProvider>
   );
