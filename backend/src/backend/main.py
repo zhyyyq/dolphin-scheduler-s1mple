@@ -137,7 +137,7 @@ async def execute_task(body: dict):
         
         logger.info(f"Executing {script_path_for_run} asynchronously.")
         returncode, stdout, stderr = await run_script_in_subprocess_async(script_path_for_run)
-        logger.info(f"Async execution finished for {script_path_for_run}.")
+        logger.info(f"Async execution finished for {script_path_for_run}. returncode: {returncode}")
 
         # Lenient success check: As per user feedback, the job runs successfully even with warnings on stderr.
         # We will only consider it a failure if a Python traceback is present.
@@ -158,7 +158,8 @@ async def execute_task(body: dict):
         return {
             "message": f"Task {filename} executed successfully.",
             "stdout": stdout,
-            "stderr": stderr
+            "stderr": stderr,
+            "returncode": returncode
         }
     except Exception as e:
         logger.error(f"Unhandled exception in /api/execute for file {filename}: {e}", exc_info=True)

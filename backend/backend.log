@@ -214,3 +214,35 @@ fastapi.exceptions.HTTPException: 500: {'message': 'Failed to execute task tutor
 2025-07-18 14:20:40,664 - src.backend.main - INFO - Script uploads\tutorial.py finished with return code 0.
 2025-07-18 14:20:40,664 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py.
 2025-07-18 14:20:40,664 - src.backend.main - INFO - Execution successful for tutorial.py.
+2025-07-18 14:23:12,217 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-18 14:23:12,217 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-18 14:23:12,217 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:109]
+2025-07-18 14:23:12,217 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-18 14:23:12,217 - python_multipart.multipart - DEBUG - Calling on_header_field with data[111:123]
+2025-07-18 14:23:12,217 - python_multipart.multipart - DEBUG - Calling on_header_value with data[125:138]
+2025-07-18 14:23:12,217 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-18 14:23:12,217 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-18 14:23:12,217 - python_multipart.multipart - DEBUG - Calling on_part_data with data[142:3036]
+2025-07-18 14:23:12,217 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-18 14:23:12,217 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-18 14:23:13,765 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:23:13,765 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:23:13,765 - src.backend.main - INFO - Executing uploads\tutorial.py asynchronously.
+2025-07-18 14:23:13,765 - src.backend.main - INFO - Attempting to run script asynchronously: uploads\tutorial.py
+2025-07-18 14:23:14,211 - src.backend.main - INFO - Script uploads\tutorial.py finished with return code 0.
+2025-07-18 14:23:14,211 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py.
+2025-07-18 14:23:14,211 - src.backend.main - INFO - Execution considered successful for tutorial.py.
+2025-07-18 14:26:56,237 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:26:56,237 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:26:56,237 - src.backend.main - INFO - Executing uploads\tutorial.py asynchronously.
+2025-07-18 14:26:56,237 - src.backend.main - INFO - Attempting to run script asynchronously: uploads\tutorial.py
+2025-07-18 14:26:56,713 - src.backend.main - INFO - Script uploads\tutorial.py finished with return code 0.
+2025-07-18 14:26:56,713 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py. returncode: 0
+2025-07-18 14:26:56,713 - src.backend.main - INFO - Execution considered successful for tutorial.py.
+2025-07-18 14:28:23,764 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:28:23,764 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:28:23,764 - src.backend.main - INFO - Executing uploads\tutorial.py asynchronously.
+2025-07-18 14:28:23,764 - src.backend.main - INFO - Attempting to run script asynchronously: uploads\tutorial.py
+2025-07-18 14:28:24,201 - src.backend.main - INFO - Script uploads\tutorial.py finished with return code 0.
+2025-07-18 14:28:24,201 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py.
+2025-07-18 14:28:24,201 - src.backend.main - INFO - Execution considered successful for tutorial.py.
