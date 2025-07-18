@@ -40,29 +40,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def run_script_in_subprocess(script_path: str) -> (int, str, str):
+async def run_script_in_subprocess_async(script_path: str) -> (int, str, str):
     """
-    Runs a script in a subprocess and returns the result.
-    This is a blocking, synchronous function.
+    Runs a script in a subprocess asynchronously and returns the result.
     """
-    logger.info(f"Attempting to run script: {script_path}")
-    python_executable = sys.executable
+    logger.info(f"Attempting to run script asynchronously: {script_path}")
     try:
-        result = subprocess.run(
-            [python_executable, "-m", "uv", "run", script_path],
-            capture_output=True,
-            text=True,
-            check=False,  # We'll check the returncode manually
-            encoding='utf-8',
+        proc = await asyncio.create_subprocess_exec(
+            "uv", "run", script_path,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
             cwd=BACKEND_DIR
         )
-        logger.info(f"Script {script_path} finished with return code {result.returncode}.")
-        return result.returncode, result.stdout, result.stderr
+        
+        stdout, stderr = await proc.communicate()
+        
+        decoded_stdout = stdout.decode('utf-8')
+        decoded_stderr = stderr.decode('utf-8')
+        
+        logger.info(f"Script {script_path} finished with return code {proc.returncode}.")
+        return proc.returncode, decoded_stdout, decoded_stderr
     except FileNotFoundError:
-        logger.error("FileNotFoundError: Python or uv executable not found.")
-        return -1, "", "Error: Python or uv executable not found."
+        logger.error("FileNotFoundError: uv executable not found.")
+        return -1, "", "Error: uv executable not found."
     except Exception as e:
-        logger.error(f"Unexpected error in subprocess: {e}", exc_info=True)
+        logger.error(f"Unexpected error in async subprocess: {e}", exc_info=True)
         return -1, "", f"An unexpected error occurred: {str(e)}"
 
 
@@ -130,18 +132,12 @@ async def execute_task(body: dict):
     logger.info(f"Saved code to {file_path}")
 
     try:
-        loop = asyncio.get_running_loop()
-        
         # The script path for `uv run` should be relative to the cwd (BACKEND_DIR)
         script_path_for_run = os.path.join("uploads", filename)
         
-        logger.info(f"Scheduling {script_path_for_run} to run in executor.")
-        # Run the blocking subprocess call in a separate thread
-        returncode, stdout, stderr = await loop.run_in_executor(
-            None,  # Use the default thread pool executor
-            functools.partial(run_script_in_subprocess, script_path_for_run)
-        )
-        logger.info(f"Executor finished for {script_path_for_run}.")
+        logger.info(f"Executing {script_path_for_run} asynchronously.")
+        returncode, stdout, stderr = await run_script_in_subprocess_async(script_path_for_run)
+        logger.info(f"Async execution finished for {script_path_for_run}.")
 
         if returncode != 0:
             logger.warning(f"Execution failed for {filename} with return code {returncode}.")

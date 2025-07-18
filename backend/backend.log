@@ -1,0 +1,52 @@
+2025-07-18 14:12:20,782 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:12:20,782 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:12:20,782 - src.backend.main - INFO - Scheduling uploads\tutorial.py to run in executor.
+2025-07-18 14:12:20,783 - src.backend.main - INFO - Attempting to run script: uploads\tutorial.py
+2025-07-18 14:12:20,811 - src.backend.main - INFO - Script uploads\tutorial.py finished with return code 1.
+2025-07-18 14:12:20,811 - src.backend.main - INFO - Executor finished for uploads\tutorial.py.
+2025-07-18 14:12:20,811 - src.backend.main - WARNING - Execution failed for tutorial.py with return code 1.
+2025-07-18 14:12:20,811 - src.backend.main - WARNING - STDOUT: 
+2025-07-18 14:12:20,811 - src.backend.main - WARNING - STDERR: D:\scheduler\backend\.venv\Scripts\python.exe: No module named uv
+
+2025-07-18 14:12:20,811 - src.backend.main - ERROR - Unhandled exception in /api/execute for file tutorial.py: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'D:\\scheduler\\backend\\.venv\\Scripts\\python.exe: No module named uv\n'}
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 150, in execute_task
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'D:\\scheduler\\backend\\.venv\\Scripts\\python.exe: No module named uv\n'}
+2025-07-18 14:15:02,831 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:15:02,831 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:15:02,831 - src.backend.main - INFO - Scheduling uploads\tutorial.py to run in executor.
+2025-07-18 14:15:02,831 - src.backend.main - INFO - Attempting to run script: uploads\tutorial.py
+2025-07-18 14:15:02,921 - src.backend.main - INFO - Script uploads\tutorial.py finished with return code 3221225786.
+2025-07-18 14:15:02,921 - src.backend.main - INFO - Executor finished for uploads\tutorial.py.
+2025-07-18 14:15:02,921 - src.backend.main - WARNING - Execution failed for tutorial.py with return code 3221225786.
+2025-07-18 14:15:02,921 - src.backend.main - WARNING - STDOUT: 
+2025-07-18 14:15:02,921 - src.backend.main - WARNING - STDERR: Traceback (most recent call last):
+  File "D:\scheduler\backend\uploads\tutorial.py", line 35, in <module>
+    from pydolphinscheduler.core.workflow import Workflow
+  File "D:\scheduler\backend\.venv\Lib\site-packages\pydolphinscheduler\core\__init__.py", line 20, in <module>
+    from pydolphinscheduler.core.engine import Engine
+  File "D:\scheduler\backend\.venv\Lib\site-packages\pydolphinscheduler\core\engine.py", line 24, in <module>
+    from pydolphinscheduler.core.task import BatchTask
+  File "D:\scheduler\backend\.venv\Lib\site-packages\pydolphinscheduler\core\task.py", line 29, in <module>
+    from pydolphinscheduler import configuration
+  File "D:\scheduler\backend\.venv\Lib\site-packages\pydolphinscheduler\configuration.py", line 26, in <module>
+    from pydolphinscheduler.utils.yaml_parser import YamlParser
+  File "D:\scheduler\backend\.venv\Lib\site-packages\pydolphinscheduler\utils\yaml_parser.py", line 25, in <module>
+    from ruamel.yaml import YAML
+  File "D:\scheduler\backend\.venv\Lib\site-packages\ruamel\yaml\__init__.py", line 43, in <module>
+    from .cyaml import *  # NOQA
+    ^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1091, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1190, in get_data
+KeyboardInterrupt
+
+2025-07-18 14:15:02,921 - src.backend.main - ERROR - Unhandled exception in /api/execute for file tutorial.py: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'Traceback (most recent call last):\n  File "D:\\scheduler\\backend\\uploads\\tutorial.py", line 35, in <module>\n    from pydolphinscheduler.core.workflow import Workflow\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\core\\__init__.py", line 20, in <module>\n    from pydolphinscheduler.core.engine import Engine\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\core\\engine.py", line 24, in <module>\n    from pydolphinscheduler.core.task import BatchTask\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\core\\task.py", line 29, in <module>\n    from pydolphinscheduler import configuration\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\configuration.py", line 26, in <module>\n    from pydolphinscheduler.utils.yaml_parser import YamlParser\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\utils\\yaml_parser.py", line 25, in <module>\n    from ruamel.yaml import YAML\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\ruamel\\yaml\\__init__.py", line 43, in <module>\n    from .cyaml import *  # NOQA\n    ^^^^^^^^^^^^^^^^^^^^\n  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load\n  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked\n  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked\n  File "<frozen importlib._bootstrap_external>", line 995, in exec_module\n  File "<frozen importlib._bootstrap_external>", line 1091, in get_code\n  File "<frozen importlib._bootstrap_external>", line 1190, in get_data\nKeyboardInterrupt\n'}
+Traceback (most recent call last):
+  File "D:\scheduler\backend\src\backend\main.py", line 149, in execute_task
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 500: {'message': 'Failed to execute task tutorial.py.', 'stdout': '', 'stderr': 'Traceback (most recent call last):\n  File "D:\\scheduler\\backend\\uploads\\tutorial.py", line 35, in <module>\n    from pydolphinscheduler.core.workflow import Workflow\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\core\\__init__.py", line 20, in <module>\n    from pydolphinscheduler.core.engine import Engine\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\core\\engine.py", line 24, in <module>\n    from pydolphinscheduler.core.task import BatchTask\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\core\\task.py", line 29, in <module>\n    from pydolphinscheduler import configuration\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\configuration.py", line 26, in <module>\n    from pydolphinscheduler.utils.yaml_parser import YamlParser\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\pydolphinscheduler\\utils\\yaml_parser.py", line 25, in <module>\n    from ruamel.yaml import YAML\n  File "D:\\scheduler\\backend\\.venv\\Lib\\site-packages\\ruamel\\yaml\\__init__.py", line 43, in <module>\n    from .cyaml import *  # NOQA\n    ^^^^^^^^^^^^^^^^^^^^\n  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load\n  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked\n  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked\n  File "<frozen importlib._bootstrap_external>", line 995, in exec_module\n  File "<frozen importlib._bootstrap_external>", line 1091, in get_code\n  File "<frozen importlib._bootstrap_external>", line 1190, in get_data\nKeyboardInterrupt\n'}
