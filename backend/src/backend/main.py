@@ -4,6 +4,8 @@ import shutil
 import os
 import subprocess
 import sys
+import asyncio
+import functools
 from .parser import parse_workflow
 
 app = FastAPI()
@@ -24,6 +26,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def run_script_in_subprocess(script_path: str) -> (int, str, str):
+    """
+    Runs a script in a subprocess and returns the result.
+    This is a blocking, synchronous function.
+    """
+    python_executable = sys.executable
+    try:
+        result = subprocess.run(
+            [python_executable, "-m", "uv", "run", script_path],
+            capture_output=True,
+            text=True,
+            check=False,  # We'll check the returncode manually
+            encoding='utf-8',
+            cwd=BACKEND_DIR
+        )
+        return result.returncode, result.stdout, result.stderr
+    except FileNotFoundError:
+        # This can happen if `python` or `uv` is not found.
+        return -1, "", "Error: Python or uv executable not found."
+    except Exception as e:
+        return -1, "", f"An unexpected error occurred: {str(e)}"
+
 
 @app.get("/")
 async def read_root():
@@ -85,31 +110,33 @@ async def execute_task(body: dict):
         f.write(code)
 
     try:
+        loop = asyncio.get_running_loop()
+        
         # The script path for `uv run` should be relative to the cwd (BACKEND_DIR)
         script_path_for_run = os.path.join("uploads", filename)
         
-        result = subprocess.run(
-            ["uv", "run", script_path_for_run],
-            capture_output=True,
-            text=True,
-            check=True,
-            encoding='utf-8',
-            cwd=BACKEND_DIR # Run from the `backend` directory
+        # Run the blocking subprocess call in a separate thread
+        returncode, stdout, stderr = await loop.run_in_executor(
+            None,  # Use the default thread pool executor
+            functools.partial(run_script_in_subprocess, script_path_for_run)
         )
-        
+
+        if returncode != 0:
+            raise HTTPException(
+                status_code=500, 
+                detail={
+                    "message": f"Failed to execute task {filename}.",
+                    "stdout": stdout,
+                    "stderr": stderr
+                }
+            )
+
         return {
             "message": f"Task {filename} executed successfully.",
-            "stdout": result.stdout,
-            "stderr": result.stderr
+            "stdout": stdout,
+            "stderr": stderr
         }
-    except subprocess.CalledProcessError as e:
-        raise HTTPException(
-            status_code=500, 
-            detail={
-                "message": f"Failed to execute task {filename}.",
-                "stdout": e.stdout,
-                "stderr": e.stderr
-            }
-        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Unhandled exception: {str(e)}")
