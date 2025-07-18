@@ -7,6 +7,7 @@ import sys
 import asyncio
 import functools
 import logging
+import httpx
 from .parser import parse_workflow
 
 # Define project root and uploads directory consistently
@@ -117,6 +118,41 @@ async def reparse_code(body: dict):
     except Exception as e:
         logger.error(f"Error in /api/reparse: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to re-parse code: {e}")
+
+@app.get("/api/projects")
+async def get_projects():
+    # Hardcoded credentials from user input
+    ds_url = "http://localhost:12345/dolphinscheduler"
+    token = "8b6c34a254ca718549ac877b10804235"
+    
+    projects_url = f"{ds_url.rstrip('/')}/projects"
+    headers = {"token": token}
+
+    try:
+        async with httpx.AsyncClient() as client:
+            # Get the list of projects
+            response = await client.get(
+                projects_url,
+                headers=headers,
+                params={"pageNo": 1, "pageSize": 100} # Fetch up to 100 projects
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            if data.get("code") != 0:
+                logger.error(f"DolphinScheduler API error: {data.get('msg')}")
+                raise HTTPException(status_code=500, detail=f"DolphinScheduler API error: {data.get('msg')}")
+            
+            project_list = data.get("data", {}).get("totalList", [])
+            return project_list
+
+    except httpx.RequestError as e:
+        logger.error(f"Could not connect to DolphinScheduler: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail=f"Could not connect to DolphinScheduler: {e}")
+    except Exception as e:
+        logger.error(f"Error fetching projects from DolphinScheduler: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/execute")
 async def execute_task(body: dict):

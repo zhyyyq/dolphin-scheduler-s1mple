@@ -303,3 +303,17 @@ fastapi.exceptions.HTTPException: 500: {'message': 'Failed to execute task tutor
 2025-07-18 14:33:47,738 - src.backend.main - INFO - Script uploads\tutorial.py finished with return code 0.
 2025-07-18 14:33:47,738 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py. returncode: 0
 2025-07-18 14:33:47,739 - src.backend.main - INFO - Execution considered successful for tutorial.py.
+2025-07-18 14:35:25,694 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:35:25,694 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:35:25,694 - src.backend.main - INFO - Executing uploads\tutorial.py asynchronously.
+2025-07-18 14:35:25,694 - src.backend.main - INFO - Attempting to run script asynchronously: uploads\tutorial.py
+2025-07-18 14:35:26,138 - src.backend.main - INFO - Script uploads\tutorial.py finished with return code 0.
+2025-07-18 14:35:26,138 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py. returncode: 0
+2025-07-18 14:35:26,138 - src.backend.main - INFO - Execution considered successful for tutorial.py.
+2025-07-18 14:36:02,250 - src.backend.main - INFO - Received request to /api/execute for file: tutorial.py
+2025-07-18 14:36:02,250 - src.backend.main - INFO - Saved code to D:\scheduler\backend\uploads\tutorial.py
+2025-07-18 14:36:02,250 - src.backend.main - INFO - Executing uploads\tutorial.py asynchronously.
+2025-07-18 14:36:02,250 - src.backend.main - INFO - Attempting to run script asynchronously: uploads\tutorial.py
+2025-07-18 14:36:02,712 - src.backend.main - INFO - Script uploads\tutorial.py finished with return code 0.
+2025-07-18 14:36:02,712 - src.backend.main - INFO - Async execution finished for uploads\tutorial.py. returncode: 0
+2025-07-18 14:36:02,712 - src.backend.main - INFO - Execution considered successful for tutorial.py.
