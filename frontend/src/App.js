@@ -81,7 +81,6 @@ function App() {
 
       if (response.ok && result.returncode === 0) {
         message.success(result.message || 'Task executed successfully.');
-        setExecutionResult(result);
       } else {
         const errorMessage = result.detail?.message || result.message || 'Failed to submit task for execution.';
         message.error(errorMessage);
