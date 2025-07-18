@@ -49,8 +49,8 @@ const simpleLayout = (data) => {
     }
   }
 
-  const x_gap = 300; // Increased gap for wider nodes
-  const y_gap = 150; // Increased gap for taller nodes
+  const x_gap = 300;
+  const y_gap = 150;
   const laidOutNodes = [];
 
   for (const [level, nodesInLevel] of levels.entries()) {
@@ -73,39 +73,50 @@ const DagGraph = ({ data, onNodeDoubleClick }) => {
   const containerRef = useRef(null);
   const graphRef = useRef(null);
 
+  // Effect for initializing the graph instance once
   useEffect(() => {
-    if (!containerRef.current || !data || !data.tasks || data.tasks.length === 0) {
+    if (containerRef.current && !graphRef.current) {
+      const graph = new Graph({
+        container: containerRef.current,
+        panning: true,
+        mousewheel: true,
+        autoResize: true,
+        background: { color: '#f0f2f5' },
+        connecting: {
+          snap: true,
+          router: 'manhattan',
+          connector: 'rounded',
+        },
+      });
+      graphRef.current = graph;
+
+      graph.on('node:dblclick', ({ node }) => {
+        if (onNodeDoubleClick) {
+          onNodeDoubleClick(node.getData());
+        }
+      });
+    }
+    
+    // Cleanup when the component unmounts
+    return () => {
+      if (graphRef.current) {
+        graphRef.current.dispose();
+        graphRef.current = null;
+      }
+    };
+  }, [onNodeDoubleClick]);
+
+  // Effect for updating the graph with new data
+  useEffect(() => {
+    const graph = graphRef.current;
+    if (!graph || !data) return;
+
+    if (!data.tasks || data.tasks.length === 0) {
+      graph.clearCells();
       return;
     }
 
-    if (graphRef.current) {
-      graphRef.current.dispose();
-    }
-
-    const graph = new Graph({
-      container: containerRef.current,
-      panning: true,
-      mousewheel: true,
-      autoResize: true,
-      background: {
-        color: '#f0f2f5',
-      },
-      connecting: {
-        snap: true,
-        router: 'manhattan',
-        connector: 'rounded',
-      },
-    });
-    graphRef.current = graph;
-
-    graph.on('node:dblclick', ({ node }) => {
-      if (onNodeDoubleClick) {
-        onNodeDoubleClick(node.getData());
-      }
-    });
-
     const laidOutNodes = simpleLayout(data);
-
     const model = {
       nodes: laidOutNodes.map(node => ({
         id: node.id,
@@ -125,18 +136,7 @@ const DagGraph = ({ data, onNodeDoubleClick }) => {
     graph.fromJSON(model);
     graph.centerContent();
 
-    return () => {
-      const graphInstance = graphRef.current;
-      graphRef.current = null;
-      if (graphInstance) {
-        // Delay disposal to avoid conflict with React's rendering cycle
-        setTimeout(() => {
-            graphInstance.off('node:dblclick');
-            graphInstance.dispose();
-        }, 0);
-      }
-    };
-  }, [data, onNodeDoubleClick]);
+  }, [data]);
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
 };
