@@ -29,41 +29,53 @@ function WorkflowEditor() {
   const [nodeCommand, setNodeCommand] = useState('');
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionResult, setExecutionResult] = useState(null);
-  const [isLoadingWorkflow, setIsLoadingWorkflow] = useState(false);
-
+  const handleReparse =  useCallback(async (codeToParse) => {
+    const code = typeof codeToParse === 'string' ? codeToParse : editedCode;
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/reparse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code }),
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setPreview(result.preview);
+        if (typeof codeToParse !== 'string') {
+          message.success('代码已重新解析，DAG 图已更新。');
+        }
+      } else {
+        message.error('重新解析代码失败。');
+      }
+    } catch (error) {
+      message.error('重新解析时发生错误。');
+    }
+  }, [editedCode]);
   useEffect(() => {
-    const projectCode = searchParams.get('projectCode');
-    const workflowCode = searchParams.get('workflowCode');
-    if (projectCode && workflowCode) {
-      const fetchWorkflowForEdit = async () => {
-        setIsLoadingWorkflow(true);
+    const workflowName = searchParams.get('workflowName');
+    if (workflowName) {
+      const fetchWorkflowContent = async () => {
         try {
-          const response = await fetch(`http://127.0.0.1:8000/api/project/${projectCode}/workflow/${workflowCode}`);
+          const response = await fetch(`http://127.0.0.1:8000/api/workflow/${workflowName}/content`);
           if (!response.ok) {
-            throw new Error('Failed to fetch workflow for editing.');
+            throw new Error('Failed to fetch workflow content for editing.');
           }
           const data = await response.json();
-          // We need to reconstruct the python code from the parsed data.
-          // This is a simplification. A real implementation would be more complex.
-          let reconstructedCode = `from pydolphinscheduler.tasks import Shell\nfrom pydolphinscheduler.workflow import Workflow\n\n`;
-          reconstructedCode += `with Workflow(name='${data.name}', schedule='0 0 0 * * ? *') as wf:\n`;
-          for (const task of data.tasks) {
-            reconstructedCode += `    ${task.name} = Shell(name='${task.name}', command='${task.command}')\n`;
-          }
-          // Note: Reconstructing relations (<<) is complex and omitted here for brevity.
           
-          setEditedCode(reconstructedCode);
-          setPreview(data);
-          setIsEditorVisible(true);
+          setEditedCode(data.content);
+          setUploadedFile(data.filename); // Set the filename for future submits
+          // setIsEditorVisible(true); // Do not open automatically
+          
+          // Also, re-parse the content to show the DAG
+          handleReparse(data.content);
+
         } catch (error) {
           message.error(error.message);
         } finally {
-          setIsLoadingWorkflow(false);
         }
       };
-      fetchWorkflowForEdit();
+      fetchWorkflowContent();
     }
-  }, [searchParams]);
+  }, [searchParams, handleReparse]);
 
   const props = {
     name: 'file',
@@ -77,31 +89,14 @@ function WorkflowEditor() {
         setPreview(response.preview);
         setEditedCode(response.content);
         setUploadedFile(response.filename);
-        setIsEditorVisible(true); // Automatically open the editor on upload
+        // setIsEditorVisible(true); // Do not open automatically
       } else if (status === 'error') {
         message.error(`文件 ${info.file.name} 上传失败。`);
       }
     },
   };
 
-  const handleReparse = async () => {
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/reparse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: editedCode }),
-      });
-      if (response.ok) {
-        const result = await response.json();
-        setPreview(result.preview);
-        message.success('代码已重新解析，DAG 图已更新。');
-      } else {
-        message.error('重新解析代码失败。');
-      }
-    } catch (error) {
-      message.error('重新解析时发生错误。');
-    }
-  };
+  
 
   const handleSubmit = async () => {
     if (!uploadedFile) {
@@ -144,22 +139,40 @@ function WorkflowEditor() {
     setNodeCommand(node.command);
   }, []);
 
-  const handleNodeEditSave = () => {
+  const handleNodeEditSave = async () => {
     if (!editingNode) return;
 
     const taskName = editingNode.name;
-    const oldCommand = editingNode.command;
     const newCommand = nodeCommand;
 
-    const regex = new RegExp(`(${taskName}\\s*=\\s*Shell\\([^)]*command=)('${oldCommand}'|"${oldCommand}")`);
-    if (regex.test(editedCode)) {
-        const newCode = editedCode.replace(regex, `$1'${newCommand}'`);
-        setEditedCode(newCode);
-    } else {
-        message.error("无法在代码中找到需要更新的任务命令。");
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/update-command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: editedCode,
+          task_name: taskName,
+          new_command: newCommand,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to update command.');
+      }
+
+      const result = await response.json();
+      setEditedCode(result.new_code);
+      message.success(`节点 ${taskName} 的命令已更新。`);
+      
+      // Also re-parse to update the DAG view with the new command
+      handleReparse(result.new_code);
+
+    } catch (error) {
+      message.error(`更新失败: ${error.message}`);
+    } finally {
+      setEditingNode(null);
     }
-    
-    setEditingNode(null);
   };
 
   const renderAppbar = () => (
@@ -267,11 +280,11 @@ function App() {
       <Sider collapsible>
         <div className="logo" style={{ height: '32px', margin: '16px', background: 'rgba(255, 255, 255, 0.2)' }} />
         <Menu theme="dark" selectedKeys={[location.pathname]} mode="inline">
-          <Menu.Item key="/dashboard" icon={<DashboardOutlined />}>
-            <Link to="/dashboard">仪表盘</Link>
+          <Menu.Item key="/" icon={<DashboardOutlined />}>
+            <Link to="/">仪表盘</Link>
           </Menu.Item>
-          <Menu.Item key="/" icon={<ApartmentOutlined />}>
-            <Link to="/">工作流</Link>
+          <Menu.Item key="/workflows" icon={<ApartmentOutlined />}>
+            <Link to="/workflows">工作流</Link>
           </Menu.Item>
           <Menu.Item key="/upload" icon={<PlusOutlined />}>
             <Link to="/upload">新建工作流</Link>
@@ -284,8 +297,8 @@ function App() {
         </Header>
         <Content style={{ margin: '16px' }}>
           <Routes>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/workflows" element={<Home />} />
             <Route path="/upload" element={<WorkflowEditor />} />
             <Route path="/project/:projectCode/workflow/:workflowCode" element={<WorkflowViewer />} />
             <Route path="/workflow/:workflowName/history" element={<VersionHistory />} />

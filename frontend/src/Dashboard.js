@@ -4,11 +4,13 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recha
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
 
 const COLORS = {
-  success: '#87d068',
-  failure: '#f50',
-  running: '#2db7f5',
-  other: '#108ee9',
+  success: '#52c41a', // 成功 - 绿色
+  failure: '#f5222d', // 失败 - 红色
+  running: '#1890ff', // 执行中 - 蓝色
+  other: '#fa8c16',  // 其他 - 橙色
 };
+
+const PIE_COLORS = [COLORS.success, COLORS.failure, COLORS.running, COLORS.other];
 
 const STATE_MAP = {
   SUCCESS: '成功',
@@ -69,25 +71,52 @@ function Dashboard() {
   ];
 
   return (
-    <div>
+    <div style={{ padding: '24px', background: '#fff', borderRadius: '8px' }}>
       <Row gutter={16}>
         <Col span={6}>
-          <Card>
-            <Statistic title="成功" value={stats.success} prefix={<CheckCircleOutlined />} valueStyle={{ color: COLORS.success }} />
+          <Card style={{ padding: '16px' }}>
+            <Statistic 
+              title="成功" 
+              value={stats.success} 
+              valueStyle={{ color: COLORS.success }}
+              formatter={(value) => (
+                <div style={{ color: COLORS.success }}>
+                  <CheckCircleOutlined /> {value}
+                </div>
+              )}
+            />
           </Card>
         </Col>
         <Col span={6}>
-          <Card>
-            <Statistic title="失败" value={stats.failure} prefix={<CloseCircleOutlined />} valueStyle={{ color: COLORS.failure }} />
+          <Card style={{ padding: '16px' }}>
+            <Statistic 
+              title="失败" 
+              value={stats.failure} 
+              valueStyle={{ color: COLORS.failure }}
+              formatter={(value) => (
+                <div style={{ color: COLORS.failure }}>
+                  <CloseCircleOutlined /> {value}
+                </div>
+              )}
+            />
           </Card>
         </Col>
         <Col span={6}>
-          <Card>
-            <Statistic title="运行中" value={stats.running} prefix={<SyncOutlined spin />} valueStyle={{ color: COLORS.running }} />
+          <Card style={{ padding: '16px' }}>
+            <Statistic 
+              title="运行中" 
+              value={stats.running} 
+              valueStyle={{ color: COLORS.running }}
+              formatter={(value) => (
+                <div style={{ color: COLORS.running }}>
+                  <SyncOutlined spin /> {value}
+                </div>
+              )}
+            />
           </Card>
         </Col>
         <Col span={6}>
-          <Card>
+          <Card style={{ padding: '16px' }}>
             <Statistic title="总计" value={stats.total} />
           </Card>
         </Col>
@@ -99,7 +128,7 @@ function Dashboard() {
               <PieChart>
                 <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label>
                   {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[entry.name.toLowerCase().replace(' ', '')]} />
+                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />
@@ -109,7 +138,7 @@ function Dashboard() {
           </Card>
         </Col>
         <Col span={16}>
-          <Card title="最近工作流实例">
+          <Card title="最近工作流实例" style={{ height: '100%' }}>
             <Table
               columns={recentInstancesColumns}
               dataSource={stats.recent_instances}

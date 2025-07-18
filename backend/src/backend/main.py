@@ -8,6 +8,7 @@ import asyncio
 import functools
 import logging
 import httpx
+import ast
 from .parser import parse_workflow
 
 # Define project root and workflow repo directory consistently
@@ -258,6 +259,78 @@ async def get_workflow_details(project_code: int, workflow_code: int):
     except Exception as e:
         logger.error(f"Error fetching workflow details: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class CommandUpdater(ast.NodeTransformer):
+    def __init__(self, task_name, new_command):
+        self.task_name = task_name
+        self.new_command = new_command
+        self.found = False
+
+    def visit_Assign(self, node):
+        # We are looking for `task_name = Shell(...)`
+        if (len(node.targets) == 1 and
+                isinstance(node.targets[0], ast.Name) and
+                node.targets[0].id == self.task_name and
+                isinstance(node.value, ast.Call) and
+                hasattr(node.value.func, 'id') and # Make sure it's a simple name, not an attribute
+                node.value.func.id == 'Shell'):
+            
+            # Found the assignment. Now find the `command` keyword.
+            for keyword in node.value.keywords:
+                if keyword.arg == 'command':
+                    # Update the command value.
+                    keyword.value = ast.Constant(self.new_command)
+                    self.found = True
+                    break
+        return node
+
+@app.post("/api/update-command")
+async def update_command(body: dict):
+    code = body.get("code")
+    task_name = body.get("task_name")
+    new_command = body.get("new_command")
+
+    if code is None or task_name is None or new_command is None:
+        raise HTTPException(status_code=400, detail="Missing required fields: code, task_name, new_command.")
+
+    try:
+        tree = ast.parse(code)
+        updater = CommandUpdater(task_name, new_command)
+        new_tree = updater.visit(tree)
+        
+        if not updater.found:
+            raise HTTPException(status_code=404, detail=f"Task '{task_name}' with a 'command' argument not found.")
+
+        # ast.unparse is available in Python 3.9+
+        new_code = ast.unparse(new_tree)
+        return {"new_code": new_code}
+    except SyntaxError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid Python code syntax: {e}")
+    except Exception as e:
+        logger.error(f"Error updating command for task {task_name}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to update command: {e}")
+
+
+@app.get("/api/workflow/{workflow_name}/content")
+async def get_workflow_content(workflow_name: str):
+    """Gets the raw content of a specific workflow file."""
+    try:
+        # Basic security check to prevent path traversal
+        if ".." in workflow_name or "/" in workflow_name or "\\" in workflow_name:
+            raise HTTPException(status_code=400, detail="Invalid workflow name.")
+            
+        file_path = os.path.join(WORKFLOW_REPO_DIR, workflow_name)
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Workflow file not found.")
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        return {"content": content, "filename": workflow_name}
+    except Exception as e:
+        logger.error(f"Error reading workflow file {workflow_name}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Could not read workflow file: {e}")
 
 
 @app.delete("/api/project/{project_code}/workflow/{workflow_code}")

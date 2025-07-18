@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Table, Spin, Alert, Typography, Tag, Button, Space,
   message
@@ -12,7 +12,7 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const handleDelete = async (record) => {
+  const handleDelete = useCallback(async (record) => {
     try {
       const response = await fetch(`http://127.0.0.1:8000/api/project/${record.projectCode}/workflow/${record.code}`, {
         method: 'DELETE',
@@ -26,7 +26,7 @@ function Home() {
     } catch (error) {
       message.error(error.message);
     }
-  };
+  }, []);
 
   const columns = [
     {
@@ -60,7 +60,7 @@ function Home() {
       render: (_, record) => (
         <Space size="middle">
           <Link to={`/project/${record.projectCode}/workflow/${record.code}`}>查看</Link>
-          <Link to={`/upload?projectCode=${record.projectCode}&workflowCode=${record.code}`}>修改</Link>
+          <Link to={`/upload?workflowName=${record.name}.py`}>修改</Link>
           <Link to={`/workflow/${record.name}.py/history`}>历史</Link>
           <Button type="link" danger onClick={() => handleDelete(record)}>删除</Button>
         </Space>
