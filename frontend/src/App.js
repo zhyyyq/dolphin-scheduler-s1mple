@@ -11,6 +11,7 @@ import DagGraph from './DagGraph';
 import Home from './Home';
 import WorkflowViewer from './WorkflowViewer';
 import Dashboard from './Dashboard';
+import VersionHistory from './VersionHistory';
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
@@ -287,6 +288,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/upload" element={<WorkflowEditor />} />
             <Route path="/project/:projectCode/workflow/:workflowCode" element={<WorkflowViewer />} />
+            <Route path="/workflow/:workflowName/history" element={<VersionHistory />} />
           </Routes>
         </Content>
       </Layout>
