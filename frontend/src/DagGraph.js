@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Graph } from '@antv/x6';
-import { DagreLayout } from '@antv/layout';
+import { Layout } from '@antv/layout';
 
 const DagGraph = ({ data }) => {
   const containerRef = useRef(null);
@@ -53,7 +53,7 @@ const DagGraph = ({ data }) => {
       })),
     };
 
-    const dagreLayout = new DagreLayout({
+    const dagreLayout = new Layout({
       type: 'dagre',
       rankdir: 'LR', // Left to Right
       align: 'UL',
