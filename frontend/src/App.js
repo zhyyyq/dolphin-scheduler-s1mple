@@ -80,7 +80,10 @@ function App() {
       const result = await response.json();
 
       if (response.ok && result.returncode === 0) {
-        message.success(result.message || 'Task executed successfully.');
+        setExecutionResult(result);
+        setTimeout(() => {
+          message.success(result.message || 'Task executed successfully.');
+        }, 0);
       } else {
         const errorMessage = result.detail?.message || result.message || 'Failed to submit task for execution.';
         message.error(errorMessage);
