@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { List, Spin, Alert, Typography, Modal, Card, Button } from 'antd';
 import { Diff, Hunk, parseDiff, FileData } from 'react-diff-view';
