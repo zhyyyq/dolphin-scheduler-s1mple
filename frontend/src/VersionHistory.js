@@ -63,9 +63,9 @@ function VersionHistory() {
       <List
         itemLayout="horizontal"
         dataSource={history}
-        renderItem={item => (
+        renderItem={(item, index) => (
           <List.Item
-            actions={[<a onClick={() => handleViewDiff(item)}>查看差异</a>]}
+            actions={index < history.length - 1 ? [<a onClick={() => handleViewDiff(item)}>查看差异</a>] : []}
           >
             <List.Item.Meta
               title={<Text strong>{item.message}</Text>}
