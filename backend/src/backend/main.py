@@ -1,7 +1,8 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
+from .parser import parse_workflow
 
 app = FastAPI()
 
@@ -26,32 +27,39 @@ async def read_root():
 async def parse_python_file(file: UploadFile = File(...)):
     """
     Parses the uploaded Python file to extract task information.
-    For now, this is a mock implementation.
     """
-    # In a real implementation, you would parse the file content
-    # to extract DAG, schedule, etc.
-    # For example, using ast module or regex.
-    
-    # For demonstration, we save the file and return mock data
-    upload_dir = "uploads"
-    os.makedirs(upload_dir, exist_ok=True)
-    file_path = os.path.join(upload_dir, file.filename)
-    
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        content = await file.read()
+        content_str = content.decode('utf-8')
+        
+        parsed_data = parse_workflow(content_str)
 
-    # Mock response based on the UI design
-    return {
-        "filename": file.filename,
-        "preview": {
-            "dag_image_url": "https://user-images.githubusercontent.com/1018939/232727011-8f0c9448-3b32-4544-a87a-275d5e317193.png",
-            "schedule": "2022-01-01 00:00:00 - 9999-12-31 23:59:59",
-            "crontab": "0 0 0 * * ?"
+        # For now, we still use a placeholder for the DAG image.
+        # A real implementation would generate this image based on parsed_data.
+        dag_image_url = "https://user-images.githubusercontent.com/1018939/232727011-8f0c9448-3b32-4544-a87a-275d5e317193.png"
+
+        # Save the file for the execution step
+        upload_dir = "uploads"
+        os.makedirs(upload_dir, exist_ok=True)
+        file_path = os.path.join(upload_dir, file.filename)
+        with open(file_path, "wb") as buffer:
+            buffer.write(content)
+
+        return {
+            "filename": file.filename,
+            "preview": {
+                "dag_image_url": dag_image_url,
+                "crontab": parsed_data.get("schedule"),
+                "tasks": parsed_data.get("tasks"),
+                "relations": parsed_data.get("relations"),
+            }
         }
-    }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to parse file: {e}")
 
 @app.post("/api/execute")
-async def execute_task(filename: str):
+async def execute_task(body: dict):
+    filename = body.get("filename")
     """
     Executes the python script.
     For now, this is a mock implementation.

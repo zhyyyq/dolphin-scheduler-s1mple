@@ -87,8 +87,15 @@ function App() {
                     </div>
                     <Title level={5} style={{marginTop: '20px'}}>调度信息</Title>
                      <div style={{ border: '1px solid #d9d9d9', padding: '10px', borderRadius: '4px', background: 'white' }}>
-                        <p><Text strong>时间范围:</Text> {preview.schedule}</p>
                         <p><Text strong>Crontab:</Text> {preview.crontab}</p>
+                        <Title level={5} style={{marginTop: '10px'}}>任务列表</Title>
+                        <ul>
+                          {preview.tasks.map(task => <li key={task}><Text>{task}</Text></li>)}
+                        </ul>
+                        <Title level={5} style={{marginTop: '10px'}}>任务关系</Title>
+                        <ul>
+                          {preview.relations.map((rel, i) => <li key={i}><Text>{rel.from} → {rel.to}</Text></li>)}
+                        </ul>
                      </div>
                   </div>
                 ) : (
