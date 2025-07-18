@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { Spin, Alert, Switch, message, Card } from 'antd';
+import { Spin, Alert, Switch, message, Card, Modal, Input } from 'antd';
 import { ApartmentOutlined, CodeOutlined } from '@ant-design/icons';
 import DagGraph from './DagGraph';
 import Editor from 'react-simple-code-editor';
@@ -17,6 +17,7 @@ function WorkflowViewer() {
   const [viewMode, setViewMode] = useState('dag'); // 'dag' or 'code'
   const [workflowCodeContent, setWorkflowCodeContent] = useState('');
   const [isCodeLoading, setIsCodeLoading] = useState(false);
+  const [viewingNode, setViewingNode] = useState(null);
 
   useEffect(() => {
     const fetchWorkflow = async () => {
@@ -69,6 +70,10 @@ function WorkflowViewer() {
     return <Alert message="Error" description={error} type="error" showIcon style={{ margin: '24px' }} />;
   }
 
+  const handleNodeDoubleClick = useCallback((node) => {
+    setViewingNode(node);
+  }, []);
+
   const renderContent = () => {
     if (viewMode === 'code') {
       return (
@@ -91,23 +96,40 @@ function WorkflowViewer() {
         </Spin>
       );
     }
-    return <DagGraph data={preview} />;
+    return <DagGraph data={preview} onNodeDoubleClick={handleNodeDoubleClick} />;
   };
 
   return (
-    <Card
-      title={`工作流: ${preview?.name}`}
-      extra={
-        <Switch
-          checkedChildren={<CodeOutlined />}
-          unCheckedChildren={<ApartmentOutlined />}
-          onChange={(checked) => setViewMode(checked ? 'code' : 'dag')}
-        />
-      }
-      bodyStyle={{ height: 'calc(100vh - 200px)', overflow: 'auto' }}
-    >
-      {renderContent()}
-    </Card>
+    <>
+      <Card
+        title={`工作流: ${preview?.name}`}
+        extra={
+          <Switch
+            checkedChildren={<CodeOutlined />}
+            unCheckedChildren={<ApartmentOutlined />}
+            onChange={(checked) => setViewMode(checked ? 'code' : 'dag')}
+          />
+        }
+        bodyStyle={{ height: 'calc(100vh - 200px)', overflow: 'auto' }}
+      >
+        {renderContent()}
+      </Card>
+      <Modal
+          title={`节点详情: ${viewingNode?.name}`}
+          open={!!viewingNode}
+          onCancel={() => setViewingNode(null)}
+          footer={null}
+      >
+          <p><strong>类型:</strong> {viewingNode?.type}</p>
+          <p><strong>命令:</strong></p>
+          <Input.TextArea 
+              rows={10} 
+              value={viewingNode?.command} 
+              readOnly
+              style={{ background: '#f5f5f5', cursor: 'text' }}
+          />
+      </Modal>
+    </>
   );
 }
 
