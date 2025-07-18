@@ -1,45 +1,86 @@
-.ant-upload-drag-icon .anticon {
-  font-size: 48px;
-  color: #1890ff;
+/* General Body Styles */
+body {
+  background-color: #f0f2f5;
 }
 
-.ant-card-body {
-    padding: 0px !important;
-}
-
-/* Make layout and content take full height */
-.layout {
-  min-height: 100vh;
-}
-
-.full-height-row {
+/* Logo Styles */
+.logo {
+  height: 32px;
+  margin: 16px;
+  background: rgba(255, 255, 255, 0.2);
   display: flex;
-  flex: 1;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 4px;
 }
 
-.full-height-card {
+/* Main Layout Styles */
+.site-layout .site-layout-background {
+  background: #ffffff;
+}
+
+/* Card Styles */
+.ant-card {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid #e8e8e8 !important;
+  transition: all 0.3s;
+}
+
+.ant-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12) !important;
+}
+
+.ant-card-head {
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  border-bottom: 1px solid #f0f0f0 !important;
+}
+
+/* Sider Styles */
+.ant-layout-sider {
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Header Styles */
+.ant-layout-header {
+  padding: 0 24px !important;
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+/* Table Styles */
+.ant-table-wrapper {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Task Node Styles for DagGraph */
+.task-node {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   height: 100%;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background-color: #fafafa;
+  transition: background-color 0.3s;
 }
 
-.full-height-card .ant-card-body {
-  flex: 1;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
+.task-node:hover {
+  background-color: #f0f0f0;
 }
 
-.editor-container, .preview-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+.task-node .icon {
+  margin-right: 8px;
+  color: #595959;
 }
 
-.editor-wrapper {
-    flex: 1;
-    overflow: auto;
-    border: 1px solid #d9d9d9;
-    border-radius: 4px;
+.task-node .label {
+  color: #262626;
 }

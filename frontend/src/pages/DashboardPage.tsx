@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Row, Col, Card, Statistic, Spin, Alert, Table, Tag, App as AntApp } from 'antd';
-import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { DashboardStats, WorkflowInstance } from '../types';
@@ -11,8 +11,6 @@ const COLORS = {
   running: '#1890ff',
   other: '#fa8c16',
 };
-
-const PIE_COLORS = [COLORS.success, COLORS.failure, COLORS.running, COLORS.other];
 
 const STATE_MAP: { [key: string]: string } = {
   SUCCESS: '成功',
@@ -66,12 +64,13 @@ const DashboardPage: React.FC = () => {
 
   const pieData = useMemo(() => {
     if (!stats) return [];
-    return [
-      { name: '成功', value: stats.success },
-      { name: '失败', value: stats.failure },
-      { name: '运行中', value: stats.running },
-      { name: '其他', value: stats.other },
+    const data = [
+      { name: '成功', value: stats.success, color: COLORS.success },
+      { name: '失败', value: stats.failure, color: COLORS.failure },
+      { name: '运行中', value: stats.running, color: COLORS.running },
+      { name: '其他', value: stats.other, color: COLORS.other },
     ];
+    return data.filter(item => item.value > 0);
   }, [stats]);
 
   const recentInstancesColumns: ColumnsType<WorkflowInstance> = useMemo(() => [
@@ -123,24 +122,39 @@ const DashboardPage: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
         <Col span={8}>
           <Card title="执行状态分布" style={{ height: '100%' }}>
-            <PieChart width={400} height={300}>
-              <Pie
-                data={pieData}
-                cx={200}
-                cy={150}
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                label
-              >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
+            {pieData.length > 1 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '300px', textAlign: 'center' }}>
+                {pieData.length === 1 ? (
+                  <>
+                    <div style={{ fontSize: '32px', color: pieData[0].color, fontWeight: 'bold' }}>100%</div>
+                    <div style={{ fontSize: '16px', marginTop: '8px' }}>{pieData[0].name}</div>
+                  </>
+                ) : (
+                  <div style={{ color: '#8c8c8c', fontSize: '16px' }}>暂无执行数据</div>
+                )}
+              </div>
+            )}
           </Card>
         </Col>
         <Col span={16}>
