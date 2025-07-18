@@ -47,6 +47,7 @@ async def parse_python_file(file: UploadFile = File(...)):
 
         return {
             "filename": file.filename,
+            "content": content_str,
             "preview": {
                 "dag_image_url": dag_image_url,
                 "crontab": parsed_data.get("schedule"),
@@ -57,9 +58,27 @@ async def parse_python_file(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to parse file: {e}")
 
+@app.post("/api/reparse")
+async def reparse_code(body: dict):
+    code = body.get("code", "")
+    try:
+        parsed_data = parse_workflow(code)
+        dag_image_url = "https://user-images.githubusercontent.com/1018939/232727011-8f0c9448-3b32-4544-a87a-275d5e317193.png"
+        return {
+            "preview": {
+                "dag_image_url": dag_image_url,
+                "crontab": parsed_data.get("schedule"),
+                "tasks": parsed_data.get("tasks"),
+                "relations": parsed_data.get("relations"),
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to re-parse code: {e}")
+
 @app.post("/api/execute")
 async def execute_task(body: dict):
     filename = body.get("filename")
+    code = body.get("code")
     """
     Executes the python script.
     For now, this is a mock implementation.
@@ -68,10 +87,11 @@ async def execute_task(body: dict):
     # user-uploaded code is extremely dangerous. This should be done in a
     # sandboxed environment.
     
+    # Save the potentially modified code back to the file before execution
     file_path = os.path.join("uploads", filename)
-    if not os.path.exists(file_path):
-        return {"error": "File not found."}
-        
+    with open(file_path, "w") as f:
+        f.write(code)
+
     # In a real app, you would trigger the execution via a proper scheduler
     # or a sandboxed subprocess.
     print(f"Executing {file_path}...")

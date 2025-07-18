@@ -36,6 +36,7 @@ def parse_workflow(content: str):
 
     def unnest_lshift_chain(n):
         if isinstance(n, ast.BinOp) and isinstance(n.op, ast.LShift):
+            # Recursively unnest the chain
             return unnest_lshift_chain(n.left) + [n.right]
         return [n]
 
@@ -56,21 +57,19 @@ def parse_workflow(content: str):
 
         # Handle `<<` operator chains
         elif isinstance(node.value, ast.BinOp) and isinstance(node.value.op, ast.LShift):
-            # This check ensures we only process the top-level expression of a chain
-            if not any(isinstance(parent, ast.BinOp) and isinstance(parent.op, ast.LShift) for parent in ast.walk(node.value)):
-                chain = unnest_lshift_chain(node.value)
-                # For a << b << c, chain is [a, b, c]. Dependency is c -> b -> a.
-                chain_names = [n.id for n in reversed(chain) if isinstance(n, ast.Name)]
+            chain = unnest_lshift_chain(node.value)
+            # For a << b << c, chain is [a, b, c]. Dependency is c -> b -> a.
+            chain_names = [n.id for n in reversed(chain) if isinstance(n, ast.Name)]
+            
+            for i in range(len(chain_names) - 1):
+                upstream_name = chain_names[i]
+                downstream_name = chain_names[i+1]
                 
-                for i in range(len(chain_names) - 1):
-                    upstream_name = chain_names[i]
-                    downstream_name = chain_names[i+1]
-                    
-                    upstream_tasks = list_assignments.get(upstream_name, [upstream_name])
-                    for task_in_group in upstream_tasks:
-                        relations.append({'from': task_in_group, 'to': downstream_name})
+                upstream_tasks = list_assignments.get(upstream_name, [upstream_name])
+                for task_in_group in upstream_tasks:
+                    relations.append({'from': task_in_group, 'to': downstream_name})
 
-    # Remove duplicate relations
+    # Remove duplicate relations that might be generated
     unique_relations = [dict(t) for t in {tuple(d.items()) for d in relations}]
 
     return {

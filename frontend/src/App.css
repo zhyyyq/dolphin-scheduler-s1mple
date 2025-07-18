@@ -6,3 +6,40 @@
 .ant-card-body {
     padding: 0px !important;
 }
+
+/* Make layout and content take full height */
+.layout {
+  min-height: 100vh;
+}
+
+.full-height-row {
+  display: flex;
+  flex: 1;
+}
+
+.full-height-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.full-height-card .ant-card-body {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-container, .preview-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.editor-wrapper {
+    flex: 1;
+    overflow: auto;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+}
