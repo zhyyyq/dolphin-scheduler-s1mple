@@ -16,19 +16,6 @@ body {
   color: var(--text-color);
 }
 
-.logo {
-  height: 32px;
-  margin: 16px;
-  background: rgba(255, 255, 255, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 6px;
-}
-
 .site-layout .site-layout-background {
   background: var(--card-background);
 }
