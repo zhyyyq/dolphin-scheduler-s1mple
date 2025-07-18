@@ -34,10 +34,6 @@ async def parse_python_file(file: UploadFile = File(...)):
         
         parsed_data = parse_workflow(content_str)
 
-        # For now, we still use a placeholder for the DAG image.
-        # A real implementation would generate this image based on parsed_data.
-        dag_image_url = "https://user-images.githubusercontent.com/1018939/232727011-8f0c9448-3b32-4544-a87a-275d5e317193.png"
-
         # Save the file for the execution step
         upload_dir = "uploads"
         os.makedirs(upload_dir, exist_ok=True)
@@ -49,7 +45,6 @@ async def parse_python_file(file: UploadFile = File(...)):
             "filename": file.filename,
             "content": content_str,
             "preview": {
-                "dag_image_url": dag_image_url,
                 "crontab": parsed_data.get("schedule"),
                 "tasks": parsed_data.get("tasks"),
                 "relations": parsed_data.get("relations"),
@@ -63,10 +58,8 @@ async def reparse_code(body: dict):
     code = body.get("code", "")
     try:
         parsed_data = parse_workflow(code)
-        dag_image_url = "https://user-images.githubusercontent.com/1018939/232727011-8f0c9448-3b32-4544-a87a-275d5e317193.png"
         return {
             "preview": {
-                "dag_image_url": dag_image_url,
                 "crontab": parsed_data.get("schedule"),
                 "tasks": parsed_data.get("tasks"),
                 "relations": parsed_data.get("relations"),

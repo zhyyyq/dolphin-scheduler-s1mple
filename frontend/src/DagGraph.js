@@ -126,10 +126,14 @@ const DagGraph = ({ data, onNodeDoubleClick }) => {
     graph.centerContent();
 
     return () => {
-      if (graphRef.current) {
-        graphRef.current.off('node:dblclick');
-        graphRef.current.dispose();
-        graphRef.current = null;
+      const graphInstance = graphRef.current;
+      graphRef.current = null;
+      if (graphInstance) {
+        // Delay disposal to avoid conflict with React's rendering cycle
+        setTimeout(() => {
+            graphInstance.off('node:dblclick');
+            graphInstance.dispose();
+        }, 0);
       }
     };
   }, [data, onNodeDoubleClick]);
