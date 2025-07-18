@@ -25,10 +25,15 @@ def parse_workflow(content: str):
             # Task declarations
             if isinstance(node.value, ast.Call) and getattr(node.value.func, 'id', None) == 'Shell':
                 task_name = node.targets[0].id
-                tasks[task_name] = {'type': 'Shell'}
+                task_details = {'name': task_name, 'type': 'Shell', 'command': 'N/A'}
                 for keyword in node.value.keywords:
                     if keyword.arg == 'name':
-                        tasks[task_name]['name'] = keyword.value.s if isinstance(keyword.value, ast.Str) else "Not Found"
+                        # In pydolphinscheduler, the task name is the variable name.
+                        # The `name` parameter inside Shell is for the DolphinScheduler UI.
+                        pass
+                    elif keyword.arg == 'command':
+                        task_details['command'] = keyword.value.s if isinstance(keyword.value, ast.Str) else "Not Found"
+                tasks[task_name] = task_details
             # List assignments for task groups
             elif isinstance(node.value, ast.List):
                 list_name = node.targets[0].id
@@ -74,6 +79,6 @@ def parse_workflow(content: str):
 
     return {
         "schedule": schedule,
-        "tasks": list(tasks.keys()),
+        "tasks": list(tasks.values()), # Return the full task objects
         "relations": unique_relations
     }

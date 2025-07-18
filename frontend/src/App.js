@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Upload, Button, Layout, Row, Col, Card, message, Typography, Modal, Switch } from 'antd';
-import { InboxOutlined, EyeOutlined } from '@ant-design/icons';
+import { Upload, Button, Layout, message, Typography, Modal, Switch } from 'antd';
+import { InboxOutlined, CodeOutlined } from '@ant-design/icons';
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-python';
@@ -10,15 +10,13 @@ import './App.css';
 
 const { Header, Content } = Layout;
 const { Dragger } = Upload;
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 function App() {
-  const [fileList, setFileList] = useState([]);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [code, setCode] = useState('');
   const [editedCode, setEditedCode] = useState('');
-  const [isPreviewVisible, setIsPreviewVisible] = useState(false);
+  const [isEditorVisible, setIsEditorVisible] = useState(false);
 
   const props = {
     name: 'file',
@@ -30,14 +28,12 @@ function App() {
       if (status === 'done') {
         message.success(`${info.file.name} file uploaded and parsed successfully.`);
         setPreview(response.preview);
-        setCode(response.content);
         setEditedCode(response.content);
         setUploadedFile(response.filename);
-        setIsPreviewVisible(true); // Show preview automatically after upload
+        setIsEditorVisible(true);
       } else if (status === 'error') {
         message.error(`${info.file.name} file upload failed.`);
       }
-      setFileList([info.file]);
     },
   };
 
@@ -51,8 +47,7 @@ function App() {
       if (response.ok) {
         const result = await response.json();
         setPreview(result.preview);
-        setIsPreviewVisible(true); // Ensure preview is visible after re-parse
-        message.success('Code re-parsed and preview updated.');
+        message.success('Code re-parsed and DAG updated.');
       } else {
         message.error('Failed to re-parse code.');
       }
@@ -89,12 +84,11 @@ function App() {
     <div style={{ position: 'absolute', top: 12, right: 24, zIndex: 10, display: 'flex', gap: '16px', alignItems: 'center' }}>
         {preview && (
             <>
-                <Button onClick={handleReparse}>Update Preview</Button>
                 <Switch
-                    checkedChildren={<EyeOutlined />}
-                    unCheckedChildren={<EyeOutlined />}
-                    checked={isPreviewVisible}
-                    onChange={setIsPreviewVisible}
+                    checkedChildren={<CodeOutlined />}
+                    unCheckedChildren={<CodeOutlined />}
+                    checked={isEditorVisible}
+                    onChange={setIsEditorVisible}
                 />
                 <Button type="primary" size="large" onClick={handleSubmit}>提交</Button>
             </>
@@ -108,20 +102,9 @@ function App() {
         <Title level={3} style={{ color: 'white', lineHeight: '64px', float: 'left' }}>极简任务调度平台</Title>
         {renderAppbar()}
       </Header>
-      <Content style={{ padding: '0', height: 'calc(100vh - 64px)' }}>
-        {code ? (
-            <Editor
-                value={editedCode}
-                onValueChange={code => setEditedCode(code)}
-                highlight={code => highlight(code, languages.python)}
-                padding={10}
-                style={{
-                    fontFamily: '"Fira code", "Fira Mono", monospace',
-                    fontSize: 14,
-                    height: '100%',
-                    overflow: 'auto'
-                }}
-            />
+      <Content style={{ padding: '0', height: 'calc(100vh - 64px)', background: '#f0f2f5' }}>
+        {preview ? (
+            <DagGraph data={preview} />
         ) : (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <Dragger {...props} style={{ width: '800px', padding: '64px' }}>
@@ -131,20 +114,34 @@ function App() {
                 </Dragger>
             </div>
         )}
-        {preview && (
-            <Modal
-                title="任务解析预览 (可拖动)"
-                open={isPreviewVisible}
-                onCancel={() => setIsPreviewVisible(false)}
-                footer={null}
-                width={800}
-                styles={{ body: { height: 600 } }}
-                destroyOnClose
-                draggable
-            >
-                <DagGraph data={preview} />
-            </Modal>
-        )}
+        <Modal
+            title="代码编辑器 (可拖动)"
+            open={isEditorVisible}
+            onCancel={() => setIsEditorVisible(false)}
+            width="60%"
+            styles={{ body: { height: '70vh' } }}
+            destroyOnClose
+            draggable
+            footer={[
+                <Button key="reparse" onClick={handleReparse}>
+                    Update DAG
+                </Button>,
+            ]}
+        >
+            <Editor
+                value={editedCode}
+                onValueChange={code => setEditedCode(code)}
+                highlight={code => highlight(code, languages.python)}
+                padding={10}
+                style={{
+                    fontFamily: '"Fira code", "Fira Mono", monospace',
+                    fontSize: 14,
+                    height: '100%',
+                    overflow: 'auto',
+                    border: '1px solid #d9d9d9'
+                }}
+            />
+        </Modal>
       </Content>
     </Layout>
   );

@@ -1,12 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { Graph } from '@antv/x6';
+import './TaskNode'; // Import to register the custom node
 
 // A simple layout algorithm to position nodes without an external library.
 const simpleLayout = (data) => {
   const nodes = JSON.parse(JSON.stringify(data.tasks));
   const edges = JSON.parse(JSON.stringify(data.relations));
 
-  const nodeMap = new Map(nodes.map(node => [node, { id: node, inDegree: 0, outDegree: 0, level: 0 }]));
+  const nodeMap = new Map(nodes.map(node => [node.name, { ...node, inDegree: 0, outDegree: 0, level: 0 }]));
 
   for (const edge of edges) {
     if (nodeMap.has(edge.from)) {
@@ -48,8 +49,8 @@ const simpleLayout = (data) => {
     }
   }
 
-  const x_gap = 200;
-  const y_gap = 80;
+  const x_gap = 300; // Increased gap for wider nodes
+  const y_gap = 150; // Increased gap for taller nodes
   const laidOutNodes = [];
 
   for (const [level, nodesInLevel] of levels.entries()) {
@@ -59,6 +60,7 @@ const simpleLayout = (data) => {
         id: nodeId,
         x: level * x_gap + 50,
         y: i * y_gap + 50 - y_offset,
+        data: nodeMap.get(nodeId),
       });
     });
   }
@@ -86,10 +88,12 @@ const DagGraph = ({ data }) => {
       mousewheel: true,
       autoResize: true,
       background: {
-        color: '#F2F7FA',
+        color: '#f0f2f5',
       },
       connecting: {
         snap: true,
+        router: 'manhattan',
+        connector: 'rounded',
       },
     });
     graphRef.current = graph;
@@ -98,14 +102,11 @@ const DagGraph = ({ data }) => {
 
     const model = {
       nodes: laidOutNodes.map(node => ({
-        ...node,
-        shape: 'rect',
-        width: 150,
-        height: 40,
-        label: node.id,
-        attrs: {
-          body: { stroke: '#8f8f8f', strokeWidth: 1, fill: '#fff', rx: 6, ry: 6 },
-        },
+        id: node.id,
+        x: node.x,
+        y: node.y,
+        shape: 'custom-react-node',
+        data: node.data,
       })),
       edges: data.relations.map(rel => ({
         source: rel.from,
