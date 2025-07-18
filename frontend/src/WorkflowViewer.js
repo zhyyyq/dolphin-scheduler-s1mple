@@ -40,6 +40,10 @@ function WorkflowViewer() {
     fetchWorkflow();
   }, [projectCode, workflowCode]);
 
+  const handleNodeDoubleClick = useCallback((node) => {
+    setViewingNode(node);
+  }, []);
+
   useEffect(() => {
     const fetchCode = async () => {
       if (viewMode === 'code' && !workflowCodeContent && preview?.name) {
@@ -69,10 +73,6 @@ function WorkflowViewer() {
   if (error) {
     return <Alert message="Error" description={error} type="error" showIcon style={{ margin: '24px' }} />;
   }
-
-  const handleNodeDoubleClick = useCallback((node) => {
-    setViewingNode(node);
-  }, []);
 
   const renderContent = () => {
     if (viewMode === 'code') {

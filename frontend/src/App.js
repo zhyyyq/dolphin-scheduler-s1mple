@@ -304,7 +304,14 @@ function App() {
 
 function AppWrapper() {
   return (
-    <ConfigProvider locale={zhCN}>
+    <ConfigProvider
+      locale={zhCN}
+      theme={{
+        token: {
+          colorPrimary: '#1677ff',
+        },
+      }}
+    >
       <Router>
         <App />
       </Router>
