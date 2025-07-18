@@ -79,6 +79,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "libcst" },
     { name = "python-multipart" },
+    { name = "ruamel-yaml" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 
@@ -88,6 +89,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.111.0" },
     { name = "libcst", specifier = ">=1.0.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
+    { name = "ruamel-yaml", specifier = ">=0.17.21" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.29.0" },
 ]
 
