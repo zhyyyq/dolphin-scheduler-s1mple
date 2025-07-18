@@ -1,5 +1,6 @@
 import React from 'react';
 import { Node } from '@antv/x6';
+import '@antv/x6-react-shape';
 import { Card, Typography } from 'antd';
 import { ShellIcon } from './ShellIcon'; // A simple SVG icon component
 
