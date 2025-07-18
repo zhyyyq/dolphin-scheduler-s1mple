@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "apache-dolphinscheduler>=4.1.0",
+    "apache-dolphinscheduler",
     "fastapi>=0.111.0",
     "python-multipart>=0.0.20",
     "uvicorn[standard]>=0.29.0",

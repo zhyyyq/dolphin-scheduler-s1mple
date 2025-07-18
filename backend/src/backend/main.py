@@ -83,15 +83,21 @@ async def execute_task(body: dict):
         f.write(code)
 
     try:
-        # Execute the python script in a separate process
-        # This uses the same Python interpreter that runs the FastAPI app
-        python_executable = sys.executable
+        # Execute the python script using `uv run`
+        # We need to make sure the command points to the correct relative path from where `uv run` is executed.
+        # Assuming `uv run` is executed from the `backend` directory.
+        relative_path = os.path.join("src", "backend", "uploads", filename)
+        
+        # Since we are in `src/backend`, we need to go up two levels to the `backend` directory.
+        backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+        
         result = subprocess.run(
-            [python_executable, file_path],
+            ["uv", "run", os.path.join("uploads", filename)],
             capture_output=True,
             text=True,
             check=True,
-            encoding='utf-8'
+            encoding='utf-8',
+            cwd=backend_dir # Run from the `backend` directory
         )
         
         return {

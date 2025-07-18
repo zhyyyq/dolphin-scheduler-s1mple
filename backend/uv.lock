@@ -83,7 +83,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "apache-dolphinscheduler", specifier = ">=4.1.0" },
+    { name = "apache-dolphinscheduler" },
     { name = "fastapi", specifier = ">=0.111.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.29.0" },
