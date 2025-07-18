@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useSearchParams, Link, useLocation } from 'react-router-dom';
-import { Upload, Button, Layout, message, Typography, Modal, Switch, Input, Spin, Menu, ConfigProvider } from 'antd';
+import { Upload, Button, Layout, message, Typography, Modal, Switch, Input, Spin, Menu, ConfigProvider, Card } from 'antd';
 import { InboxOutlined, CodeOutlined, ApartmentOutlined, PlusOutlined, DashboardOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import Editor from 'react-simple-code-editor';
@@ -24,12 +24,13 @@ function WorkflowEditor() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [editedCode, setEditedCode] = useState('');
-  const [isEditorVisible, setIsEditorVisible] = useState(false);
   const [editingNode, setEditingNode] = useState(null);
   const [nodeCommand, setNodeCommand] = useState('');
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionResult, setExecutionResult] = useState(null);
-  const handleReparse =  useCallback(async (codeToParse) => {
+  const [viewMode, setViewMode] = useState('dag'); // 'dag' or 'code'
+
+  const handleReparse = useCallback(async (codeToParse) => {
     const code = typeof codeToParse === 'string' ? codeToParse : editedCode;
     try {
       const response = await fetch('http://127.0.0.1:8000/api/reparse', {
@@ -41,7 +42,7 @@ function WorkflowEditor() {
         const result = await response.json();
         setPreview(result.preview);
         if (typeof codeToParse !== 'string') {
-          message.success('代码已重新解析，DAG 图已更新。');
+            message.success('代码已重新解析，DAG 图已更新。');
         }
       } else {
         message.error('重新解析代码失败。');
@@ -49,7 +50,8 @@ function WorkflowEditor() {
     } catch (error) {
       message.error('重新解析时发生错误。');
     }
-  }, [editedCode]);
+  },[editedCode]);
+
   useEffect(() => {
     const workflowName = searchParams.get('workflowName');
     if (workflowName) {
@@ -62,15 +64,11 @@ function WorkflowEditor() {
           const data = await response.json();
           
           setEditedCode(data.content);
-          setUploadedFile(data.filename); // Set the filename for future submits
-          // setIsEditorVisible(true); // Do not open automatically
-          
-          // Also, re-parse the content to show the DAG
+          setUploadedFile(data.filename);
           handleReparse(data.content);
 
         } catch (error) {
           message.error(error.message);
-        } finally {
         }
       };
       fetchWorkflowContent();
@@ -89,14 +87,11 @@ function WorkflowEditor() {
         setPreview(response.preview);
         setEditedCode(response.content);
         setUploadedFile(response.filename);
-        // setIsEditorVisible(true); // Do not open automatically
       } else if (status === 'error') {
         message.error(`文件 ${info.file.name} 上传失败。`);
       }
     },
   };
-
-  
 
   const handleSubmit = async () => {
     if (!uploadedFile) {
@@ -165,7 +160,6 @@ function WorkflowEditor() {
       setEditedCode(result.new_code);
       message.success(`节点 ${taskName} 的命令已更新。`);
       
-      // Also re-parse to update the DAG view with the new command
       handleReparse(result.new_code);
 
     } catch (error) {
@@ -175,63 +169,62 @@ function WorkflowEditor() {
     }
   };
 
-  const renderAppbar = () => (
-    <div style={{ position: 'absolute', top: 12, right: 24, zIndex: 10, display: 'flex', gap: '16px', alignItems: 'center' }}>
-        {preview && (
-            <>
-                <Switch
-                    checkedChildren={<CodeOutlined />}
-                    unCheckedChildren={<CodeOutlined />}
-                    checked={isEditorVisible}
-                    onChange={setIsEditorVisible}
-                />
-                <Button type="primary" size="large" onClick={handleSubmit} loading={isExecuting}>提交</Button>
-            </>
-        )}
-    </div>
-  );
+  const renderContent = () => {
+    if (!preview) {
+      return (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+          <Dragger {...props} style={{ width: '800px', padding: '64px', background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
+            <p className="ant-upload-drag-icon"><InboxOutlined /></p>
+            <p className="ant-upload-text">请上传你的任务配置文件</p>
+            <p className="ant-upload-hint">支持拖拽或点击上传</p>
+          </Dragger>
+        </div>
+      );
+    }
+
+    if (viewMode === 'code') {
+      return (
+        <Editor
+          value={editedCode}
+          onValueChange={code => setEditedCode(code)}
+          highlight={code => highlight(code, languages.python)}
+          padding={10}
+          style={{
+            fontFamily: '"Fira code", "Fira Mono", monospace',
+            fontSize: 14,
+            height: '100%',
+            overflow: 'auto',
+            border: '1px solid #d9d9d9'
+          }}
+        />
+      );
+    }
+    return <DagGraph data={preview} onNodeDoubleClick={handleNodeDoubleClick} />;
+  };
 
   return (
     <>
-      {renderAppbar()}
-      <DagGraph data={preview} onNodeDoubleClick={handleNodeDoubleClick} />
-      {!preview && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}>
-              <Dragger {...props} style={{ width: '800px', padding: '64px', background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}>
-                  <p className="ant-upload-drag-icon"><InboxOutlined /></p>
-                  <p className="ant-upload-text">请上传你的任务配置文件</p>
-                  <p className="ant-upload-hint">支持拖拽或点击上传</p>
-              </Dragger>
-          </div>
-      )}
-      <Modal
-          title="代码编辑器 (可拖动)"
-          open={isEditorVisible}
-          onCancel={() => setIsEditorVisible(false)}
-          width="60%"
-          styles={{ body: { height: '70vh' } }}
-          destroyOnHidden
-          draggable
-          footer={[
-              <Button key="reparse" onClick={handleReparse}>
-                  更新 DAG
-              </Button>,
-          ]}
+      <Card
+        title={uploadedFile ? `工作流: ${uploadedFile}` : "新建工作流"}
+        extra={
+          preview && (
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <Switch
+                checkedChildren={<CodeOutlined />}
+                unCheckedChildren={<ApartmentOutlined />}
+                checked={viewMode === 'code'}
+                onChange={(checked) => setViewMode(checked ? 'code' : 'dag')}
+              />
+              <Button onClick={() => handleReparse()}>更新 DAG</Button>
+              <Button type="primary" size="large" onClick={handleSubmit} loading={isExecuting}>提交</Button>
+            </div>
+          )
+        }
+        bodyStyle={{ height: 'calc(100vh - 220px)', overflow: 'auto' }}
       >
-          <Editor
-              value={editedCode}
-              onValueChange={code => setEditedCode(code)}
-              highlight={code => highlight(code, languages.python)}
-              padding={10}
-              style={{
-                  fontFamily: '"Fira code", "Fira Mono", monospace',
-                  fontSize: 14,
-                  height: '100%',
-                  overflow: 'auto',
-                  border: '1px solid #d9d9d9'
-              }}
-          />
-      </Modal>
+        {renderContent()}
+      </Card>
+      
       <Modal
           title={`编辑节点: ${editingNode?.name}`}
           open={!!editingNode}
@@ -280,11 +273,11 @@ function App() {
       <Sider collapsible>
         <div className="logo" style={{ height: '32px', margin: '16px', background: 'rgba(255, 255, 255, 0.2)' }} />
         <Menu theme="dark" selectedKeys={[location.pathname]} mode="inline">
-          <Menu.Item key="/" icon={<DashboardOutlined />}>
-            <Link to="/">仪表盘</Link>
+          <Menu.Item key="/dashboard" icon={<DashboardOutlined />}>
+            <Link to="/dashboard">仪表盘</Link>
           </Menu.Item>
-          <Menu.Item key="/workflows" icon={<ApartmentOutlined />}>
-            <Link to="/workflows">工作流</Link>
+          <Menu.Item key="/" icon={<ApartmentOutlined />}>
+            <Link to="/">工作流</Link>
           </Menu.Item>
           <Menu.Item key="/upload" icon={<PlusOutlined />}>
             <Link to="/upload">新建工作流</Link>
@@ -297,8 +290,8 @@ function App() {
         </Header>
         <Content style={{ margin: '16px' }}>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/workflows" element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/" element={<Home />} />
             <Route path="/upload" element={<WorkflowEditor />} />
             <Route path="/project/:projectCode/workflow/:workflowCode" element={<WorkflowViewer />} />
             <Route path="/workflow/:workflowName/history" element={<VersionHistory />} />
@@ -309,7 +302,6 @@ function App() {
   );
 }
 
-// We need to wrap App with Router to use useLocation hook
 function AppWrapper() {
   return (
     <ConfigProvider locale={zhCN}>
@@ -321,6 +313,3 @@ function AppWrapper() {
 }
 
 export default AppWrapper;
-
-// The default export is now the wrapper
-// export default App;

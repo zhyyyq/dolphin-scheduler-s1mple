@@ -104,6 +104,7 @@ function WorkflowViewer() {
           onChange={(checked) => setViewMode(checked ? 'code' : 'dag')}
         />
       }
+      bodyStyle={{ height: 'calc(100vh - 200px)', overflow: 'auto' }}
     >
       {renderContent()}
     </Card>
