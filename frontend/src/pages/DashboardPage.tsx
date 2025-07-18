@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Row, Col, Card, Statistic, Spin, Alert, Table, Tag, App as AntApp } from 'antd';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { DashboardStats, WorkflowInstance } from '../types';
@@ -103,8 +103,8 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div style={{ padding: '24px', background: '#fff', borderRadius: '8px' }}>
-      <Row gutter={16}>
+    <div style={{ padding: '24px', background: '#f0f2f5' }}>
+      <Row gutter={[16, 16]}>
         <Col span={6}>
           <StatCard title="成功" value={stats.success} color={COLORS.success} icon={<CheckCircleOutlined />} />
         </Col>
@@ -120,20 +120,27 @@ const DashboardPage: React.FC = () => {
           </Card>
         </Col>
       </Row>
-      <Row gutter={16} style={{ marginTop: '24px' }}>
+      <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
         <Col span={8}>
-          <Card title="执行状态分布">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label>
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+          <Card title="执行状态分布" style={{ height: '100%' }}>
+            <PieChart width={400} height={300}>
+              <Pie
+                data={pieData}
+                cx={200}
+                cy={150}
+                labelLine={false}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+                label
+              >
+                {pieData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
           </Card>
         </Col>
         <Col span={16}>
@@ -142,7 +149,8 @@ const DashboardPage: React.FC = () => {
               columns={recentInstancesColumns}
               dataSource={stats.recent_instances}
               rowKey="id"
-              size="small"
+              size="middle"
+              pagination={{ pageSize: 5 }}
             />
           </Card>
         </Col>
