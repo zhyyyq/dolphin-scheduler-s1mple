@@ -1,7 +1,7 @@
-import { Graph, Node } from '@antv/x6';
-import '@antv/x6-react-shape';
+import { register } from '@antv/x6-react-shape';
 import { ShellIcon } from './ShellIcon';
 import React from 'react';
+import { Node } from '@antv/x6';
 
 // The component that will be rendered
 const TaskNodeComponent: React.FC<{ node: Node }> = ({ node }) => {
@@ -19,8 +19,8 @@ const TaskNodeComponent: React.FC<{ node: Node }> = ({ node }) => {
 };
 
 // Register the custom React node
-Graph.registerNode('task-node', {
-  inherit: 'react-shape',
+register({
+  shape: 'task-node',
   width: 180,
   height: 36,
   component: TaskNodeComponent,
