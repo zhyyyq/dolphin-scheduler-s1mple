@@ -563,3 +563,38 @@ async def execute_task(body: dict):
         if isinstance(e, HTTPException):
             raise e
         raise e
+
+from pydantic import BaseModel
+
+class WorkflowYaml(BaseModel):
+    name: str
+    content: str
+
+@app.post("/api/workflow/yaml")
+async def save_workflow_yaml(workflow: WorkflowYaml):
+    """
+    Saves a YAML workflow file from raw content, saves it to the repo, and commits it.
+    """
+    try:
+        # Basic security check for the filename
+        if ".." in workflow.name or "/" in workflow.name or "\\" in workflow.name:
+            raise HTTPException(status_code=400, detail="Invalid workflow name.")
+
+        filename = f"{workflow.name}.yaml"
+        
+        # Save the file to the version-controlled repository
+        os.makedirs(WORKFLOW_REPO_DIR, exist_ok=True)
+        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
+        with open(file_path, "w", encoding="utf-8") as buffer:
+            buffer.write(workflow.content)
+        
+        # Commit the new/updated workflow
+        git_commit(filename, f"Save workflow from low-code editor: {filename}")
+
+        return {
+            "message": "Workflow saved successfully.",
+            "filename": filename,
+        }
+    except Exception as e:
+        logger.error(f"Error in /api/workflow/yaml: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to save workflow: {e}")

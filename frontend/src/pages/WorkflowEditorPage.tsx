@@ -1,244 +1,222 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Upload, Button, Modal, Switch, Input, Spin, Card, App as AntApp } from 'antd';
-import { InboxOutlined, CodeOutlined, ApartmentOutlined } from '@ant-design/icons';
-import Editor from 'react-simple-code-editor';
-import { highlight, languages } from 'prismjs/components/prism-core';
-import 'prismjs/components/prism-python';
-import 'prismjs/themes/prism.css';
-import DagGraph from '../components/DagGraph';
-import { PreviewData, Task, ExecutionResult } from '../types';
-
-const { Dragger } = Upload;
-const { TextArea } = Input;
+import React, { useEffect, useRef, useState } from 'react';
+import { Graph } from '@antv/x6';
+import { Stencil } from '@antv/x6-plugin-stencil';
+import { Button, Modal, Input } from 'antd';
+import yaml from 'js-yaml';
+import '../components/TaskNode'; // Register custom node
+import { Task } from '../types';
 
 const WorkflowEditorPage: React.FC = () => {
-  const { message } = AntApp.useApp();
-  const [searchParams] = useSearchParams();
-  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
-  const [preview, setPreview] = useState<PreviewData | null>(null);
-  const [editedCode, setEditedCode] = useState<string>('');
-  const [editingNode, setEditingNode] = useState<Task | null>(null);
-  const [nodeCommand, setNodeCommand] = useState<string>('');
-  const [isExecuting, setIsExecuting] = useState<boolean>(false);
-  const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
-  const [viewMode, setViewMode] = useState<'dag' | 'code'>('dag');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stencilContainerRef = useRef<HTMLDivElement>(null);
+  const graphRef = useRef<Graph | null>(null);
 
-  const handleReparse = useCallback(async (codeToParse: string) => {
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/reparse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: codeToParse }),
-      });
-      if (response.ok) {
-        const result = await response.json();
-        setPreview(result.preview);
-      } else {
-        message.error('重新解析代码失败。');
-      }
-    } catch (error) {
-      message.error('重新解析时发生错误。');
-    }
-  }, [message]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [currentNode, setCurrentNode] = useState<any>(null);
+  const [nodeName, setNodeName] = useState('');
+  const [nodeCommand, setNodeCommand] = useState('');
+  const [workflowName, setWorkflowName] = useState('my-workflow');
 
   useEffect(() => {
-    const workflowName = searchParams.get('workflowName');
-    if (workflowName) {
-      const fetchWorkflowContent = async () => {
-        try {
-          const response = await fetch(`http://127.0.0.1:8000/api/workflow/${workflowName}/content`);
-          if (!response.ok) throw new Error('Failed to fetch workflow content for editing.');
-          const data = await response.json();
-          setEditedCode(data.content);
-          setUploadedFile(data.filename);
-          handleReparse(data.content);
-        } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-          message.error(errorMessage);
-        }
-      };
-      fetchWorkflowContent();
-    }
-  }, [searchParams, handleReparse, message]);
+    if (containerRef.current && !graphRef.current) {
+      const graph = new Graph({
+        container: containerRef.current,
+        autoResize: true,
+        panning: true,
+        mousewheel: true,
+        background: {
+          color: '#F2F7FA',
+        },
+        connecting: {
+          router: 'manhattan',
+          connector: {
+            name: 'rounded',
+            args: {
+              radius: 8,
+            },
+          },
+          anchor: 'center',
+          connectionPoint: 'anchor',
+          allowBlank: false,
+          snap: {
+            radius: 20,
+          },
+          createEdge() {
+            return this.createEdge({
+              shape: 'edge',
+              attrs: {
+                line: {
+                  stroke: '#8f8f8f',
+                  strokeWidth: 1,
+                },
+              },
+            });
+          },
+        },
+        highlighting: {
+          magnetAdsorbed: {
+            name: 'stroke',
+            args: {
+              attrs: {
+                fill: '#fff',
+                stroke: '#31d0c6',
+                strokeWidth: 4,
+              },
+            },
+          },
+        },
+        onPortRendered(args) {
+          const port = args.port;
+          const contentSelectors = args.contentSelectors;
+          const container = contentSelectors && contentSelectors.content;
+          if (container) {
+            (container as HTMLElement).style.display = 'none';
+          }
+        },
+      });
 
-  const handleNodeDoubleClick = useCallback((node: Task) => {
-    setEditingNode(node);
-    setNodeCommand(node.command);
+      graphRef.current = graph;
+
+      if (stencilContainerRef.current) {
+        const stencil = new Stencil({
+          title: 'Components',
+          target: graph,
+          stencilGraphWidth: 200,
+          stencilGraphHeight: 180,
+          collapsable: true,
+          groups: [
+            {
+              name: 'group1',
+              title: 'Tasks',
+            },
+          ],
+          layoutOptions: {
+            columns: 1,
+            columnWidth: 180,
+            rowHeight: 55,
+          },
+        });
+
+        stencilContainerRef.current.appendChild(stencil.container);
+
+        const shellNode = graph.createNode({
+          shape: 'task-node',
+          width: 180,
+          height: 36,
+          data: {
+            label: 'Shell Task',
+            taskType: 'SHELL',
+            command: 'echo "Hello"',
+          },
+        });
+
+        stencil.load([shellNode], 'group1');
+      }
+
+      graph.on('node:dblclick', ({ node }) => {
+        setCurrentNode(node);
+        setNodeName(node.getData().label);
+        setNodeCommand(node.getData().command);
+        setIsModalVisible(true);
+      });
+    }
   }, []);
 
-  const handleNodeEditSave = async () => {
-    if (!editingNode) return;
-    const taskName = editingNode.name;
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/update-command', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: editedCode, task_name: taskName, new_command: nodeCommand }),
+  const handleOk = () => {
+    if (currentNode) {
+      currentNode.setData({
+        ...currentNode.getData(),
+        label: nodeName,
+        command: nodeCommand,
       });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to update command.');
-      }
-      const result = await response.json();
-      setEditedCode(result.new_code);
-      message.success(`节点 ${taskName} 的命令已更新。`);
-      handleReparse(result.new_code);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      message.error(`更新失败: ${errorMessage}`);
-    } finally {
-      setEditingNode(null);
     }
-  };
-  
-  const handleSubmit = async () => {
-    if (!uploadedFile) {
-      message.warning('请先上传一个文件。');
-      return;
-    }
-    
-    setIsExecuting(true);
-    setExecutionResult(null);
-
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: uploadedFile, code: editedCode }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.returncode === 0) {
-        setExecutionResult(result);
-        setTimeout(() => {
-          message.success(result.message || '任务提交成功。');
-        }, 0);
-      } else {
-        const errorMessage = result.detail?.message || result.message || '提交任务执行失败。';
-        message.error(errorMessage);
-        setExecutionResult(result.detail || result);
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      message.error(`提交任务时发生错误: ${errorMessage}`);
-      setExecutionResult({ stdout: '', stderr: errorMessage });
-    } finally {
-      setIsExecuting(false);
-    }
+    setIsModalVisible(false);
+    setCurrentNode(null);
   };
 
-  const renderContent = () => {
-    if (!preview) {
-      return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-          <Dragger
-            name="file"
-            multiple={false}
-            action="http://127.0.0.1:8000/api/parse"
-            showUploadList={false}
-            onChange={(info) => {
-              const { status, response } = info.file;
-              if (status === 'done') {
-                message.success(`文件 ${info.file.name} 上传并解析成功。`);
-                setPreview(response.preview);
-                setEditedCode(response.content);
-                setUploadedFile(response.filename);
-              } else if (status === 'error') {
-                message.error(`文件 ${info.file.name} 上传失败。`);
-              }
-            }}
-            style={{ width: '800px', padding: '64px', background: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
-          >
-            <p className="ant-upload-drag-icon"><InboxOutlined /></p>
-            <p className="ant-upload-text">请上传你的任务配置文件</p>
-            <p className="ant-upload-hint">支持拖拽或点击上传</p>
-          </Dragger>
-        </div>
-      );
-    }
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    setCurrentNode(null);
+  };
 
-    if (viewMode === 'code') {
-      return (
-        <Editor
-          value={editedCode}
-          onValueChange={setEditedCode}
-          highlight={code => highlight(code, languages.python)}
-          padding={10}
-          style={{
-            fontFamily: '"Fira code", "Fira Mono", monospace',
-            fontSize: 14,
-            height: '100%',
-            overflow: 'auto',
-            border: '1px solid #d9d9d9'
-          }}
-        />
-      );
+  const handleSave = () => {
+    if (graphRef.current) {
+      const { cells } = graphRef.current.toJSON();
+      const nodes = cells.filter(cell => cell.shape === 'task-node');
+      const edges = cells.filter(cell => cell.shape === 'edge');
+
+      const tasks = nodes.map(node => {
+        const deps = edges
+          .filter(edge => edge.target.cell === node.id)
+          .map(edge => {
+            const sourceNode = nodes.find(n => n.id === edge.source.cell);
+            return sourceNode ? sourceNode.data.label : '';
+          })
+          .filter(name => name);
+        
+        return {
+          name: node.data.label,
+          task_type: node.data.taskType,
+          command: node.data.command,
+          deps: deps,
+        };
+      });
+
+      const workflow = {
+        workflow: {
+          name: workflowName,
+          schedule: '0 0 0 * * ? *',
+        },
+        tasks,
+      };
+
+      const yamlStr = yaml.dump(workflow);
+      
+      fetch('http://localhost:8000/api/workflow/yaml', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: workflow.workflow.name,
+          content: yamlStr,
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message) {
+          alert('Workflow saved successfully!');
+        } else {
+          alert(`Error: ${data.detail}`);
+        }
+      })
+      .catch(error => {
+        console.error('Error saving workflow:', error);
+        alert('Failed to save workflow.');
+      });
     }
-    return <DagGraph data={preview} onNodeDoubleClick={handleNodeDoubleClick} />;
   };
 
   return (
-    <>
-      <Card
-        title={uploadedFile ? `工作流: ${uploadedFile}` : "新建工作流"}
-        extra={
-          preview && (
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <Switch
-                checkedChildren={<CodeOutlined />}
-                unCheckedChildren={<ApartmentOutlined />}
-                checked={viewMode === 'code'}
-                onChange={(checked) => setViewMode(checked ? 'code' : 'dag')}
-              />
-              <Button onClick={() => handleReparse(editedCode)}>更新 DAG</Button>
-              <Button type="primary" size="large" onClick={handleSubmit} loading={isExecuting}>提交</Button>
-            </div>
-          )
-        }
-        styles={{ body: { height: 'calc(100vh - 220px)', overflow: 'auto' } }}
-      >
-        {renderContent()}
-      </Card>
-      
-      <Modal
-          title={`编辑节点: ${editingNode?.name}`}
-          open={!!editingNode}
-          onOk={handleNodeEditSave}
-          onCancel={() => setEditingNode(null)}
-      >
-          <p>命令:</p>
-          <TextArea 
-              rows={4} 
-              value={nodeCommand} 
-              onChange={(e) => setNodeCommand(e.target.value)} 
-          />
+    <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
+      <div ref={stencilContainerRef} style={{ width: '250px', borderRight: '1px solid #dfe3e8', position: 'relative' }}></div>
+      <div style={{ flex: 1, position: 'relative' }}>
+        <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, display: 'flex', alignItems: 'center', background: 'white', padding: '8px', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <span style={{ marginRight: '8px', fontWeight: '500' }}>Workflow Name:</span>
+          <Input value={workflowName} onChange={e => setWorkflowName(e.target.value)} style={{ width: '200px' }} />
+        </div>
+        <div ref={containerRef} style={{ width: '100%', height: '100%' }}></div>
+        <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10 }}>
+          <Button type="primary" onClick={handleSave}>Save Workflow</Button>
+        </div>
+      </div>
+      <Modal title="Edit Task" open={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
+        <p>Name:</p>
+        <Input value={nodeName} onChange={e => setNodeName(e.target.value)} />
+        <p>Command:</p>
+        <Input.TextArea value={nodeCommand} onChange={e => setNodeCommand(e.target.value)} rows={4} />
       </Modal>
-      <Modal
-          title="执行结果"
-          open={!!executionResult}
-          onCancel={() => setExecutionResult(null)}
-          footer={[
-              <Button key="back" onClick={() => setExecutionResult(null)}>
-                  关闭
-              </Button>,
-          ]}
-      >
-          {isExecuting ? <Spin /> : (
-              <div>
-                  <h4>标准输出:</h4>
-                  <pre style={{ background: '#f5f5f5', padding: '10px', borderRadius: '4px' }}>
-                      {executionResult?.stdout || '(空)'}
-                  </pre>
-                  <h4>标准错误:</h4>
-                  <pre style={{ background: '#fffbe6', color: '#d4380d', padding: '10px', borderRadius: '4px' }}>
-                      {executionResult?.stderr || '(空)'}
-                  </pre>
-              </div>
-          )}
-      </Modal>
-    </>
+    </div>
   );
 };
 

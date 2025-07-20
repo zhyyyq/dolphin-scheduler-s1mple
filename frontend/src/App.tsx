@@ -6,7 +6,6 @@ import zhCN from 'antd/locale/zh_CN';
 
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
-import VersionHistoryPage from './pages/VersionHistoryPage';
 import WorkflowEditorPage from './pages/WorkflowEditorPage';
 import WorkflowViewerPage from './pages/WorkflowViewerPage';
 
@@ -30,9 +29,9 @@ const App: React.FC = () => {
       label: <Link to="/">工作流</Link>,
     },
     {
-      key: '/upload',
+      key: '/editor',
       icon: <PlusOutlined />,
-      label: <Link to="/upload">新建工作流</Link>,
+      label: <Link to="/editor">新建工作流</Link>,
     },
   ];
 
@@ -54,9 +53,8 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/" element={<HomePage />} />
-            <Route path="/upload" element={<WorkflowEditorPage />} />
+            <Route path="/editor" element={<WorkflowEditorPage />} />
             <Route path="/project/:projectCode/workflow/:workflowCode" element={<WorkflowViewerPage />} />
-            <Route path="/workflow/:workflowName/history" element={<VersionHistoryPage />} />
           </Routes>
         </Content>
       </Layout>

@@ -7369,3 +7369,939 @@ STDERR: None
 2025-07-20 08:41:17,714 - python_multipart.multipart - DEBUG - Calling on_end with no data
 2025-07-20 08:41:17,752 - src.backend.main - INFO - Changes detected for demo1.yaml. Committing...
 2025-07-20 08:41:17,873 - src.backend.main - INFO - Committed 'demo1.yaml' with message: 'Create workflow: demo1.yaml'
+2025-07-20 02:03:54,195 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 02:03:54,458 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89BB9640>
+2025-07-20 02:03:54,458 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:54,458 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:03:54,458 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:03:54,458 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:03:54,458 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:54,466 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:03:54 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:03:54,466 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:03:54,466 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:03:54,466 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:03:54,466 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:03:54,466 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:03:54,466 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:54,466 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:03:54,466 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:03:54,466 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:03:54,466 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:54,478 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:03:54 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:03:54,478 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:03:54,478 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:03:54,478 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:03:54,478 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:03:54,478 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:03:54,478 - httpcore.connection - DEBUG - close.started
+2025-07-20 02:03:54,478 - httpcore.connection - DEBUG - close.complete
+2025-07-20 02:03:54,609 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 02:03:54,858 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89EDEE40>
+2025-07-20 02:03:54,858 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:54,858 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:03:54,858 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:03:54,858 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:03:54,858 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:54,858 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:03:54 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:03:54,868 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:03:54,868 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:03:54,868 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:03:54,869 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:03:54,869 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:03:54,869 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:54,869 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:03:54,869 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:03:54,869 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:03:54,869 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:54,871 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:03:54 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:03:54,871 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:03:54,871 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:03:54,871 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:03:54,871 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:03:54,871 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:03:54,871 - httpcore.connection - DEBUG - close.started
+2025-07-20 02:03:54,871 - httpcore.connection - DEBUG - close.complete
+2025-07-20 02:03:56,668 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 02:03:56,925 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89EFCCB0>
+2025-07-20 02:03:56,925 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:56,925 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:03:56,925 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:03:56,925 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:03:56,925 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:56,933 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:03:56 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:03:56,933 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=1 "HTTP/1.1 200 OK"
+2025-07-20 02:03:56,933 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:03:56,933 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:03:56,933 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:03:56,933 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:03:56,933 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:56,933 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:03:56,933 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:03:56,933 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:03:56,933 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:56,952 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:03:56 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:03:56,954 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-instances?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:03:56,954 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:03:56,960 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:03:56,960 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:03:56,960 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:03:56,960 - httpcore.connection - DEBUG - close.started
+2025-07-20 02:03:56,960 - httpcore.connection - DEBUG - close.complete
+2025-07-20 02:03:57,093 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 02:03:57,357 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89EDECC0>
+2025-07-20 02:03:57,357 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:57,357 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:03:57,357 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:03:57,357 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:03:57,357 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:57,360 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:03:57 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:03:57,360 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=1 "HTTP/1.1 200 OK"
+2025-07-20 02:03:57,360 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:03:57,360 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:03:57,360 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:03:57,360 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:03:57,360 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:57,360 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:03:57,360 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:03:57,360 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:03:57,360 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:03:57,373 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:03:57 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:03:57,373 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-instances?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:03:57,373 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:03:57,373 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:03:57,373 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:03:57,373 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:03:57,375 - httpcore.connection - DEBUG - close.started
+2025-07-20 02:03:57,375 - httpcore.connection - DEBUG - close.complete
+2025-07-20 02:04:00,797 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 02:04:01,068 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89DD6900>
+2025-07-20 02:04:01,068 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:04:01,069 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:04:01,069 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:04:01,069 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:04:01,069 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:04:01,076 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:04:01 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:04:01,076 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:04:01,076 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:04:01,076 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:04:01,076 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:04:01,076 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:04:01,076 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:04:01,076 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:04:01,078 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:04:01,078 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:04:01,078 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:04:01,084 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:04:01 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:04:01,084 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:04:01,084 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:04:01,084 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:04:01,084 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:04:01,084 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:04:01,084 - httpcore.connection - DEBUG - close.started
+2025-07-20 02:04:01,085 - httpcore.connection - DEBUG - close.complete
+2025-07-20 02:04:01,296 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 02:04:01,560 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89DD6C30>
+2025-07-20 02:04:01,560 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:04:01,560 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:04:01,560 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:04:01,560 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:04:01,560 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:04:01,568 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:04:01 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:04:01,568 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:04:01,568 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:04:01,568 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:04:01,568 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:04:01,568 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:04:01,568 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:04:01,568 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:04:01,568 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:04:01,568 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:04:01,568 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:04:01,578 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:04:01 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:04:01,578 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:04:01,578 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:04:01,578 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:04:01,578 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:04:01,578 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:04:01,578 - httpcore.connection - DEBUG - close.started
+2025-07-20 02:04:01,578 - httpcore.connection - DEBUG - close.complete
+2025-07-20 02:04:04,904 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 02:04:04,904 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 02:04:04,904 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 02:04:04,904 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:04:04,904 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 02:04:04,904 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 02:04:04,904 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:04:04,904 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 02:04:04,905 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 02:04:04,905 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 02:04:04,905 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 02:04:04,928 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 02:06:25,426 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 02:06:25,675 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89EA4D70>
+2025-07-20 02:06:25,675 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:06:25,675 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:06:25,675 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:06:25,675 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:06:25,675 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:06:25,679 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:06:25 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:06:25,679 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:06:25,679 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:06:25,679 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:06:25,679 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:06:25,679 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:06:25,679 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:06:25,679 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:06:25,679 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:06:25,679 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:06:25,679 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:06:25,689 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:06:25 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:06:25,689 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:06:25,689 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:06:25,689 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:06:25,689 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:06:25,690 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:06:25,690 - httpcore.connection - DEBUG - close.started
+2025-07-20 02:06:25,690 - httpcore.connection - DEBUG - close.complete
+2025-07-20 02:06:25,813 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 02:06:26,062 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF8B23C980>
+2025-07-20 02:06:26,062 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:06:26,062 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:06:26,062 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:06:26,062 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:06:26,062 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:06:26,066 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:06:26 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:06:26,066 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:06:26,066 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:06:26,066 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:06:26,066 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:06:26,066 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:06:26,066 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 02:06:26,066 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 02:06:26,066 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 02:06:26,066 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 02:06:26,066 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 02:06:26,076 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 01:06:26 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 02:06:26,076 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 02:06:26,076 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 02:06:26,076 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 02:06:26,076 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 02:06:26,076 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 02:06:26,076 - httpcore.connection - DEBUG - close.started
+2025-07-20 02:06:26,076 - httpcore.connection - DEBUG - close.complete
+2025-07-20 02:06:41,725 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 02:06:41,725 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 02:06:41,725 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 02:06:41,725 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:06:41,725 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 02:06:41,725 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 02:06:41,725 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:06:41,725 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 02:06:41,725 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 02:06:41,725 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 02:06:41,725 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 02:06:41,750 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 02:16:59,784 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 02:16:59,784 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 02:16:59,784 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 02:16:59,784 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:16:59,784 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 02:16:59,784 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 02:16:59,784 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:16:59,784 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 02:16:59,784 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 02:16:59,785 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 02:16:59,785 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 02:16:59,806 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 02:18:28,221 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 02:18:28,221 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 02:18:28,221 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 02:18:28,221 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:18:28,221 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 02:18:28,221 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 02:18:28,221 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:18:28,221 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 02:18:28,221 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 02:18:28,221 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 02:18:28,221 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 02:18:28,243 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 02:18:37,045 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 02:18:37,045 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 02:18:37,045 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 02:18:37,045 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:18:37,045 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 02:18:37,045 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 02:18:37,045 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:18:37,045 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 02:18:37,045 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 02:18:37,045 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 02:18:37,045 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 02:18:37,066 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 02:22:26,760 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 02:22:26,760 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 02:22:26,760 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 02:22:26,761 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:22:26,761 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 02:22:26,761 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 02:22:26,761 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:22:26,761 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 02:22:26,761 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 02:22:26,761 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 02:22:26,761 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 02:22:26,784 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 02:28:54,053 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 02:28:54,053 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 02:28:54,053 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 02:28:54,053 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:28:54,053 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 02:28:54,053 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 02:28:54,053 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 02:28:54,053 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 02:28:54,053 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 02:28:54,053 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 02:28:54,053 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 02:28:54,077 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 03:38:49,942 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 03:38:50,192 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89EDD640>
+2025-07-20 03:38:50,192 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:38:50,192 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:38:50,192 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:38:50,192 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:38:50,192 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:38:50,207 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:38:50 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:38:50,207 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:38:50,207 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:38:50,207 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:38:50,207 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:38:50,207 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:38:50,208 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:38:50,208 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:38:50,208 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:38:50,208 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:38:50,208 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:38:50,214 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:38:50 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:38:50,215 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:38:50,215 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:38:50,215 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:38:50,215 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:38:50,215 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:38:50,215 - httpcore.connection - DEBUG - close.started
+2025-07-20 03:38:50,215 - httpcore.connection - DEBUG - close.complete
+2025-07-20 03:38:50,409 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 03:38:50,657 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF8B23CEF0>
+2025-07-20 03:38:50,658 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:38:50,658 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:38:50,658 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:38:50,658 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:38:50,658 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:38:50,666 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:38:50 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:38:50,667 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:38:50,668 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:38:50,668 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:38:50,668 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:38:50,669 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:38:50,669 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:38:50,670 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:38:50,670 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:38:50,670 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:38:50,670 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:38:50,675 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:38:50 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:38:50,675 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:38:50,677 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:38:50,677 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:38:50,677 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:38:50,677 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:38:50,677 - httpcore.connection - DEBUG - close.started
+2025-07-20 03:38:50,678 - httpcore.connection - DEBUG - close.complete
+2025-07-20 03:38:53,874 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 03:38:53,874 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 03:38:53,874 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 03:38:53,874 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:38:53,874 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 03:38:53,874 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 03:38:53,874 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:38:53,874 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 03:38:53,875 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 03:38:53,875 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 03:38:53,875 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 03:38:53,897 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 03:45:08,550 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 03:45:08,807 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89DA7410>
+2025-07-20 03:45:08,807 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:45:08,807 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:45:08,807 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:45:08,807 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:45:08,807 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:45:08,818 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:45:08 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:45:08,820 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:45:08,820 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:45:08,820 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:45:08,820 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:45:08,820 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:45:08,820 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:45:08,823 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:45:08,823 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:45:08,823 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:45:08,823 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:45:08,827 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:45:08 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:45:08,827 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:45:08,827 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:45:08,827 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:45:08,827 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:45:08,827 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:45:08,827 - httpcore.connection - DEBUG - close.started
+2025-07-20 03:45:08,827 - httpcore.connection - DEBUG - close.complete
+2025-07-20 03:45:08,967 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 03:45:09,220 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89EFFC80>
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:45:09 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:45:09,225 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:45:09,225 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:45:09,236 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:45:09 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:45:09,236 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:45:09,236 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:45:09,236 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:45:09,236 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:45:09,236 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:45:09,236 - httpcore.connection - DEBUG - close.started
+2025-07-20 03:45:09,236 - httpcore.connection - DEBUG - close.complete
+2025-07-20 03:45:12,901 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 03:45:12,901 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 03:45:12,901 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 03:45:12,901 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:45:12,901 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 03:45:12,901 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 03:45:12,902 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:45:12,902 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 03:45:12,902 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 03:45:12,902 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 03:45:12,902 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 03:45:12,926 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 03:46:26,279 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 03:46:26,279 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 03:46:26,279 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 03:46:26,279 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:46:26,279 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 03:46:26,279 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 03:46:26,279 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:46:26,279 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 03:46:26,279 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 03:46:26,279 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 03:46:26,279 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 03:46:26,301 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 03:47:27,557 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 03:47:27,833 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF8B24A090>
+2025-07-20 03:47:27,833 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:47:27,833 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:47:27,833 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:47:27,833 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:47:27,833 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:47:27,843 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:47:27 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:47:27,843 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:47:27,843 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:47:27,843 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:47:27,843 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:47:27,843 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:47:27,844 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:47:27,844 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:47:27,844 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:47:27,844 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:47:27,844 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:47:27,849 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:47:27 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:47:27,849 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:47:27,851 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:47:27,851 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:47:27,851 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:47:27,851 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:47:27,851 - httpcore.connection - DEBUG - close.started
+2025-07-20 03:47:27,851 - httpcore.connection - DEBUG - close.complete
+2025-07-20 03:47:27,971 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 03:47:28,231 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF8B248830>
+2025-07-20 03:47:28,231 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:47:28,231 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:47:28,231 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:47:28,231 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:47:28,231 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:47:28,238 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:47:28 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:47:28,238 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:47:28,238 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:47:28,239 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:47:28,239 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:47:28,239 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:47:28,239 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:47:28,239 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:47:28,239 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:47:28,239 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:47:28,239 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:47:28,245 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:47:28 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:47:28,245 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:47:28,245 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:47:28,245 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:47:28,245 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:47:28,245 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:47:28,245 - httpcore.connection - DEBUG - close.started
+2025-07-20 03:47:28,245 - httpcore.connection - DEBUG - close.complete
+2025-07-20 03:47:33,785 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 03:47:33,785 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 03:47:33,785 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 03:47:33,785 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:47:33,785 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 03:47:33,785 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 03:47:33,785 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:47:33,785 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 03:47:33,785 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 03:47:33,785 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 03:47:33,785 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 03:47:33,806 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 03:50:51,362 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 03:50:51,617 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89EFCD40>
+2025-07-20 03:50:51,617 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:50:51,618 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:50:51,618 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:50:51,618 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:50:51,618 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:50:51,626 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:50:51 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:50:51,626 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:50:51,626 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:50:51,626 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:50:51,627 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:50:51,627 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:50:51,627 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:50:51,627 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:50:51,628 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:50:51,628 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:50:51,628 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:50:51,633 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:50:51 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:50:51,633 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:50:51,633 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:50:51,633 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:50:51,633 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:50:51,633 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:50:51,633 - httpcore.connection - DEBUG - close.started
+2025-07-20 03:50:51,634 - httpcore.connection - DEBUG - close.complete
+2025-07-20 03:50:51,776 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 03:50:52,042 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF8B255430>
+2025-07-20 03:50:52,042 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:50:52,042 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:50:52,042 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:50:52,042 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:50:52,042 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:50:52,042 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:50:52 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:50:52,042 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:50:52,042 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:50:52,042 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:50:52,042 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:50:52,042 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:50:52,042 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:50:52,052 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:50:52,052 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:50:52,052 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:50:52,052 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:50:52,056 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:50:52 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:50:52,057 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:50:52,057 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:50:52,057 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:50:52,057 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:50:52,057 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:50:52,057 - httpcore.connection - DEBUG - close.started
+2025-07-20 03:50:52,058 - httpcore.connection - DEBUG - close.complete
+2025-07-20 03:53:11,730 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 03:53:11,730 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 03:53:11,730 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 03:53:11,730 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:53:11,730 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 03:53:11,730 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 03:53:11,730 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:53:11,730 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 03:53:11,730 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 03:53:11,730 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 03:53:11,730 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 03:53:11,757 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 03:55:03,933 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 03:55:04,194 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF89EFF380>
+2025-07-20 03:55:04,194 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:55:04,194 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:55:04,194 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:55:04,194 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:55:04,194 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:55:04,203 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:55:04 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:55:04,203 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:55:04,203 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:55:04,203 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:55:04,203 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:55:04,203 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:55:04,203 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:55:04,203 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:55:04,203 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:55:04,205 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:55:04,205 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:55:04,210 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:55:04 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:55:04,210 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:55:04,210 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:55:04,210 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:55:04,210 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:55:04,210 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:55:04,210 - httpcore.connection - DEBUG - close.started
+2025-07-20 03:55:04,210 - httpcore.connection - DEBUG - close.complete
+2025-07-20 03:55:04,334 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 03:55:04,600 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x000001EF8B2549B0>
+2025-07-20 03:55:04,601 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:55:04,601 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:55:04,601 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:55:04,601 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:55:04,601 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:55:04,608 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:55:04 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:55:04,608 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:55:04,608 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:55:04,608 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:55:04,608 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:55:04,608 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:55:04,608 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 03:55:04,609 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 03:55:04,609 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 03:55:04,609 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 03:55:04,609 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 03:55:04,615 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 02:55:04 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 03:55:04,615 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 03:55:04,615 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 03:55:04,615 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 03:55:04,615 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 03:55:04,615 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 03:55:04,615 - httpcore.connection - DEBUG - close.started
+2025-07-20 03:55:04,615 - httpcore.connection - DEBUG - close.complete
+2025-07-20 03:55:07,148 - python_multipart.multipart - DEBUG - Calling on_part_begin with no data
+2025-07-20 03:55:07,148 - python_multipart.multipart - DEBUG - Calling on_header_field with data[42:61]
+2025-07-20 03:55:07,148 - python_multipart.multipart - DEBUG - Calling on_header_value with data[63:108]
+2025-07-20 03:55:07,148 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:55:07,148 - python_multipart.multipart - DEBUG - Calling on_header_field with data[110:122]
+2025-07-20 03:55:07,148 - python_multipart.multipart - DEBUG - Calling on_header_value with data[124:148]
+2025-07-20 03:55:07,148 - python_multipart.multipart - DEBUG - Calling on_header_end with no data
+2025-07-20 03:55:07,148 - python_multipart.multipart - DEBUG - Calling on_headers_finished with no data
+2025-07-20 03:55:07,148 - python_multipart.multipart - DEBUG - Calling on_part_data with data[152:770]
+2025-07-20 03:55:07,148 - python_multipart.multipart - DEBUG - Calling on_part_end with no data
+2025-07-20 03:55:07,148 - python_multipart.multipart - DEBUG - Calling on_end with no data
+2025-07-20 03:55:07,170 - src.backend.main - INFO - No changes to commit for demo1.yaml
+2025-07-20 04:19:00,964 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:19:01,232 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EA808470>
+2025-07-20 04:19:01,232 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:01,233 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:01,233 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:01,233 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:01,233 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:01,240 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:01 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:01,240 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:01,240 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:01,240 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:01,240 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:01,240 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:01,241 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:01,241 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:01,241 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:01,241 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:01,241 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:01,247 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:01 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:01,247 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:01,247 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:01,247 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:01,247 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:01,247 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:01,247 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:19:01,248 - httpcore.connection - DEBUG - close.complete
+2025-07-20 04:19:01,370 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:19:01,640 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EA83B830>
+2025-07-20 04:19:01,640 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:01,644 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:01,644 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:01,644 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:01,644 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:01,652 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:01 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:01,652 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:01,652 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:01,652 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:01,652 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:01,652 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:01,652 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:01,652 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:01,652 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:01,652 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:01,652 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:01,657 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:01 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:01,657 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:01,657 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:01,657 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:01,657 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:01,657 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:01,657 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:19:01,658 - httpcore.connection - DEBUG - close.complete
+2025-07-20 04:19:16,517 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:19:16,766 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EA861E20>
+2025-07-20 04:19:16,767 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:16,767 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:16,767 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:16,767 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:16,767 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:16,774 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:16 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:16,774 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:16,774 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:16,775 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:16,775 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:16,775 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:16,775 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:16,784 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:16,784 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:16,784 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:16,785 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:16,792 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:16 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:16,793 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:16,793 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:16,793 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:16,793 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:16,793 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:16,793 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:19:16,793 - httpcore.connection - DEBUG - close.complete
+2025-07-20 04:19:16,915 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:19:17,183 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EA83A210>
+2025-07-20 04:19:17,183 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:17,183 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:17,183 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:17,184 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:17,184 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:17,189 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:17 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:17,189 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:17,189 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:17,189 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:17,189 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:17,189 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:17,189 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:17,189 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:17,189 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:17,189 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:17,189 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:17,195 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:17 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:17,195 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:17,195 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:17,195 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:17,195 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:17,195 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:17,195 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:19:17,195 - httpcore.connection - DEBUG - close.complete
+2025-07-20 04:19:18,731 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:19:19,004 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EA860590>
+2025-07-20 04:19:19,004 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:19,005 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:19,005 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:19,005 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:19,005 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:19,011 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:19 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:19,011 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:19,011 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:19,012 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:19,012 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:19,012 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:19,012 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:19,012 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:19,012 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:19,012 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:19,012 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:19,017 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:19 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:19,017 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:19,017 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:19,017 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:19,017 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:19,017 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:19,017 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:19:19,017 - httpcore.connection - DEBUG - close.complete
+2025-07-20 04:19:19,139 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:19:19,397 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EA7E3B60>
+2025-07-20 04:19:19,397 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:19,397 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:19,397 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:19,397 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:19,397 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:19,403 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:19 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:19,403 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:19,404 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:19,404 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:19,404 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:19,404 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:19,404 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:19,404 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:19,404 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:19,404 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:19,404 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:19,408 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:19 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:19,408 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:19,408 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:19,408 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:19,408 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:19,408 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:19,408 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:19:19,409 - httpcore.connection - DEBUG - close.complete
+2025-07-20 04:19:47,100 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:19:47,356 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EA860260>
+2025-07-20 04:19:47,356 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:47,356 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:47,356 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:47,356 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:47,356 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:47,361 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:47 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:47,361 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:47,361 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:47,361 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:47,361 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:47,361 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:47,362 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:47,362 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:47,362 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:47,362 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:47,362 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:47,362 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:47 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:47,362 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:47,362 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:47,362 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:47,362 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:47,362 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:47,362 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:19:47,362 - httpcore.connection - DEBUG - close.complete
+2025-07-20 04:19:47,489 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:19:47,748 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EBB98380>
+2025-07-20 04:19:47,748 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:47,751 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:47,751 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:47,751 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:47,751 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:47,756 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:47 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:47,756 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:47,756 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:47,756 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:47,756 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:47,756 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:47,756 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:47,756 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:19:47,756 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:19:47,756 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:19:47,756 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:19:47,762 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:19:47 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:19:47,762 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:19:47,762 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:19:47,762 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:19:47,762 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:19:47,762 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:19:47,762 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:19:47,762 - httpcore.connection - DEBUG - close.complete
+2025-07-20 04:22:40,689 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:22:40,953 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EBB99C70>
+2025-07-20 04:22:40,954 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:40,955 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:22:40,956 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:22:40,956 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:22:40,956 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:40,961 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:22:40 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:22:40,961 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:22:40,966 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:22:40,966 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:22:40,967 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:22:40,967 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:22:40,967 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:40,967 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:22:40,967 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:22:40,967 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:22:40,967 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:40,971 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:22:40 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:22:40,971 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:22:40,971 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:22:40,971 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:22:40,971 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:22:40,971 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:22:40,971 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:22:40,971 - httpcore.connection - DEBUG - close.complete
+2025-07-20 04:22:41,178 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:22:41,446 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EA863F50>
+2025-07-20 04:22:41,448 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:41,448 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:22:41,448 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:22:41,448 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:22:41,448 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:41,451 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:22:41 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:22:41,451 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:22:41,451 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:22:41,455 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:22:41,455 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:22:41,455 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:22:41,455 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:41,455 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:22:41,455 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:22:41,455 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:22:41,455 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:41,461 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:22:41 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:22:41,462 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-definition?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:22:41,462 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:22:41,462 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:22:41,462 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:22:41,462 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:22:41,462 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:22:41,462 - httpcore.connection - DEBUG - close.complete
+2025-07-20 04:22:41,780 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:22:42,030 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EA863530>
+2025-07-20 04:22:42,030 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:42,031 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:22:42,031 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:22:42,031 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:22:42,031 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:42,035 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:22:42 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:22:42,035 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=1 "HTTP/1.1 200 OK"
+2025-07-20 04:22:42,035 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:22:42,036 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:22:42,036 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:22:42,036 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:22:42,036 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:42,036 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:22:42,037 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:22:42,037 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:22:42,037 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:42,041 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:22:42 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:22:42,041 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-instances?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:22:42,041 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:22:42,041 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:22:42,041 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:22:42,041 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:22:42,041 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:22:42,042 - httpcore.connection - DEBUG - close.complete
+2025-07-20 04:22:42,246 - httpcore.connection - DEBUG - connect_tcp.started host='localhost' port=12345 local_address=None timeout=5.0 socket_options=None
+2025-07-20 04:22:42,522 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x00000265EBB99700>
+2025-07-20 04:22:42,522 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:42,524 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:22:42,525 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:22:42,525 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:22:42,526 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:42,529 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:22:42 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:22:42,530 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects?pageNo=1&pageSize=1 "HTTP/1.1 200 OK"
+2025-07-20 04:22:42,530 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:22:42,531 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:22:42,531 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:22:42,531 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:22:42,532 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:42,532 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-07-20 04:22:42,532 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'GET']>
+2025-07-20 04:22:42,532 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-07-20 04:22:42,532 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'GET']>
+2025-07-20 04:22:42,535 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Sun, 20 Jul 2025 03:22:42 GMT'), (b'Vary', b'Origin'), (b'Vary', b'Access-Control-Request-Method'), (b'Vary', b'Access-Control-Request-Headers'), (b'Content-Type', b'application/json'), (b'Vary', b'Accept-Encoding, User-Agent'), (b'Content-Encoding', b'gzip'), (b'Transfer-Encoding', b'chunked')])
+2025-07-20 04:22:42,536 - httpx - INFO - HTTP Request: GET http://localhost:12345/dolphinscheduler/projects/146765806329280/process-instances?pageNo=1&pageSize=100 "HTTP/1.1 200 OK"
+2025-07-20 04:22:42,536 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'GET']>
+2025-07-20 04:22:42,536 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-07-20 04:22:42,536 - httpcore.http11 - DEBUG - response_closed.started
+2025-07-20 04:22:42,536 - httpcore.http11 - DEBUG - response_closed.complete
+2025-07-20 04:22:42,536 - httpcore.connection - DEBUG - close.started
+2025-07-20 04:22:42,536 - httpcore.connection - DEBUG - close.complete
