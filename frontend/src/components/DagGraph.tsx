@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { Graph } from '@antv/x6';
-import { DagreLayout } from '@antv/layout';
 import { PreviewData, Task } from '../types';
 import './TaskNode'; // Ensure the custom node is registered
 
@@ -17,6 +16,8 @@ const DagGraph: React.FC<DagGraphProps> = ({ data, onNodeDoubleClick }) => {
     const nodes = graphData.tasks.map(task => ({
       id: task.name,
       shape: 'task-node',
+      width: 180,
+      height: 36,
       data: {
         label: task.name,
         taskType: task.type,
@@ -72,18 +73,12 @@ const DagGraph: React.FC<DagGraphProps> = ({ data, onNodeDoubleClick }) => {
     if (graphRef.current && data) {
       const { nodes, edges } = transformData(data);
       
-      const dagreLayout = new DagreLayout({
-        rankdir: 'TB',
-        align: 'UL',
-        ranksep: 50,
-        nodesep: 50,
-        controlPoints: true,
-      });
-
-      const model = { nodes, edges };
-      const newModel = (dagreLayout as any).layout(model);
+      const model = {
+        nodes: nodes.map((n, i) => ({ ...n, x: i * 200, y: i * 50 })),
+        edges,
+      };
       
-      graphRef.current.fromJSON(newModel);
+      graphRef.current.fromJSON(model);
       graphRef.current.centerContent();
     }
   }, [data]);
