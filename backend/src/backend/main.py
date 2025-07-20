@@ -104,9 +104,9 @@ async def read_root():
     return {"message": "Welcome to the Task Scheduler API"}
 
 @app.post("/api/parse")
-async def parse_python_file(file: UploadFile = File(...)):
+async def parse_yaml_file(file: UploadFile = File(...)):
     """
-    Parses the uploaded Python file, saves it to the repo, and commits it.
+    Parses the uploaded YAML file, saves it to the repo, and commits it.
     """
     try:
         content = await file.read()
@@ -137,7 +137,7 @@ async def parse_python_file(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Failed to parse file: {e}")
 
 @app.post("/api/reparse")
-async def reparse_code(body: dict):
+async def reparse_yaml_code(body: dict):
     code = body.get("code", "")
     try:
         parsed_data = parse_workflow(code)
@@ -261,29 +261,7 @@ async def get_workflow_details(project_code: int, workflow_code: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class CommandUpdater(ast.NodeTransformer):
-    def __init__(self, task_name, new_command):
-        self.task_name = task_name
-        self.new_command = new_command
-        self.found = False
-
-    def visit_Assign(self, node):
-        # We are looking for `task_name = Shell(...)`
-        if (len(node.targets) == 1 and
-                isinstance(node.targets[0], ast.Name) and
-                node.targets[0].id == self.task_name and
-                isinstance(node.value, ast.Call) and
-                hasattr(node.value.func, 'id') and # Make sure it's a simple name, not an attribute
-                node.value.func.id == 'Shell'):
-            
-            # Found the assignment. Now find the `command` keyword.
-            for keyword in node.value.keywords:
-                if keyword.arg == 'command':
-                    # Update the command value.
-                    keyword.value = ast.Constant(self.new_command)
-                    self.found = True
-                    break
-        return node
+from ruamel.yaml import YAML
 
 @app.post("/api/update-command")
 async def update_command(body: dict):
@@ -294,19 +272,27 @@ async def update_command(body: dict):
     if code is None or task_name is None or new_command is None:
         raise HTTPException(status_code=400, detail="Missing required fields: code, task_name, new_command.")
 
+    yaml = YAML()
     try:
-        tree = ast.parse(code)
-        updater = CommandUpdater(task_name, new_command)
-        new_tree = updater.visit(tree)
+        data = yaml.load(code)
         
-        if not updater.found:
-            raise HTTPException(status_code=404, detail=f"Task '{task_name}' with a 'command' argument not found.")
+        tasks = data.get('tasks', [])
+        task_found = False
+        for task in tasks:
+            if task.get('name') == task_name:
+                task['command'] = new_command
+                task_found = True
+                break
+        
+        if not task_found:
+            raise HTTPException(status_code=404, detail=f"Task '{task_name}' not found.")
 
-        # ast.unparse is available in Python 3.9+
-        new_code = ast.unparse(new_tree)
+        from io import StringIO
+        string_stream = StringIO()
+        yaml.dump(data, string_stream)
+        new_code = string_stream.getvalue()
+        
         return {"new_code": new_code}
-    except SyntaxError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid Python code syntax: {e}")
     except Exception as e:
         logger.error(f"Error updating command for task {task_name}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to update command: {e}")

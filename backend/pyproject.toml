@@ -12,6 +12,7 @@ dependencies = [
     "python-multipart>=0.0.20",
     "uvicorn[standard]>=0.29.0",
     "httpx",
+    "pyyaml",
 ]
 
 [tool.setuptools]
