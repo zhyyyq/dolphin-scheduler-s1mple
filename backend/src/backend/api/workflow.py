@@ -1,16 +1,15 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 import os
 import subprocess
-import httpx
 import uuid
 from ruamel.yaml import YAML
+from sqlalchemy.orm import Session
 from ..parser import parse_workflow
-from ..db.setup import create_db_connection
+from ..db.setup import create_db_connection, Workflow
 from ..core.logger import logger
-from ..services import git_service, file_service
+from ..services import git_service
 
-# Define project root and workflow repo directory consistently
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 WORKFLOW_REPO_DIR = os.path.join(BACKEND_DIR, "workflow_repo")
 
@@ -21,11 +20,15 @@ class WorkflowYaml(BaseModel):
     content: str
     original_filename: str = None
 
+def get_db():
+    db = create_db_connection()
+    try:
+        yield db
+    finally:
+        db.close()
+
 @router.post("/api/workflow/yaml")
-async def save_workflow_yaml(workflow: WorkflowYaml):
-    """
-    Saves or updates a YAML workflow file using its UUID as the filename.
-    """
+async def save_workflow_yaml(workflow: WorkflowYaml, db: Session = Depends(get_db)):
     try:
         yaml = YAML()
         data = yaml.load(workflow.content)
@@ -38,39 +41,27 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
         workflow_uuid = workflow_meta.get('uuid')
         is_create = not workflow_uuid
 
-        # Check for duplicate names in the database
-        connection = create_db_connection()
-        if connection:
-            cursor = connection.cursor(dictionary=True)
-            if is_create:
-                cursor.execute("SELECT * FROM workflows WHERE name = %s", (workflow_name,))
-            else:
-                cursor.execute("SELECT * FROM workflows WHERE name = %s AND uuid != %s", (workflow_name, workflow_uuid))
-            existing_workflow = cursor.fetchone()
-            connection.close()
-            if existing_workflow:
-                raise HTTPException(status_code=409, detail=f"A workflow with the name '{workflow_name}' already exists.")
+        if is_create:
+            existing_workflow = db.query(Workflow).filter(Workflow.name == workflow_name).first()
+        else:
+            existing_workflow = db.query(Workflow).filter(Workflow.name == workflow_name, Workflow.uuid != workflow_uuid).first()
+        
+        if existing_workflow:
+            raise HTTPException(status_code=409, detail=f"A workflow with the name '{workflow_name}' already exists.")
 
         if is_create:
             workflow_uuid = str(uuid.uuid4())
             data['workflow']['uuid'] = workflow_uuid
             commit_message = f"Create workflow {workflow_name}"
-            # Add to database
-            connection = create_db_connection()
-            if connection:
-                cursor = connection.cursor()
-                cursor.execute("INSERT INTO workflows (uuid, name) VALUES (%s, %s)", (workflow_uuid, workflow_name))
-                connection.commit()
-                connection.close()
+            new_workflow = Workflow(uuid=workflow_uuid, name=workflow_name)
+            db.add(new_workflow)
         else:
             commit_message = f"Update workflow {workflow_name}"
-            # Update in database
-            connection = create_db_connection()
-            if connection:
-                cursor = connection.cursor()
-                cursor.execute("UPDATE workflows SET name = %s WHERE uuid = %s", (workflow_name, workflow_uuid))
-                connection.commit()
-                connection.close()
+            db_workflow = db.query(Workflow).filter(Workflow.uuid == workflow_uuid).first()
+            if db_workflow:
+                db_workflow.name = workflow_name
+
+        db.commit()
 
         filename = f"{workflow_uuid}.yaml"
         file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
@@ -96,36 +87,26 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
             "filename": filename,
             "uuid": workflow_uuid
         }
-    except subprocess.CalledProcessError as e:
-        err_msg = f"Git operation failed: {e.stderr}"
-        logger.error(err_msg)
-        raise HTTPException(status_code=500, detail=err_msg)
     except Exception as e:
+        db.rollback()
         logger.error(f"Error in /api/workflow/yaml: {e}", exc_info=True)
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Failed to save workflow: {e}")
 
 @router.get("/api/workflows/local")
-async def get_local_workflows():
-    """Lists workflows from the database."""
-    connection = create_db_connection()
-    if not connection:
-        return []
+async def get_local_workflows(db: Session = Depends(get_db)):
     try:
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT uuid, name FROM workflows")
-        workflows = cursor.fetchall()
-        
+        workflows = db.query(Workflow).all()
         local_files = []
         for wf in workflows:
-            filename = f"{wf['uuid']}.yaml"
+            filename = f"{wf.uuid}.yaml"
             file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
             mod_time = os.path.getmtime(file_path) if os.path.exists(file_path) else None
             
             local_files.append({
-                "name": wf['name'],
-                "uuid": wf['uuid'],
+                "name": wf.name,
+                "uuid": wf.uuid,
                 "projectName": "Local File",
                 "releaseState": "OFFLINE",
                 "updateTime": mod_time,
@@ -136,15 +117,9 @@ async def get_local_workflows():
     except Exception as e:
         logger.error(f"Error fetching local workflows from DB: {e}")
         return []
-    finally:
-        if connection.is_connected():
-            connection.close()
 
 @router.get("/api/workflow/{workflow_uuid}")
 async def get_workflow_details(workflow_uuid: str):
-    """
-    Fetches the detailed structure of a specific local workflow using its UUID.
-    """
     try:
         filename = f"{workflow_uuid}.yaml"
         file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
@@ -173,27 +148,15 @@ async def get_workflow_details(workflow_uuid: str):
         raise HTTPException(status_code=500, detail=f"Could not read local workflow file: {e}")
 
 @router.delete("/api/workflow/{workflow_uuid}")
-async def delete_workflow(workflow_uuid: str):
-    """Deletes a local workflow file and its database record."""
-    # First, delete from the database
-    connection = create_db_connection()
-    if not connection:
-        raise HTTPException(status_code=500, detail="Could not connect to the database.")
+async def delete_workflow(workflow_uuid: str, db: Session = Depends(get_db)):
     try:
-        cursor = connection.cursor()
-        cursor.execute("DELETE FROM workflows WHERE uuid = %s", (workflow_uuid,))
-        connection.commit()
-        if cursor.rowcount == 0:
+        db_workflow = db.query(Workflow).filter(Workflow.uuid == workflow_uuid).first()
+        if db_workflow:
+            db.delete(db_workflow)
+            db.commit()
+        else:
             logger.warning(f"No workflow with UUID {workflow_uuid} found in the database to delete.")
-    except Exception as e:
-        logger.error(f"Error deleting workflow {workflow_uuid} from DB: {e}")
-        raise HTTPException(status_code=500, detail="Database error during deletion.")
-    finally:
-        if connection.is_connected():
-            connection.close()
 
-    # Then, delete the file from the repository
-    try:
         filename = f"{workflow_uuid}.yaml"
         file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
         if os.path.exists(file_path):
@@ -204,6 +167,7 @@ async def delete_workflow(workflow_uuid: str):
 
         return {"message": "Workflow deleted successfully."}
     except Exception as e:
+        db.rollback()
         logger.error(f"Error deleting local workflow file {workflow_uuid}: {e}", exc_info=True)
         if isinstance(e, HTTPException):
             raise e

@@ -4,7 +4,7 @@ from ..core.logger import logger
 
 router = APIRouter()
 
-DS_URL = "http://localhost:12345/dolphinscheduler"
+DS_URL = "http://dolphinscheduler-api:12345/dolphinscheduler"
 TOKEN = "8b6c34a254ca718549ac877b10804235"
 HEADERS = {"token": TOKEN}
 

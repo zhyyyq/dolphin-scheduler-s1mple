@@ -1,43 +1,27 @@
-import psycopg2
-from psycopg2 import OperationalError
+from sqlalchemy import create_engine, Column, String, text
+from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 from ..core.logger import logger
 
+DATABASE_URL = "postgresql+psycopg2://root:root@dolphinscheduler-postgresql:5432/dolphinscheduler"
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+class Workflow(Base):
+    __tablename__ = "workflows"
+    uuid = Column(String(36), primary_key=True)
+    name = Column(String(255), nullable=False)
+
 def create_db_connection():
-    """Creates a connection to the PostgreSQL database."""
-    try:
-        connection = psycopg2.connect(
-            host="dolphinscheduler-postgresql",
-            user="root",
-            password="root",
-            dbname="dolphinscheduler",
-            port=5432,
-            client_encoding='utf8'
-        )
-        return connection
-    except OperationalError as e:
-        logger.error(f"Error while connecting to PostgreSQL: {e}")
-        return None
+    """Creates a new database session."""
+    return SessionLocal()
 
 def init_db():
     """Initializes the database table."""
-    connection = create_db_connection()
-    if connection is None:
-        logger.error("Failed to connect to the database. Aborting table initialization.")
-        return
-
     try:
-        cursor = connection.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS workflows (
-                uuid VARCHAR(36) PRIMARY KEY,
-                name VARCHAR(255) NOT NULL
-            )
-        """)
-        connection.commit()
+        Base.metadata.create_all(bind=engine)
         logger.info("Workflow table initialized successfully.")
     except Exception as e:
         logger.error(f"Error during table initialization: {e}")
-    finally:
-        if connection:
-            connection.close()
