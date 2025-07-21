@@ -106,11 +106,12 @@ async def delete_ds_workflow(project_code: int, workflow_code: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/api/ds/execute/{project_code}/{process_definition_code}")
-async def execute_ds_workflow(project_code: int, process_definition_code: int):
+async def execute_ds_workflow(project_code: int, process_definition_code: int, scheduleTime: str):
     """Executes a DolphinScheduler workflow."""
     url = f"{DS_URL.rstrip('/')}/projects/{project_code}/executors/start-process-instance"
     payload = {
         "processDefinitionCode": process_definition_code,
+        "scheduleTime": scheduleTime,
         "failureStrategy": "CONTINUE",
         "warningType": "NONE",
         "warningGroupId": 0,

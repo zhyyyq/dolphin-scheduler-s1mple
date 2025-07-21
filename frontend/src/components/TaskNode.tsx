@@ -29,42 +29,47 @@ register({
       top: {
         position: 'top',
         attrs: {
-          circle: {
+          portBody: {
             magnet: true,
-            stroke: '#8f8f8f',
-            r: 5,
+          },
+          portDot: {
+            fill: '#8f8f8f',
           },
         },
       },
       bottom: {
         position: 'bottom',
         attrs: {
-          circle: {
+          portBody: {
             magnet: true,
-            stroke: '#8f8f8f',
-            r: 5,
+          },
+          portDot: {
+            fill: '#8f8f8f',
           },
         },
       },
       left: {
         position: 'left',
         attrs: {
-          circle: {
+          portBody: {
             magnet: true,
-            stroke: '#8f8f8f',
-            r: 5,
+          },
+          portDot: {
+            fill: '#8f8f8f',
           },
         },
       },
       right: {
         position: 'right',
         attrs: {
-          circle: {
+          portBody: {
             magnet: true,
-            stroke: '#8f8f8f',
-            r: 5,
+          },
+          portDot: {
+            fill: '#8f8f8f',
           },
         },
+        allowMulti: true,
       },
     },
   },
@@ -72,6 +77,19 @@ register({
     {
       tagName: 'circle',
       selector: 'portBody',
+      attrs: {
+        r: 10,
+        fill: 'transparent',
+        stroke: 'none',
+      },
+    },
+    {
+      tagName: 'circle',
+      selector: 'portDot',
+      attrs: {
+        r: 5,
+        fill: '#8f8f8f',
+      },
     },
   ],
 });
