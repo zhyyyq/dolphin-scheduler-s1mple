@@ -9,6 +9,7 @@ import functools
 import logging
 import httpx
 import ast
+import yaml
 from .parser import parse_workflow
 
 # Define project root and workflow repo directory consistently
@@ -28,6 +29,49 @@ logger = logging.getLogger(__name__)
 # --- End of new logging configuration ---
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Initializes the Git repository on application startup if it doesn't exist,
+    and ensures a default user is configured.
+    """
+    if not os.path.exists(WORKFLOW_REPO_DIR):
+        os.makedirs(WORKFLOW_REPO_DIR)
+
+    git_dir = os.path.join(WORKFLOW_REPO_DIR, ".git")
+    
+    if not os.path.exists(git_dir):
+        logger.info(f"Git repository not found in {WORKFLOW_REPO_DIR}. Initializing...")
+        try:
+            subprocess.run(["git", "init"], cwd=WORKFLOW_REPO_DIR, check=True, capture_output=True)
+            logger.info("Git repository initialized successfully.")
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            logger.error(f"Failed to initialize Git repository: {e}")
+            return # Stop if git init fails
+
+    # Check for user config and set a default if not present
+    try:
+        user_name = subprocess.run(
+            ["git", "config", "user.name"],
+            cwd=WORKFLOW_REPO_DIR, capture_output=True, text=True
+        ).stdout.strip()
+        user_email = subprocess.run(
+            ["git", "config", "user.email"],
+            cwd=WORKFLOW_REPO_DIR, capture_output=True, text=True
+        ).stdout.strip()
+
+        if not user_name or not user_email:
+            logger.info("Git user not configured. Setting default user...")
+            subprocess.run(["git", "config", "user.name", "Scheduler Bot"], cwd=WORKFLOW_REPO_DIR, check=True)
+            subprocess.run(["git", "config", "user.email", "bot@example.com"], cwd=WORKFLOW_REPO_DIR, check=True)
+            logger.info("Default Git user configured successfully.")
+        else:
+            logger.info(f"Git user already configured: {user_name} <{user_email}>")
+
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        logger.error(f"Failed to check or configure Git user: {e}")
+
 
 # CORS configuration
 origins = [
@@ -65,9 +109,9 @@ def git_commit(file_path, message):
             logger.info(f"No changes to commit for {file_path}")
 
     except subprocess.CalledProcessError as e:
-        # git commit can fail if there's nothing to commit after adding (e.g. only whitespace changes)
-        # We can log this as a warning and continue.
-        logger.warning(f"Git operation warning for {file_path}: {e}\nSTDOUT: {e.stdout}\nSTDERR: {e.stderr}")
+        err_msg = f"Git operation failed for {file_path}: {e.stderr}"
+        logger.error(err_msg)
+        raise Exception(err_msg)
     except FileNotFoundError:
         logger.error("Git command not found. Please ensure Git is installed and in the system's PATH.")
 
@@ -199,18 +243,75 @@ async def get_workflows():
 
     except httpx.RequestError as e:
         logger.error(f"Could not connect to DolphinScheduler: {e}", exc_info=True)
-        raise HTTPException(status_code=502, detail=f"Could not connect to DolphinScheduler: {e}")
+        # Return empty list on connection error, so the UI can still function
+        return []
     except Exception as e:
         logger.error(f"Error fetching workflows from DolphinScheduler: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/workflows/local")
+async def get_local_workflows():
+    """Lists workflow YAML files from the local repository."""
+    try:
+        if not os.path.exists(WORKFLOW_REPO_DIR):
+            return []
+        
+        local_files = []
+        for filename in os.listdir(WORKFLOW_REPO_DIR):
+            if filename.endswith(".yaml") or filename.endswith(".yml"):
+                file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
+                try:
+                    # Get last modification time
+                    mod_time = os.path.getmtime(file_path)
+                    # Basic parsing to get workflow name from content
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = yaml.safe_load(f)
+                        workflow_name = content.get('workflow', {}).get('name', filename)
+
+                    local_files.append({
+                        "name": workflow_name,
+                        "projectName": "Local File",
+                        "releaseState": "OFFLINE",
+                        "updateTime": mod_time,
+                        "code": filename, # Use filename as a unique code
+                        "isLocal": True,
+                    })
+                except Exception as e:
+                    logger.error(f"Could not process local file {filename}: {e}")
+                    continue # Skip corrupted files
+        return local_files
+    except Exception as e:
+        logger.error(f"Error listing local workflows: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Could not list local workflows.")
+
 
 @app.get("/api/project/{project_code}/workflow/{workflow_code}")
-async def get_workflow_details(project_code: int, workflow_code: int):
+async def get_workflow_details(project_code: str, workflow_code: str):
     """
     Fetches the detailed structure of a specific workflow from DolphinScheduler
-    and transforms it into a format suitable for the frontend DAG graph.
+    or from a local file, and transforms it into a format suitable for the frontend DAG graph.
     """
+    # Check if it's a local file request
+    if project_code == "local":
+        try:
+            file_path = os.path.join(WORKFLOW_REPO_DIR, workflow_code)
+            if not os.path.exists(file_path):
+                raise HTTPException(status_code=404, detail="Local workflow file not found.")
+            
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            parsed_data = parse_workflow(content)
+            return {
+                "name": parsed_data.get('workflow', {}).get('name', workflow_code),
+                "tasks": parsed_data.get("tasks"),
+                "relations": parsed_data.get("relations"),
+            }
+        except Exception as e:
+            logger.error(f"Error reading local workflow file {workflow_code}: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Could not read local workflow file: {e}")
+
+    # --- Original DolphinScheduler logic ---
     ds_url = "http://localhost:12345/dolphinscheduler"
     token = "8b6c34a254ca718549ac877b10804235"
     headers = {"token": token}
@@ -320,7 +421,37 @@ async def get_workflow_content(workflow_name: str):
 
 
 @app.delete("/api/project/{project_code}/workflow/{workflow_code}")
-async def delete_workflow(project_code: int, workflow_code: int):
+async def delete_workflow(project_code: str, workflow_code: str):
+    # Handle local file deletion
+    if project_code == "local":
+        try:
+            file_path = os.path.join(WORKFLOW_REPO_DIR, workflow_code)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                # Manually handle git commit for deletion
+                subprocess.run(["git", "add", "-u", "."], cwd=WORKFLOW_REPO_DIR, check=True)
+                # Check if there's anything to commit
+                status_result = subprocess.run(
+                    ["git", "status", "--porcelain"],
+                    cwd=WORKFLOW_REPO_DIR,
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+                if status_result.stdout.strip():
+                    subprocess.run(
+                        ["git", "commit", "-m", f"Delete workflow file: {workflow_code}"],
+                        cwd=WORKFLOW_REPO_DIR,
+                        check=True
+                    )
+                return {"message": "Local workflow file deleted successfully."}
+            else:
+                raise HTTPException(status_code=404, detail="Local workflow file not found.")
+        except Exception as e:
+            logger.error(f"Error deleting local workflow file {workflow_code}: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Could not delete local workflow file: {e}")
+
+    # --- Original DolphinScheduler logic ---
     ds_url = "http://localhost:12345/dolphinscheduler"
     token = "8b6c34a254ca718549ac877b10804235"
     headers = {"token": token}
@@ -569,32 +700,101 @@ from pydantic import BaseModel
 class WorkflowYaml(BaseModel):
     name: str
     content: str
+    original_filename: str = None
 
 @app.post("/api/workflow/yaml")
 async def save_workflow_yaml(workflow: WorkflowYaml):
     """
-    Saves a YAML workflow file from raw content, saves it to the repo, and commits it.
+    Saves or updates a YAML workflow file locally and commits it.
+    Handles renaming by deleting the old file if the name changes.
     """
     try:
-        # Basic security check for the filename
-        if ".." in workflow.name or "/" in workflow.name or "\\" in workflow.name:
+        new_filename = f"{workflow.name}.yaml"
+        if ".." in new_filename or "/" in new_filename or "\\" in new_filename:
             raise HTTPException(status_code=400, detail="Invalid workflow name.")
 
-        filename = f"{workflow.name}.yaml"
-        
-        # Save the file to the version-controlled repository
         os.makedirs(WORKFLOW_REPO_DIR, exist_ok=True)
-        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
-        with open(file_path, "w", encoding="utf-8") as buffer:
+        new_file_path = os.path.join(WORKFLOW_REPO_DIR, new_filename)
+
+        commit_message = ""
+        
+        # --- Handle Update/Rename ---
+        if workflow.original_filename:
+            old_file_path = os.path.join(WORKFLOW_REPO_DIR, workflow.original_filename)
+            
+            # If filename has changed, it's a rename.
+            if workflow.original_filename != new_filename:
+                if os.path.exists(old_file_path):
+                    # Use git mv for proper rename tracking
+                    subprocess.run(
+                        ["git", "mv", old_file_path, new_file_path],
+                        cwd=WORKFLOW_REPO_DIR,
+                        check=True
+                    )
+                    commit_message = f"Rename workflow from {workflow.original_filename} to {new_filename}"
+                else:
+                    # Old file doesn't exist, treat as new file creation
+                    commit_message = f"Create workflow: {new_filename}"
+            else:
+                commit_message = f"Update workflow: {new_filename}"
+        # --- Handle Create ---
+        else:
+            commit_message = f"Create workflow: {new_filename}"
+
+        # Write the new content
+        with open(new_file_path, "w", encoding="utf-8") as buffer:
             buffer.write(workflow.content)
         
-        # Commit the new/updated workflow
-        git_commit(filename, f"Save workflow from low-code editor: {filename}")
+        # Add and commit all changes (add new file, stage rename)
+        subprocess.run(["git", "add", new_file_path], cwd=WORKFLOW_REPO_DIR, check=True)
+        subprocess.run(["git", "commit", "-m", commit_message], cwd=WORKFLOW_REPO_DIR, check=True)
 
         return {
             "message": "Workflow saved successfully.",
-            "filename": filename,
+            "filename": new_filename,
         }
+    except subprocess.CalledProcessError as e:
+        err_msg = f"Git operation failed: {e.stderr}"
+        logger.error(err_msg)
+        raise HTTPException(status_code=500, detail=err_msg)
     except Exception as e:
         logger.error(f"Error in /api/workflow/yaml: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to save workflow: {e}")
+
+class SubmitWorkflow(BaseModel):
+    filename: str
+
+@app.post("/api/workflow/submit")
+async def submit_workflow_to_ds(workflow: SubmitWorkflow):
+    """
+    Submits a local YAML workflow file to DolphinScheduler using the CLI.
+    """
+    try:
+        filename = workflow.filename
+        if ".." in filename or "/" in filename or "\\" in filename:
+            raise HTTPException(status_code=400, detail="Invalid workflow filename.")
+
+        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail=f"Workflow file '{filename}' not found.")
+
+        result = subprocess.run(
+            ["pydolphinscheduler", "yaml", "-f", file_path],
+            cwd=BACKEND_DIR,
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding='utf-8'
+        )
+        logger.info(f"pydolphinscheduler CLI output for {filename}:\n{result.stdout}")
+        
+        return {"message": f"Workflow '{filename}' submitted successfully."}
+    except subprocess.CalledProcessError as e:
+        logger.error(f"pydolphinscheduler CLI failed for {filename}: {e.stderr}")
+        raise HTTPException(status_code=500, detail=f"Failed to submit workflow to DolphinScheduler: {e.stderr}")
+    except FileNotFoundError:
+        logger.error("pydolphinscheduler command not found.")
+        raise HTTPException(status_code=500, detail="pydolphinscheduler command not found.")
+    except Exception as e:
+        logger.error(f"Error in /api/workflow/submit: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to submit workflow: {e}")

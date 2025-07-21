@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Graph } from '@antv/x6';
 import { Stencil } from '@antv/x6-plugin-stencil';
+import { Keyboard } from '@antv/x6-plugin-keyboard';
+import { Selection } from '@antv/x6-plugin-selection';
 import { Button, Modal, Input, App as AntApp } from 'antd';
 import * as yaml from 'js-yaml';
 import '../components/TaskNode'; // Register custom node
@@ -10,6 +12,7 @@ import api from '../api';
 
 const WorkflowEditorPage: React.FC = () => {
   const navigate = useNavigate();
+  const { projectCode, workflowCode } = useParams<{ projectCode: string; workflowCode: string }>();
   const { message } = AntApp.useApp();
   const containerRef = useRef<HTMLDivElement>(null);
   const stencilContainerRef = useRef<HTMLDivElement>(null);
@@ -22,7 +25,9 @@ const WorkflowEditorPage: React.FC = () => {
   const [workflowName, setWorkflowName] = useState('my-workflow');
 
   useEffect(() => {
-    if (containerRef.current && !graphRef.current) {
+    const initGraph = async () => {
+      if (!containerRef.current || graphRef.current) return;
+
       const graph = new Graph({
         container: containerRef.current,
         autoResize: true,
@@ -44,18 +49,6 @@ const WorkflowEditorPage: React.FC = () => {
           allowBlank: false,
           snap: {
             radius: 20,
-          },
-          createEdge() {
-            return this.createEdge({
-              shape: 'edge',
-              attrs: {
-                line: {
-                  stroke: '#8f8f8f',
-                  strokeWidth: 1,
-                },
-              },
-              zIndex: -1,
-            });
           },
           validateConnection({ sourceView, targetView, sourceMagnet, targetMagnet }) {
             // 确保连接桩不为空
@@ -87,7 +80,30 @@ const WorkflowEditorPage: React.FC = () => {
         },
       });
 
+      graph.use(
+        new Selection({
+          enabled: true,
+          rubberband: true,
+          showNodeSelectionBox: true,
+        }),
+      );
+
+      graph.use(
+        new Keyboard({
+          enabled: true,
+          global: true,
+        }),
+      );
+
       graphRef.current = graph;
+
+      // Bind keyboard events for deletion
+      graph.bindKey(['delete', 'backspace'], () => {
+        const selectedCells = graph.getSelectedCells();
+        if (selectedCells.length) {
+          graph.removeCells(selectedCells);
+        }
+      });
 
       if (stencilContainerRef.current) {
         const stencil = new Stencil({
@@ -135,8 +151,52 @@ const WorkflowEditorPage: React.FC = () => {
         setNodeCommand(node.getData().command);
         setIsModalVisible(true);
       });
-    }
-  }, []);
+
+      if (projectCode && workflowCode) {
+        try {
+          const response = await api.get<{ name: string; tasks: Task[]; relations: { from: string; to: string }[] }>(`/api/project/${projectCode}/workflow/${workflowCode}`);
+          const { name, tasks, relations } = response;
+          setWorkflowName(name);
+
+          const nodeMap = new Map();
+          tasks.forEach((task: Task, index: number) => {
+            const node = graph.createNode({
+              shape: 'task-node',
+              x: (index % 4) * 250,
+              y: Math.floor(index / 4) * 150,
+              data: {
+                label: task.name,
+                taskType: task.type,
+                command: task.command,
+              },
+              ports: { items: [{ group: 'in' }, { group: 'out' }] }
+            });
+            graph.addNode(node);
+            nodeMap.set(task.name, node);
+          });
+
+          relations.forEach((rel: { from: string; to: string }) => {
+            const sourceNode = nodeMap.get(rel.from);
+            const targetNode = nodeMap.get(rel.to);
+            if (sourceNode && targetNode) {
+              graph.addEdge({
+                source: sourceNode,
+                target: targetNode,
+                shape: 'edge',
+                attrs: { line: { stroke: '#8f8f8f', strokeWidth: 1 } },
+                zIndex: -1,
+              });
+            }
+          });
+
+        } catch (error) {
+          message.error('Failed to load workflow data.');
+        }
+      }
+    };
+
+    initGraph();
+  }, [projectCode, workflowCode, message]);
 
   const handleOk = () => {
     if (currentNode) {
@@ -192,6 +252,7 @@ const WorkflowEditorPage: React.FC = () => {
         await api.post('/api/workflow/yaml', {
           name: workflow.workflow.name,
           content: yamlStr,
+          original_filename: projectCode === 'local' ? workflowCode : undefined,
         });
         message.success('Workflow saved successfully!');
         navigate('/');

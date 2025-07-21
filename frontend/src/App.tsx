@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import WorkflowEditorPage from './pages/WorkflowEditorPage';
 import WorkflowViewerPage from './pages/WorkflowViewerPage';
+import WorkflowHistoryPage from './pages/WorkflowHistoryPage';
 
 import './App.css';
 
@@ -29,9 +30,9 @@ const App: React.FC = () => {
       label: <Link to="/">工作流</Link>,
     },
     {
-      key: '/editor',
+      key: '/workflow/edit',
       icon: <PlusOutlined />,
-      label: <Link to="/editor">新建工作流</Link>,
+      label: <Link to="/workflow/edit">新建工作流</Link>,
     },
   ];
 
@@ -53,7 +54,9 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/" element={<HomePage />} />
-            <Route path="/editor" element={<WorkflowEditorPage />} />
+            <Route path="/workflow/edit" element={<WorkflowEditorPage />} />
+            <Route path="/workflow/edit/:projectCode/:workflowCode" element={<WorkflowEditorPage />} />
+            <Route path="/workflow/:workflowName/history" element={<WorkflowHistoryPage />} />
             <Route path="/project/:projectCode/workflow/:workflowCode" element={<WorkflowViewerPage />} />
           </Routes>
         </Content>

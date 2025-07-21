@@ -1,10 +1,11 @@
 export interface Workflow {
-  code: number;
+  code: any; // Can be number from DS or string from local file
   name: string;
   projectCode: number;
   projectName: string;
-  releaseState: 'ONLINE' | 'OFFLINE';
+  releaseState: 'ONLINE' | 'OFFLINE' | 'UNSUBMITTED';
   updateTime: string;
+  isLocal?: boolean;
 }
 
 export interface Task {
