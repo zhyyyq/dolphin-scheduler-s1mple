@@ -16,6 +16,7 @@ export interface WorkflowDetail extends Workflow {
   relations: Relation[];
   filename: string;
   yaml_content: string;
+  schedule?: any;
 }
 
 export interface HttpParam {
