@@ -1,6 +1,6 @@
 import subprocess
 import os
-from ..core.logger import logger
+from core.logger import logger
 
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 WORKFLOW_REPO_DIR = os.path.join(BACKEND_DIR, "workflow_repo").replace('\\', '/')

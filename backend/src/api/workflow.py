@@ -5,10 +5,10 @@ import subprocess
 import uuid
 from ruamel.yaml import YAML
 from sqlalchemy.orm import Session
-from ..parser import parse_workflow
-from ..db.setup import create_db_connection, Workflow
-from ..core.logger import logger
-from ..services import git_service
+from parser import parse_workflow
+from db.setup import create_db_connection, Workflow
+from core.logger import logger
+from services import git_service
 
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 WORKFLOW_REPO_DIR = os.path.join(BACKEND_DIR, "workflow_repo")

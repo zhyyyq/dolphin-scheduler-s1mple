@@ -21,6 +21,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
+packages = ["backend"]
 package-dir = {"" = "src"}
 
 [[tool.uv.index]]

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 import httpx
 import os
 from dotenv import load_dotenv
-from ..core.logger import logger
+from core.logger import logger
 
 load_dotenv()
 
