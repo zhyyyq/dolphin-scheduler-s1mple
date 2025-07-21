@@ -5,7 +5,7 @@ import { Stencil } from '@antv/x6-plugin-stencil';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
 import { Selection } from '@antv/x6-plugin-selection';
 import { History } from '@antv/x6-plugin-history';
-import { Button, Modal, Input, App as AntApp, Switch, Select } from 'antd';
+import { Button, Modal, Input, App as AntApp, Switch, Select, Menu } from 'antd';
 import * as yaml from 'js-yaml';
 import '../components/TaskNode'; // Register custom node
 import { Task, Workflow } from '../types';
@@ -16,9 +16,15 @@ const WorkflowEditorPage: React.FC = () => {
   const { workflow_uuid } = useParams<{ workflow_uuid: string }>();
   const { message } = AntApp.useApp();
   const containerRef = useRef<HTMLDivElement>(null);
-  const stencilContainerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<Graph | null>(null);
 
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    px: number;
+    py: number;
+  }>({ visible: false, x: 0, y: 0, px: 0, py: 0 });
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isYamlModalVisible, setIsYamlModalVisible] = useState(false);
   const [yamlContent, setYamlContent] = useState('');
@@ -113,75 +119,13 @@ const WorkflowEditorPage: React.FC = () => {
         graph.redo();
       });
 
-      if (stencilContainerRef.current) {
-        const stencil = new Stencil({
-          title: 'Components',
-          target: graph,
-          stencilGraphWidth: 200,
-          collapsable: true,
-          groups: [
-            { name: 'general', title: 'General', collapsed: true },
-            { name: 'control_flow', title: 'Control Flow', collapsed: true },
-            { name: 'data', title: 'Data', collapsed: true },
-            { name: 'big_data', title: 'Big Data', collapsed: true },
-            { name: 'cloud_ml', title: 'Cloud/ML', collapsed: true },
-            { name: 'other', title: 'Other', collapsed: true },
-          ],
-          layoutOptions: {
-            columns: 3,
-            columnWidth: 80,
-            rowHeight: 60,
-          },
-        });
+      graph.on('blank:contextmenu', ({ e, x, y }) => {
+        e.preventDefault();
+        setContextMenu({ visible: true, x: e.clientX, y: e.clientY, px: x, py: y });
+      });
 
-        stencilContainerRef.current.appendChild(stencil.container);
-
-        const taskTypes = [
-          { label: 'Shell', type: 'SHELL', command: 'echo "Hello"', category: 'general' },
-          { label: 'Python', type: 'PYTHON', command: 'print("Hello")', category: 'general' },
-          { label: 'Conditions', type: 'CONDITIONS', command: '', category: 'control_flow' },
-          { label: 'Switch', type: 'SWITCH', command: '', category: 'control_flow' },
-          { label: 'Dependent', type: 'DEPENDENT', command: '', category: 'control_flow' },
-          { label: 'Sub Process', type: 'SUB_PROCESS', command: '', category: 'control_flow' },
-          { label: 'SQL', type: 'SQL', command: 'SELECT * FROM table', category: 'data' },
-          { label: 'DataX', type: 'DATAX', command: '', category: 'data' },
-          { label: 'Spark', type: 'SPARK', command: '', category: 'big_data' },
-          { label: 'Flink', type: 'FLINK', command: '', category: 'big_data' },
-          { label: 'Map Reduce', type: 'MR', command: '', category: 'big_data' },
-          { label: 'Kubernetes', type: 'K8S', command: '', category: 'cloud_ml' },
-          { label: 'SageMaker', type: 'SAGEMAKER', command: '', category: 'cloud_ml' },
-          { label: 'MLflow', type: 'MLFLOW', command: '', category: 'cloud_ml' },
-          { label: 'OpenMLDB', type: 'OPENMLDB', command: '', category: 'cloud_ml' },
-          { label: 'PyTorch', type: 'PYTORCH', command: '', category: 'cloud_ml' },
-          { label: 'DVC', type: 'DVC', command: '', category: 'cloud_ml' },
-          { label: 'HTTP', type: 'HTTP', command: 'curl http://example.com', category: 'other' },
-          { label: 'Procedure', type: 'PROCEDURE', command: '', category: 'other' },
-        ];
-
-        const nodesByCategory: { [key: string]: any[] } = {};
-        taskTypes.forEach(task => {
-          if (!nodesByCategory[task.category]) {
-            nodesByCategory[task.category] = [];
-          }
-          nodesByCategory[task.category].push(
-            graph.createNode({
-              shape: 'task-node',
-              width: 60,
-              height: 40,
-              data: {
-                label: task.label,
-                taskType: task.type,
-                command: task.command,
-                isStencil: true,
-              },
-            })
-          );
-        });
-
-        Object.keys(nodesByCategory).forEach(category => {
-          stencil.load(nodesByCategory[category], category);
-        });
-      }
+      graph.on('node:contextmenu', ({ e }) => e.preventDefault());
+      graph.on('edge:contextmenu', ({ e }) => e.preventDefault());
 
       graph.on('node:dblclick', ({ node }) => {
         setCurrentNode(node);
@@ -497,10 +441,71 @@ const WorkflowEditorPage: React.FC = () => {
     }
   };
 
+  const taskTypes = [
+    { label: 'Shell', type: 'SHELL', command: 'echo "Hello"', category: 'general' },
+    { label: 'Python', type: 'PYTHON', command: 'print("Hello")', category: 'general' },
+    { label: 'Conditions', type: 'CONDITIONS', command: '', category: 'control_flow' },
+    { label: 'Switch', type: 'SWITCH', command: '', category: 'control_flow' },
+    { label: 'Dependent', type: 'DEPENDENT', command: '', category: 'control_flow' },
+    { label: 'Sub Process', type: 'SUB_PROCESS', command: '', category: 'control_flow' },
+    { label: 'SQL', type: 'SQL', command: 'SELECT * FROM table', category: 'data' },
+    { label: 'DataX', type: 'DATAX', command: '', category: 'data' },
+    { label: 'Spark', type: 'SPARK', command: '', category: 'big_data' },
+    { label: 'Flink', type: 'FLINK', command: '', category: 'big_data' },
+    { label: 'Map Reduce', type: 'MR', command: '', category: 'big_data' },
+    { label: 'Kubernetes', type: 'K8S', command: '', category: 'cloud_ml' },
+    { label: 'SageMaker', type: 'SAGEMAKER', command: '', category: 'cloud_ml' },
+    { label: 'MLflow', type: 'MLFLOW', command: '', category: 'cloud_ml' },
+    { label: 'OpenMLDB', type: 'OPENMLDB', command: '', category: 'cloud_ml' },
+    { label: 'PyTorch', type: 'PYTORCH', command: '', category: 'cloud_ml' },
+    { label: 'DVC', type: 'DVC', command: '', category: 'cloud_ml' },
+    { label: 'HTTP', type: 'HTTP', command: 'curl http://example.com', category: 'other' },
+    { label: 'Procedure', type: 'PROCEDURE', command: '', category: 'other' },
+  ];
+
+  const taskCategories = [
+    { key: 'general', label: 'General' },
+    { key: 'control_flow', label: 'Control Flow' },
+    { key: 'data', label: 'Data' },
+    { key: 'big_data', label: 'Big Data' },
+    { key: 'cloud_ml', label: 'Cloud/ML' },
+    { key: 'other', label: 'Other' },
+  ];
+
+  const handleMenuClick = (e: { key: string }) => {
+    const graph = graphRef.current;
+    if (!graph) return;
+
+    const task = taskTypes.find(t => t.type === e.key);
+    if (task) {
+      graph.addNode({
+        shape: 'task-node',
+        x: contextMenu.px,
+        y: contextMenu.py,
+        data: {
+          label: task.label,
+          taskType: task.type,
+          command: task.command,
+        },
+      });
+    }
+    setContextMenu({ ...contextMenu, visible: false });
+  };
+
+  const menuItems = taskCategories.map(category => ({
+    key: category.key,
+    label: category.label,
+    children: taskTypes
+      .filter(task => task.category === category.key)
+      .map(task => ({
+        key: task.type,
+        label: task.label,
+      })),
+  }));
+
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
-      <div ref={stencilContainerRef} style={{ width: '250px', borderRight: '1px solid #dfe3e8', position: 'relative', height: '100%', overflowY: 'auto' }}></div>
-      <div style={{ flex: 1, position: 'relative' }}>
+      <div style={{ flex: 1, position: 'relative' }} onClick={() => setContextMenu({ ...contextMenu, visible: false })}>
         <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px', background: 'white', padding: '8px', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <span style={{ marginRight: '8px', fontWeight: '500', width: '120px' }}>Workflow Name:</span>
@@ -651,6 +656,16 @@ const WorkflowEditorPage: React.FC = () => {
           style={{ fontFamily: 'monospace', background: '#f5f5f5' }} 
         />
       </Modal>
+      {contextMenu.visible && (
+        <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 1000 }}>
+          <Menu
+            onClick={handleMenuClick}
+            items={menuItems}
+            mode="vertical"
+            style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.15)', borderRadius: '4px' }}
+          />
+        </div>
+      )}
     </div>
   );
 };

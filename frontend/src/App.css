@@ -101,3 +101,9 @@ body {
 .task-node-stencil .icon {
   font-size: 24px;
 }
+
+.task-icon-text {
+  font-size: 12px;
+  font-weight: bold;
+  color: #595959;
+}
