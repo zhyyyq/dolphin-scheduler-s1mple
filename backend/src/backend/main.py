@@ -540,18 +540,38 @@ async def get_workflow_history(workflow_name: str):
 async def get_workflow_commit_diff(workflow_name: str, commit_hash: str):
     """Gets the diff for a specific commit of a workflow file."""
     try:
+        # Using `git diff` is cleaner than `git show` for getting only the diff.
+        # The `^!` notation shows changes against all parents, handling merge commits.
         result = subprocess.run(
-            ["git", "show", "-m", "--pretty=format:", commit_hash, "--", workflow_name],
+            ["git", "diff", f"{commit_hash}^!", "--", workflow_name],
             cwd=WORKFLOW_REPO_DIR,
             check=True,
             capture_output=True,
             text=True,
             encoding='utf-8'
         )
-        # The --pretty=format: option ensures only the diff is returned.
         return {"diff": result.stdout.strip()}
     except subprocess.CalledProcessError as e:
-        logger.error(f"Git show failed for {workflow_name} at {commit_hash}: {e.stderr}")
+        # This can fail for the very first commit, which has no parents.
+        # Fallback to `git show` for the initial commit.
+        if "bad revision" in e.stderr:
+             try:
+                # For the first commit, `show` will display the creation of the file.
+                # We use --pretty=format: to remove commit metadata.
+                show_result = subprocess.run(
+                    ["git", "show", "--pretty=format:", commit_hash, "--", workflow_name],
+                    cwd=WORKFLOW_REPO_DIR,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    encoding='utf-8'
+                )
+                return {"diff": show_result.stdout.strip()}
+             except subprocess.CalledProcessError as show_e:
+                logger.error(f"Git show fallback failed for {workflow_name} at {commit_hash}: {show_e.stderr}")
+                raise HTTPException(status_code=404, detail="Commit or file not found.")
+        
+        logger.error(f"Git diff failed for {workflow_name} at {commit_hash}: {e.stderr}")
         raise HTTPException(status_code=404, detail="Commit or file not found.")
     except FileNotFoundError:
         raise HTTPException(status_code=500, detail="Git command not found.")
