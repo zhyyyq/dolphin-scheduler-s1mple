@@ -59,8 +59,16 @@ const api = {
     return handleResponse(response);
   },
   
-  async delete<T>(path: string): Promise<T> {
-    const response = await fetch(path, {
+  async delete<T>(path: string, params?: Record<string, any>): Promise<T> {
+    const url = new URL(path, window.location.origin);
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== undefined && params[key] !== null) {
+          url.searchParams.append(key, params[key]);
+        }
+      });
+    }
+    const response = await fetch(url.toString(), {
       method: 'DELETE',
     });
     return handleResponse(response);

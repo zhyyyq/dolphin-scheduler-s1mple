@@ -92,11 +92,10 @@ const HomePage: React.FC = () => {
 
   const handleDelete = useCallback(async (record: Workflow) => {
     try {
-      if (record.isLocal) {
-        await api.delete(`/api/workflow/${record.uuid}`);
-      } else {
-        await api.delete(`/api/ds/project/${record.projectCode}/workflow/${record.code}`);
-      }
+      await api.delete(`/api/workflow/${record.uuid}`, {
+        project_code: record.projectCode,
+        workflow_code: record.code,
+      });
       message.success('Workflow deleted successfully.');
       fetchWorkflows();
     } catch (err) {
