@@ -147,6 +147,8 @@ services:
   backend:
     build: ./backend
     profiles: ["diy"]
+    env_file:
+      - ./backend/docker.env
     ports:
       - "8000:8000"
     networks:
