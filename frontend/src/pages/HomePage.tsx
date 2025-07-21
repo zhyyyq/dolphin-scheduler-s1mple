@@ -46,37 +46,7 @@ const HomePage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const [dsWorkflows, localWorkflows] = await Promise.all([
-        api.get<Workflow[]>('/api/workflows'),
-        api.get<Workflow[]>('/api/workflows/local')
-      ]);
-
-      const localWorkflowsMap = new Map(localWorkflows.map(wf => [wf.name, wf]));
-      const dsWorkflowsMap = new Map(dsWorkflows.map(wf => [wf.name, wf]));
-
-      const allWorkflowNames = new Set([...Array.from(localWorkflowsMap.keys()), ...Array.from(dsWorkflowsMap.keys())]);
-
-      const combinedWorkflows = Array.from(allWorkflowNames).map(name => {
-        const localWf = localWorkflowsMap.get(name);
-        const dsWf = dsWorkflowsMap.get(name);
-
-        if (dsWf && localWf) {
-          // Both exist, merge them. DS is the source of truth for state.
-          return {
-            ...localWf, // start with local to get uuid, updateTime
-            ...dsWf,    // overwrite with DS data
-            uuid: localWf.uuid, // IMPORTANT: keep local uuid for editing
-            isLocal: true, // It's editable locally
-          };
-        } else if (dsWf) {
-          // Only exists in DolphinScheduler, not editable locally
-          return { ...dsWf, isLocal: false, uuid: dsWf.uuid || `${dsWf.projectCode}-${dsWf.code}` };
-        } else {
-          // Only exists locally
-          return { ...localWf, releaseState: 'UNSUBMITTED', isLocal: true };
-        }
-      }).filter(wf => wf) as Workflow[];
-
+      const combinedWorkflows = await api.get<Workflow[]>('/api/workflows/combined');
       setWorkflows(combinedWorkflows);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';

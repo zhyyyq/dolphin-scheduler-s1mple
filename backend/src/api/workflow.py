@@ -9,6 +9,7 @@ from ..parser import parse_workflow
 from ..db.setup import create_db_connection, Workflow
 from ..core.logger import logger
 from ..services import git_service, ds_service, file_service
+from .ds import get_workflows as get_ds_workflows
 
 WORKFLOW_REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'workflow_repo'))
 
@@ -205,6 +206,47 @@ async def get_workflow_details(workflow_uuid: str, db: Session = Depends(get_db)
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Could not read local workflow file: {e}")
+
+@router.get("/api/workflows/combined")
+async def get_combined_workflows(db: Session = Depends(get_db)):
+    try:
+        ds_workflows = await get_ds_workflows()
+        local_workflows = await get_local_workflows(db)
+
+        local_workflows_map = {wf['name']: wf for wf in local_workflows}
+        ds_workflows_map = {wf['name']: wf for wf in ds_workflows}
+
+        all_workflow_names = set(local_workflows_map.keys()) | set(ds_workflows_map.keys())
+
+        combined_workflows = []
+        for name in all_workflow_names:
+            local_wf = local_workflows_map.get(name)
+            ds_wf = ds_workflows_map.get(name)
+
+            if ds_wf and local_wf:
+                combined_workflows.append({
+                    **local_wf,
+                    **ds_wf,
+                    'uuid': local_wf['uuid'],
+                    'isLocal': True,
+                })
+            elif ds_wf:
+                combined_workflows.append({
+                    **ds_wf,
+                    'isLocal': False,
+                    'uuid': ds_wf.get('uuid') or f"ds-{ds_wf.get('projectCode')}-{ds_wf.get('code')}"
+                })
+            elif local_wf:
+                combined_workflows.append({
+                    **local_wf,
+                    'releaseState': 'UNSUBMITTED',
+                    'isLocal': True,
+                })
+        
+        return combined_workflows
+    except Exception as e:
+        logger.error(f"Error fetching combined workflows: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch combined workflows.")
 
 @router.delete("/api/workflow/{workflow_uuid}")
 async def delete_workflow(
