@@ -144,6 +144,15 @@ services:
     networks:
       - dolphinscheduler
 
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - dolphinscheduler-postgresql
+    networks:
+      - dolphinscheduler
+
 networks:
   dolphinscheduler:
     driver: bridge

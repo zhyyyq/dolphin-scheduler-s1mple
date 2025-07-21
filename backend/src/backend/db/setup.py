@@ -11,7 +11,8 @@ def create_db_connection():
             user="root",
             password="root",
             dbname="dolphinscheduler",
-            port=5432
+            port=5432,
+            client_encoding='utf8'
         )
         return connection
     except OperationalError as e:
