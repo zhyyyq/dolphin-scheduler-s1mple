@@ -13,6 +13,7 @@ dependencies = [
     "uvicorn[standard]>=0.29.0",
     "httpx",
     "pyyaml",
+    "mysql-connector-python>=9.3.0",
 ]
 
 [tool.setuptools]

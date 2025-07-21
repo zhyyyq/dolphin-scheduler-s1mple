@@ -14,6 +14,8 @@ import yaml
 import uuid
 from ruamel.yaml import YAML
 from .parser import parse_workflow
+from .db import init_db
+from .workflow import router as workflow_router
 
 # Define project root and workflow repo directory consistently
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -33,8 +35,14 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+app.include_router(workflow_router)
+
 @app.on_event("startup")
 async def startup_event():
+    """
+    Initializes the Git repository and database table on application startup.
+    """
+    init_db()
     """
     Initializes the Git repository on application startup if it doesn't exist,
     and ensures a default user is configured.
@@ -254,44 +262,6 @@ async def get_workflows():
         logger.error(f"Error fetching workflows from DolphinScheduler: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/workflows/local")
-async def get_local_workflows():
-    """Lists workflow YAML files from the local repository."""
-    try:
-        if not os.path.exists(WORKFLOW_REPO_DIR):
-            return []
-        
-        yaml_parser = YAML()
-        local_files = []
-        for filename in os.listdir(WORKFLOW_REPO_DIR):
-            if filename.endswith(".yaml") or filename.endswith(".yml"):
-                file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
-                try:
-                    # Get last modification time
-                    mod_time = os.path.getmtime(file_path)
-                    # Basic parsing to get workflow name from content
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        content = yaml_parser.load(f)
-                        workflow_data = content.get('workflow', {})
-                        workflow_name = workflow_data.get('name', filename)
-                        workflow_uuid = workflow_data.get('uuid')
-
-                    local_files.append({
-                        "name": workflow_name,
-                        "uuid": workflow_uuid,
-                        "projectName": "Local File",
-                        "releaseState": "OFFLINE",
-                        "updateTime": mod_time,
-                        "code": filename, # Use filename as a unique code
-                        "isLocal": True,
-                    })
-                except Exception as e:
-                    logger.error(f"Could not process local file {filename}: {e}")
-                    continue # Skip corrupted files
-        return local_files
-    except Exception as e:
-        logger.error(f"Error listing local workflows: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Could not list local workflows.")
 
 @app.get("/api/workflows/deleted")
 async def get_deleted_workflows():
@@ -373,35 +343,6 @@ async def restore_workflow(restore_data: RestoreWorkflow):
         raise HTTPException(status_code=500, detail=f"Failed to restore workflow: {e}")
 
 
-@app.get("/api/workflow/{workflow_uuid}")
-async def get_workflow_details(workflow_uuid: str):
-    """
-    Fetches the detailed structure of a specific local workflow using its UUID.
-    """
-    try:
-        filename = f"{workflow_uuid}.yaml"
-        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="Local workflow file not found.")
-        
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        yaml_parser = YAML()
-        raw_data = yaml_parser.load(content)
-        parsed_data = parse_workflow(content)
-        
-        return {
-            "name": parsed_data.get('workflow', {}).get('name', filename),
-            "uuid": raw_data.get('workflow', {}).get('uuid'),
-            "schedule": parsed_data.get('workflow', {}).get('schedule'),
-            "tasks": parsed_data.get("tasks"),
-            "relations": parsed_data.get("relations"),
-            "filename": filename
-        }
-    except Exception as e:
-        logger.error(f"Error reading local workflow file {workflow_uuid}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Could not read local workflow file: {e}")
 
     # --- Original DolphinScheduler logic ---
     ds_url = "http://localhost:12345/dolphinscheduler"
@@ -510,38 +451,6 @@ async def get_workflow_content(workflow_name: str):
         raise HTTPException(status_code=500, detail=f"Could not read workflow file: {e}")
 
 
-@app.delete("/api/workflow/{workflow_uuid}")
-async def delete_workflow(workflow_uuid: str):
-    """Deletes a local workflow file using its UUID."""
-    try:
-        filename = f"{workflow_uuid}.yaml"
-        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
-        if not os.path.exists(file_path):
-             raise HTTPException(status_code=404, detail="Local workflow file not found.")
-
-        os.remove(file_path)
-        # Manually handle git commit for deletion
-        subprocess.run(["git", "add", "-u", "."], cwd=WORKFLOW_REPO_DIR, check=True)
-        # Check if there's anything to commit
-        status_result = subprocess.run(
-            ["git", "status", "--porcelain"],
-            cwd=WORKFLOW_REPO_DIR,
-            check=True,
-            capture_output=True,
-            text=True
-        )
-        if status_result.stdout.strip():
-            subprocess.run(
-                ["git", "commit", "-m", f"Delete workflow file: {filename}"],
-                cwd=WORKFLOW_REPO_DIR,
-                check=True
-            )
-        return {"message": "Local workflow file deleted successfully."}
-    except Exception as e:
-        logger.error(f"Error deleting local workflow file {workflow_uuid}: {e}", exc_info=True)
-        if isinstance(e, HTTPException):
-            raise e
-        raise HTTPException(status_code=500, detail=f"Could not delete local workflow file: {e}")
 
 @app.delete("/api/ds/project/{project_code}/workflow/{workflow_code}")
 async def delete_ds_workflow(project_code: int, workflow_code: int):
@@ -854,79 +763,6 @@ async def execute_task(body: dict):
 
 from pydantic import BaseModel
 
-class WorkflowYaml(BaseModel):
-    name: str
-    content: str
-    original_filename: str = None
-
-@app.post("/api/workflow/yaml")
-async def save_workflow_yaml(workflow: WorkflowYaml):
-    """
-    Saves or updates a YAML workflow file using its UUID as the filename.
-    """
-    try:
-        yaml = YAML()
-        data = yaml.load(workflow.content)
-        
-        # Ensure the workflow data structure is present
-        if 'workflow' not in data:
-            data['workflow'] = {}
-
-        # Determine the UUID for the workflow
-        workflow_uuid = data.get('workflow', {}).get('uuid')
-        is_create = not workflow_uuid
-
-        if is_create:
-            workflow_uuid = str(uuid.uuid4())
-            data['workflow']['uuid'] = workflow_uuid
-            commit_message = f"Create workflow {data.get('workflow', {}).get('name', workflow_uuid)}"
-        else:
-            commit_message = f"Update workflow {data.get('workflow', {}).get('name', workflow_uuid)}"
-
-        # The filename is now the UUID
-        filename = f"{workflow_uuid}.yaml"
-        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
-
-        # If the user provided an original_filename (from the old name-based system),
-        # and it's different from the new UUID-based filename, remove the old file.
-        if workflow.original_filename and workflow.original_filename != filename:
-            old_file_path = os.path.join(WORKFLOW_REPO_DIR, workflow.original_filename)
-            if os.path.exists(old_file_path):
-                os.remove(old_file_path)
-                commit_message = f"Migrate and update workflow {data.get('workflow', {}).get('name')} to UUID-based storage"
-
-        # Write the final content to the UUID-based file
-        from io import StringIO
-        string_stream = StringIO()
-        yaml.dump(data, string_stream)
-        final_content = string_stream.getvalue()
-
-        with open(file_path, "w", encoding="utf-8") as buffer:
-            buffer.write(final_content)
-        
-        # Git operations
-        subprocess.run(["git", "add", "."], cwd=WORKFLOW_REPO_DIR, check=True)
-        
-        status_result = subprocess.run(["git", "status", "--porcelain"], cwd=WORKFLOW_REPO_DIR, check=True, capture_output=True, text=True)
-        if status_result.stdout.strip():
-            subprocess.run(["git", "commit", "-m", commit_message], cwd=WORKFLOW_REPO_DIR, check=True)
-        else:
-            logger.info("No changes to commit.")
-
-        return {
-            "message": "Workflow saved successfully.",
-            "filename": filename,
-            "uuid": workflow_uuid
-        }
-    except subprocess.CalledProcessError as e:
-        err_msg = f"Git operation failed: {e.stderr}"
-        logger.error(err_msg)
-        raise HTTPException(status_code=500, detail=err_msg)
-    except Exception as e:
-        logger.error(f"Error in /api/workflow/yaml: {e}", exc_info=True)
-        if isinstance(e, HTTPException):
-            raise e
-        raise HTTPException(status_code=500, detail=f"Failed to save workflow: {e}")
 
 class SubmitWorkflow(BaseModel):
     filename: str
@@ -946,7 +782,7 @@ async def submit_workflow_to_ds(workflow: SubmitWorkflow):
             raise HTTPException(status_code=404, detail=f"Workflow file '{filename}' not found.")
 
         result = subprocess.run(
-            ["pydolphinscheduler", "yaml", "-f", file_path],
+            ["pydolphinscheduler", "yaml", "-f", file_path, "--worker-group", "default"],
             cwd=BACKEND_DIR,
             check=True,
             capture_output=True,
@@ -979,15 +815,21 @@ async def execute_ds_workflow(project_code: int, process_definition_code: int):
         "failureStrategy": "CONTINUE",
         "warningType": "NONE",
         "warningGroupId": 0,
-        "execType": "START_PROCESS"
+        "execType": "START_PROCESS",
+        "environmentCode": -1,
+        "workerGroup": "default"
     }
 
     try:
         async with httpx.AsyncClient() as client:
+            logger.info(f"Executing DS workflow. URL: {url}, Payload: {payload}")
             response = await client.post(url, headers=headers, data=payload)
+            logger.info(f"DS API response status: {response.status_code}")
+            logger.info(f"DS API response body: {response.text}")
             response.raise_for_status()
             data = response.json()
             if data.get("code") != 0:
+                logger.error(f"DS API error (execute): {data.get('msg')}")
                 raise HTTPException(status_code=500, detail=f"DS API error (execute): {data.get('msg')}")
             return {"message": "Workflow execution started successfully.", "data": data.get("data")}
     except httpx.RequestError as e:

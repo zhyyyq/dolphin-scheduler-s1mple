@@ -181,7 +181,7 @@ const WorkflowEditorPage: React.FC = () => {
         try {
           const response = await api.get<{ name: string; uuid: string; schedule: string; tasks: Task[]; relations: { from: string; to: string }[], filename: string }>(`/api/workflow/${workflow_uuid}`);
           const { name, uuid, schedule, tasks, relations } = response;
-          setWorkflowName(name.replace(/\.yaml$/, '').replace(/\.yml$/, ''));
+          setWorkflowName(name);
           setWorkflowUuid(uuid);
           if (schedule) {
             setWorkflowSchedule(schedule);
