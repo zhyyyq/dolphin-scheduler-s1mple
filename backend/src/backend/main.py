@@ -7,7 +7,6 @@ import subprocess
 import sys
 import asyncio
 import functools
-import logging
 import httpx
 import ast
 import yaml
@@ -17,22 +16,11 @@ from .parser import parse_workflow
 from .db import init_db
 from .routers.workflow import router as workflow_router
 from .routers.ds import router as ds_router
+from .logger import setup_logger, logger
 
 # Define project root and workflow repo directory consistently
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 WORKFLOW_REPO_DIR = os.path.join(BACKEND_DIR, "workflow_repo")
-
-# --- Start of new logging configuration ---
-# Configure logging to write to a file
-LOG_FILE = os.path.join(BACKEND_DIR, 'backend.log')
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename=LOG_FILE,
-    filemode='a'
-)
-logger = logging.getLogger(__name__)
-# --- End of new logging configuration ---
 
 app = FastAPI()
 
@@ -44,6 +32,7 @@ async def startup_event():
     """
     Initializes the Git repository and database table on application startup.
     """
+    setup_logger()
     init_db()
     """
     Initializes the Git repository on application startup if it doesn't exist,

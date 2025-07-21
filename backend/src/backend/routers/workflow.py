@@ -2,14 +2,12 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
 import os
 import subprocess
-import logging
 import httpx
 import uuid
 from ruamel.yaml import YAML
 from ..parser import parse_workflow
 from ..db import create_db_connection
-
-logger = logging.getLogger(__name__)
+from ..logger import logger
 
 # Define project root and workflow repo directory consistently
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
