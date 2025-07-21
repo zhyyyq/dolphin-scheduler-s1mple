@@ -19,6 +19,8 @@ const WorkflowEditorPage: React.FC = () => {
   const graphRef = useRef<Graph | null>(null);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isYamlModalVisible, setIsYamlModalVisible] = useState(false);
+  const [yamlContent, setYamlContent] = useState('');
   const [currentNode, setCurrentNode] = useState<any>(null);
   const [nodeName, setNodeName] = useState('');
   const [nodeCommand, setNodeCommand] = useState('');
@@ -218,6 +220,43 @@ const WorkflowEditorPage: React.FC = () => {
     setCurrentNode(null);
   };
 
+  const handleShowYaml = () => {
+    if (graphRef.current) {
+      const { cells } = graphRef.current.toJSON();
+      const nodes = cells.filter(cell => cell.shape === 'task-node');
+      const edges = cells.filter(cell => cell.shape === 'edge');
+
+      const tasks = nodes.map(node => {
+        const deps = edges
+          .filter(edge => edge.target.cell === node.id)
+          .map(edge => {
+            const sourceNode = nodes.find(n => n.id === edge.source.cell);
+            return sourceNode ? sourceNode.data.label : '';
+          })
+          .filter(name => name);
+        
+        return {
+          name: node.data.label,
+          task_type: node.data.taskType,
+          command: node.data.command,
+          deps: deps,
+        };
+      });
+
+      const workflow = {
+        workflow: {
+          name: workflowName,
+          schedule: '0 0 0 * * ? *',
+        },
+        tasks,
+      };
+
+      const yamlStr = yaml.dump(workflow);
+      setYamlContent(yamlStr);
+      setIsYamlModalVisible(true);
+    }
+  };
+
   const handleSave = async () => {
     if (graphRef.current) {
       const { cells } = graphRef.current.toJSON();
@@ -280,7 +319,8 @@ const WorkflowEditorPage: React.FC = () => {
           <Input value={workflowName} onChange={e => setWorkflowName(e.target.value)} style={{ width: '200px' }} />
         </div>
         <div ref={containerRef} style={{ width: '100%', height: '100%' }}></div>
-        <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10 }}>
+        <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, display: 'flex', gap: '8px' }}>
+          <Button onClick={handleShowYaml}>View YAML</Button>
           <Button type="primary" onClick={handleSave}>Save Workflow</Button>
         </div>
       </div>
@@ -289,6 +329,19 @@ const WorkflowEditorPage: React.FC = () => {
         <Input value={nodeName} onChange={e => setNodeName(e.target.value)} />
         <p>Command:</p>
         <Input.TextArea value={nodeCommand} onChange={e => setNodeCommand(e.target.value)} rows={4} />
+      </Modal>
+      <Modal
+        title="Workflow YAML"
+        open={isYamlModalVisible}
+        onCancel={() => setIsYamlModalVisible(false)}
+        footer={[
+          <Button key="back" onClick={() => setIsYamlModalVisible(false)}>
+            Close
+          </Button>,
+        ]}
+        width={800}
+      >
+        <Input.TextArea value={yamlContent} readOnly rows={20} style={{ fontFamily: 'monospace', background: '#f5f5f5' }} />
       </Modal>
     </div>
   );
