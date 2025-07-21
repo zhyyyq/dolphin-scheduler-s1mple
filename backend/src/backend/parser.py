@@ -1,5 +1,5 @@
 import yaml
-from .logger import logger
+from .core.logger import logger
 
 def parse_workflow(content: str):
     """

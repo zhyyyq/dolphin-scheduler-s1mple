@@ -1,6 +1,6 @@
 import mysql.connector
 import os
-from .logger import logger
+from ..core.logger import logger
 
 def create_db_connection():
     """Creates a connection to the MySQL database."""

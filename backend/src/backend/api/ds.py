@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 import httpx
-from ..logger import logger
+from ..core.logger import logger
 
 router = APIRouter()
 

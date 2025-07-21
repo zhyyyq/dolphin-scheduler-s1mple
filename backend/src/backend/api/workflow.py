@@ -6,8 +6,9 @@ import httpx
 import uuid
 from ruamel.yaml import YAML
 from ..parser import parse_workflow
-from ..db import create_db_connection
-from ..logger import logger
+from ..db.setup import create_db_connection
+from ..core.logger import logger
+from ..services import git_service, file_service
 
 # Define project root and workflow repo directory consistently
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -85,13 +86,7 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
         with open(file_path, "w", encoding="utf-8") as buffer:
             buffer.write(final_content)
         
-        subprocess.run(["git", "add", "."], cwd=WORKFLOW_REPO_DIR, check=True)
-        
-        status_result = subprocess.run(["git", "status", "--porcelain"], cwd=WORKFLOW_REPO_DIR, check=True, capture_output=True, text=True)
-        if status_result.stdout.strip():
-            subprocess.run(["git", "commit", "-m", commit_message], cwd=WORKFLOW_REPO_DIR, check=True)
-        else:
-            logger.info("No changes to commit.")
+        git_service.git_commit(filename, commit_message)
 
         return {
             "message": "Workflow saved successfully.",
@@ -200,21 +195,7 @@ async def delete_workflow(workflow_uuid: str):
         file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
         if os.path.exists(file_path):
             os.remove(file_path)
-            # Manually handle git commit for deletion
-            subprocess.run(["git", "add", "-u", "."], cwd=WORKFLOW_REPO_DIR, check=True)
-            status_result = subprocess.run(
-                ["git", "status", "--porcelain"],
-                cwd=WORKFLOW_REPO_DIR,
-                check=True,
-                capture_output=True,
-                text=True
-            )
-            if status_result.stdout.strip():
-                subprocess.run(
-                    ["git", "commit", "-m", f"Delete workflow file: {filename}"],
-                    cwd=WORKFLOW_REPO_DIR,
-                    check=True
-                )
+            git_service.git_commit(filename, f"Delete workflow file: {filename}")
         else:
             logger.warning(f"Workflow file {filename} not found in repo, but deleted from DB.")
 
