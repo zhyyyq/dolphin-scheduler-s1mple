@@ -257,6 +257,65 @@ const WorkflowEditorPage: React.FC = () => {
     }
   };
 
+  const handleSyncYamlToGraph = async () => {
+    if (!graphRef.current) return;
+    const graph = graphRef.current;
+
+    try {
+      // Step 1: Parse YAML and get structured data from backend
+      const parsedWorkflow = yaml.load(yamlContent) as any;
+      const workflowNameFromYaml = parsedWorkflow?.workflow?.name || 'my-workflow';
+      
+      const response = await api.post<{ preview: { tasks: Task[], relations: { from: string, to: string }[] } }>('/api/reparse', { code: yamlContent });
+      const { tasks, relations } = response.preview;
+
+      // Step 2: Clear the graph
+      graph.clearCells();
+
+      // Step 3: Re-populate the graph
+      const nodeMap = new Map();
+      tasks.forEach((task: Task, index: number) => {
+        const node = graph.createNode({
+          shape: 'task-node',
+          x: (index % 4) * 250,
+          y: Math.floor(index / 4) * 150,
+          data: {
+            label: task.name,
+            taskType: task.type,
+            command: task.command,
+          },
+          ports: { items: [{ group: 'in' }, { group: 'out' }] }
+        });
+        graph.addNode(node);
+        nodeMap.set(task.name, node);
+      });
+
+      relations.forEach((rel: { from: string; to: string }) => {
+        const sourceNode = nodeMap.get(rel.from);
+        const targetNode = nodeMap.get(rel.to);
+        if (sourceNode && targetNode) {
+          graph.addEdge({
+            source: sourceNode,
+            target: targetNode,
+            shape: 'edge',
+            attrs: { line: { stroke: '#8f8f8f', strokeWidth: 1 } },
+            zIndex: -1,
+          });
+        }
+      });
+
+      // Step 4: Update workflow name and close modal
+      setWorkflowName(workflowNameFromYaml);
+      message.success('Graph updated from YAML successfully!');
+      setIsYamlModalVisible(false);
+      graph.centerContent();
+
+    } catch (error: any) {
+      message.error(`Failed to sync YAML to graph: ${error.message}`);
+      console.error('YAML Sync Error:', error);
+    }
+  };
+
   const handleSave = async () => {
     if (graphRef.current) {
       const { cells } = graphRef.current.toJSON();
@@ -336,12 +395,20 @@ const WorkflowEditorPage: React.FC = () => {
         onCancel={() => setIsYamlModalVisible(false)}
         footer={[
           <Button key="back" onClick={() => setIsYamlModalVisible(false)}>
-            Close
+            Cancel
+          </Button>,
+          <Button key="submit" type="primary" onClick={handleSyncYamlToGraph}>
+            Sync to Graph
           </Button>,
         ]}
         width={800}
       >
-        <Input.TextArea value={yamlContent} readOnly rows={20} style={{ fontFamily: 'monospace', background: '#f5f5f5' }} />
+        <Input.TextArea 
+          value={yamlContent} 
+          onChange={(e) => setYamlContent(e.target.value)} 
+          rows={20} 
+          style={{ fontFamily: 'monospace', background: '#f5f5f5' }} 
+        />
       </Modal>
     </div>
   );
