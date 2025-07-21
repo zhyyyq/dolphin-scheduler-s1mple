@@ -709,7 +709,10 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
     Handles renaming by deleting the old file if the name changes.
     """
     try:
-        new_filename = f"{workflow.name}.yaml"
+        # Clean the workflow name to prevent ".yaml.yaml" extensions
+        clean_name = workflow.name.replace(".yaml", "").replace(".yml", "")
+        new_filename = f"{clean_name}.yaml"
+        
         if ".." in new_filename or "/" in new_filename or "\\" in new_filename:
             raise HTTPException(status_code=400, detail="Invalid workflow name.")
 

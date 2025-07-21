@@ -156,7 +156,7 @@ const WorkflowEditorPage: React.FC = () => {
         try {
           const response = await api.get<{ name: string; tasks: Task[]; relations: { from: string; to: string }[] }>(`/api/project/${projectCode}/workflow/${workflowCode}`);
           const { name, tasks, relations } = response;
-          setWorkflowName(name);
+          setWorkflowName(name.replace(/\.yaml$/, '').replace(/\.yml$/, ''));
 
           const nodeMap = new Map();
           tasks.forEach((task: Task, index: number) => {
@@ -188,6 +188,9 @@ const WorkflowEditorPage: React.FC = () => {
               });
             }
           });
+
+          // Center the graph content after loading
+          graph.centerContent();
 
         } catch (error) {
           message.error('Failed to load workflow data.');
