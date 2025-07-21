@@ -1,0 +1,30 @@
+export const taskTypes = [
+  { label: 'Shell', type: 'SHELL', command: 'echo "Hello"', category: 'general' },
+  { label: 'Python', type: 'PYTHON', command: 'print("Hello")', category: 'general' },
+  { label: 'Conditions', type: 'CONDITIONS', command: '', category: 'control_flow' },
+  { label: 'Switch', type: 'SWITCH', command: '', category: 'control_flow' },
+  { label: 'Dependent', type: 'DEPENDENT', command: '', category: 'control_flow' },
+  { label: 'Sub Process', type: 'SUB_PROCESS', command: '', category: 'control_flow' },
+  { label: 'SQL', type: 'SQL', command: 'SELECT * FROM table', category: 'data' },
+  { label: 'DataX', type: 'DATAX', command: '', category: 'data' },
+  { label: 'Spark', type: 'SPARK', command: '', category: 'big_data' },
+  { label: 'Flink', type: 'FLINK', command: '', category: 'big_data' },
+  { label: 'Map Reduce', type: 'MR', command: '', category: 'big_data' },
+  { label: 'Kubernetes', type: 'K8S', command: '', category: 'cloud_ml' },
+  { label: 'SageMaker', type: 'SAGEMAKER', command: '', category: 'cloud_ml' },
+  { label: 'MLflow', type: 'MLFLOW', command: '', category: 'cloud_ml' },
+  { label: 'OpenMLDB', type: 'OPENMLDB', command: '', category: 'cloud_ml' },
+  { label: 'PyTorch', type: 'PYTORCH', command: '', category: 'cloud_ml' },
+  { label: 'DVC', type: 'DVC', command: '', category: 'cloud_ml' },
+  { label: 'HTTP', type: 'HTTP', command: 'curl http://example.com', category: 'other' },
+  { label: 'Procedure', type: 'PROCEDURE', command: '', category: 'other' },
+];
+
+export const taskCategories = [
+  { key: 'general', label: 'General' },
+  { key: 'control_flow', label: 'Control Flow' },
+  { key: 'data', label: 'Data' },
+  { key: 'big_data', label: 'Big Data' },
+  { key: 'cloud_ml', label: 'Cloud/ML' },
+  { key: 'other', label: 'Other' },
+];
