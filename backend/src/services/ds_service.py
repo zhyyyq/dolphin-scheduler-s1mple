@@ -140,14 +140,17 @@ async def submit_workflow_to_ds(filename: str):
                 content = f.read()
 
             def replace_sub_workflow_path(match):
-                sub_workflow_name = match.group(1)
-                # Find the actual file in the repo
-                actual_file = find_workflow_file_by_name(sub_workflow_name)
+                sub_workflow_ref = match.group(1)
+                # Heuristic: derive workflow name from the file path reference
+                workflow_name_to_find, _ = os.path.splitext(os.path.basename(sub_workflow_ref))
+
+                # Find the actual file in the repo by its internal 'name'
+                actual_file = find_workflow_file_by_name(workflow_name_to_find)
                 if not actual_file:
-                    raise FileNotFoundError(f"Sub-workflow '{sub_workflow_name}' not found in repository.")
+                    raise FileNotFoundError(f"Sub-workflow reference '{sub_workflow_ref}' could not be resolved. No workflow named '{workflow_name_to_find}' found in repository.")
                 
                 # pydolphinscheduler needs an absolute path to resolve correctly
-                abs_path = os.path.join(WORKFLOW_REPO_DIR, actual_file)
+                abs_path = os.path.join(WORKFLOW_REPO_DIR, actual_file).replace('\\', '/')
                 return f'$WORKFLOW{{"{abs_path}"}}'
 
             # Replace all sub-workflow references with their absolute paths
@@ -164,7 +167,7 @@ async def submit_workflow_to_ds(filename: str):
                 tmp_path = tmp.name
             
             result = subprocess.run(
-                ["pydolphinscheduler", "yaml", "-f", tmp_path],
+                ["uv", "run", "pydolphinscheduler", "yaml", "-f", tmp_path],
                 cwd=BACKEND_DIR,
                 check=True,
                 capture_output=True,
@@ -199,7 +202,8 @@ async def submit_workflow_to_ds(filename: str):
     except subprocess.CalledProcessError as e:
         logger.error(f"pydolphinscheduler CLI failed for {filename}: {e.stderr}")
         raise HTTPException(status_code=500, detail=f"Failed to submit workflow to DolphinScheduler: {e.stderr}")
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        logger.error(f"Sub-workflow file not found: {e}")
         logger.error("pydolphinscheduler command not found.")
         raise HTTPException(status_code=500, detail="pydolphinscheduler command not found.")
     except Exception as e:

@@ -151,17 +151,18 @@ def get_workflow_history(workflow_uuid: str):
         raise
 
 def find_workflow_file_by_name(name_to_find: str):
-    """Finds a workflow file in the repo by its 'name' attribute."""
-    for filename in os.listdir(WORKFLOW_REPO_DIR):
-        if filename.endswith('.yaml'):
-            file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    data = yaml.safe_load(f)
-                    if data and data.get('workflow', {}).get('name') == name_to_find:
-                        return filename
-            except Exception as e:
-                logger.warning(f"Could not parse {filename}: {e}")
+    """Finds a workflow file in the repo by its 'name' attribute, searching recursively."""
+    for root, _, files in os.walk(WORKFLOW_REPO_DIR):
+        for filename in files:
+            if filename.endswith('.yaml'):
+                file_path = os.path.join(root, filename)
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        data = yaml.safe_load(f)
+                        if data and data.get('workflow', {}).get('name') == name_to_find:
+                            return os.path.relpath(file_path, WORKFLOW_REPO_DIR).replace('\\', '/')
+                except Exception as e:
+                    logger.warning(f"Could not parse {file_path}: {e}")
     return None
 
 def get_workflow_commit_diff(workflow_uuid: str, commit_hash: str):
