@@ -10,6 +10,8 @@ import logging
 import httpx
 import ast
 import yaml
+import uuid
+from ruamel.yaml import YAML
 from .parser import parse_workflow
 
 # Define project root and workflow repo directory consistently
@@ -256,6 +258,7 @@ async def get_local_workflows():
         if not os.path.exists(WORKFLOW_REPO_DIR):
             return []
         
+        yaml_parser = YAML()
         local_files = []
         for filename in os.listdir(WORKFLOW_REPO_DIR):
             if filename.endswith(".yaml") or filename.endswith(".yml"):
@@ -265,11 +268,14 @@ async def get_local_workflows():
                     mod_time = os.path.getmtime(file_path)
                     # Basic parsing to get workflow name from content
                     with open(file_path, 'r', encoding='utf-8') as f:
-                        content = yaml.safe_load(f)
-                        workflow_name = content.get('workflow', {}).get('name', filename)
+                        content = yaml_parser.load(f)
+                        workflow_data = content.get('workflow', {})
+                        workflow_name = workflow_data.get('name', filename)
+                        workflow_uuid = workflow_data.get('uuid')
 
                     local_files.append({
                         "name": workflow_name,
+                        "uuid": workflow_uuid,
                         "projectName": "Local File",
                         "releaseState": "OFFLINE",
                         "updateTime": mod_time,
@@ -283,6 +289,85 @@ async def get_local_workflows():
     except Exception as e:
         logger.error(f"Error listing local workflows: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Could not list local workflows.")
+
+@app.get("/api/workflows/deleted")
+async def get_deleted_workflows():
+    """Lists workflow files that have been deleted from the repository."""
+    try:
+        # Use git log to find files that have a 'D' (deleted) status in their history.
+        # The command lists the filename for commits that were deletions.
+        result = subprocess.run(
+            ["git", "log", "--diff-filter=D", "--summary"],
+            cwd=WORKFLOW_REPO_DIR,
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding='utf-8'
+        )
+        
+        deleted_files = {}
+        # Parsing the git log output to find deleted filenames and their last commit.
+        commit_hash = None
+        for line in result.stdout.strip().split('\n'):
+            if line.startswith('commit '):
+                commit_hash = line.split(' ')[1]
+            elif 'delete mode' in line:
+                # Extract filename from a line like: " delete mode 100644 my-workflow.yaml"
+                filename = line.split(' ')[-1]
+                if filename not in deleted_files:
+                     # Check if the file is currently present in the working directory
+                    if not os.path.exists(os.path.join(WORKFLOW_REPO_DIR, filename)):
+                        deleted_files[filename] = {
+                            "filename": filename,
+                            "commit_hash": commit_hash
+                        }
+
+        return list(deleted_files.values())
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Git log for deleted files failed: {e.stderr}")
+        return []
+    except Exception as e:
+        logger.error(f"Error listing deleted workflows: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Could not list deleted workflows.")
+
+class RestoreWorkflow(BaseModel):
+    filename: str
+    commit_hash: str
+
+@app.post("/api/workflow/restore")
+async def restore_workflow(restore_data: RestoreWorkflow):
+    """Restores a deleted workflow file from a specific commit."""
+    try:
+        filename = restore_data.filename
+        commit_hash = restore_data.commit_hash
+
+        if ".." in filename or "/" in filename or "\\" in filename:
+            raise HTTPException(status_code=400, detail="Invalid workflow filename.")
+
+        # Check if the file already exists to avoid overwriting
+        if os.path.exists(os.path.join(WORKFLOW_REPO_DIR, filename)):
+            raise HTTPException(status_code=409, detail=f"File '{filename}' already exists. Cannot restore.")
+
+        # Use git checkout to restore the file from the commit *before* it was deleted.
+        # The `^` notation refers to the parent of the deletion commit.
+        subprocess.run(
+            ["git", "checkout", f"{commit_hash}^", "--", filename],
+            cwd=WORKFLOW_REPO_DIR,
+            check=True
+        )
+        
+        # Commit the restoration
+        commit_message = f"Restore workflow: {filename}"
+        subprocess.run(["git", "add", filename], cwd=WORKFLOW_REPO_DIR, check=True)
+        subprocess.run(["git", "commit", "-m", commit_message], cwd=WORKFLOW_REPO_DIR, check=True)
+
+        return {"message": f"Workflow '{filename}' restored successfully."}
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Git checkout failed for {filename}: {e.stderr}")
+        raise HTTPException(status_code=500, detail=f"Failed to restore workflow: {e.stderr}")
+    except Exception as e:
+        logger.error(f"Error restoring workflow: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to restore workflow: {e}")
 
 
 @app.get("/api/project/{project_code}/workflow/{workflow_code}")
@@ -300,10 +385,14 @@ async def get_workflow_details(project_code: str, workflow_code: str):
             
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
-            
+
+            yaml_parser = YAML()
+            raw_data = yaml_parser.load(content)
             parsed_data = parse_workflow(content)
+            
             return {
                 "name": parsed_data.get('workflow', {}).get('name', workflow_code),
+                "uuid": raw_data.get('workflow', {}).get('uuid'),
                 "tasks": parsed_data.get("tasks"),
                 "relations": parsed_data.get("relations"),
             }
@@ -361,8 +450,6 @@ async def get_workflow_details(project_code: str, workflow_code: str):
         logger.error(f"Error fetching workflow details: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-
-from ruamel.yaml import YAML
 
 @app.post("/api/update-command")
 async def update_command(body: dict):
@@ -764,11 +851,10 @@ class WorkflowYaml(BaseModel):
 @app.post("/api/workflow/yaml")
 async def save_workflow_yaml(workflow: WorkflowYaml):
     """
-    Saves or updates a YAML workflow file locally and commits it.
-    Handles renaming by deleting the old file if the name changes.
+    Saves or updates a YAML workflow file, assigning a UUID to new workflows
+    and preserving it for existing ones.
     """
     try:
-        # Clean the workflow name to prevent ".yaml.yaml" extensions
         clean_name = workflow.name.replace(".yaml", "").replace(".yml", "")
         new_filename = f"{clean_name}.yaml"
         
@@ -778,48 +864,61 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
         os.makedirs(WORKFLOW_REPO_DIR, exist_ok=True)
         new_file_path = os.path.join(WORKFLOW_REPO_DIR, new_filename)
         
-        # Determine if this is a rename operation
+        yaml = YAML()
+        data = yaml.load(workflow.content)
+
         is_rename = workflow.original_filename and workflow.original_filename != new_filename
-        # Determine if this is a create operation
         is_create = not workflow.original_filename
 
-        # If creating a new workflow or renaming to a new name, check for existence.
-        if (is_create or is_rename) and os.path.exists(new_file_path):
-            raise HTTPException(
-                status_code=409, # 409 Conflict is appropriate for duplicate resource
-                detail=f"Workflow with name '{workflow.name}' already exists."
-            )
+        if is_create:
+            data['workflow']['uuid'] = str(uuid.uuid4())
+        elif workflow.original_filename:  # This is an update or rename
+            try:
+                original_file_path = os.path.join(WORKFLOW_REPO_DIR, workflow.original_filename)
+                if os.path.exists(original_file_path):
+                    with open(original_file_path, 'r', encoding='utf-8') as f:
+                        original_data = yaml.load(f)
+                    existing_uuid = original_data.get('workflow', {}).get('uuid')
+                    
+                    if existing_uuid:
+                        data['workflow']['uuid'] = existing_uuid
+                    else:  # Migrating an old workflow without a UUID
+                        data['workflow']['uuid'] = str(uuid.uuid4())
+                else:  # Original file not found, treat as creation
+                    data['workflow']['uuid'] = str(uuid.uuid4())
+            except Exception as e:
+                logger.error(f"Could not read original workflow to preserve UUID, assigning a new one. Error: {e}")
+                data['workflow']['uuid'] = str(uuid.uuid4())
+
+        # The check for duplicate names has been removed as per the new requirement.
+        # if (is_create or is_rename) and os.path.exists(new_file_path):
+        #     raise HTTPException(
+        #         status_code=409,
+        #         detail=f"Workflow with name '{workflow.name}' already exists."
+        #     )
 
         commit_message = ""
-
-        # If it's a rename, remove the old file.
         if is_rename:
             old_file_path = os.path.join(WORKFLOW_REPO_DIR, workflow.original_filename)
             if os.path.exists(old_file_path):
                 os.remove(old_file_path)
-                commit_message = f"Rename workflow from {workflow.original_filename} to {new_filename}"
-            else: # Old file not found, treat as creation
-                commit_message = f"Create workflow: {new_filename}"
+            commit_message = f"Rename workflow from {workflow.original_filename} to {new_filename}"
         elif is_create:
             commit_message = f"Create workflow: {new_filename}"
-        else: # It's an update to the same file
+        else:
             commit_message = f"Update workflow: {new_filename}"
 
-        # Write the new file content.
+        from io import StringIO
+        string_stream = StringIO()
+        yaml.dump(data, string_stream)
+        final_content = string_stream.getvalue()
+
         with open(new_file_path, "w", encoding="utf-8") as buffer:
-            buffer.write(workflow.content)
+            buffer.write(final_content)
         
-        # Stage all changes (creations, deletions, modifications) and commit.
         subprocess.run(["git", "add", "."], cwd=WORKFLOW_REPO_DIR, check=True)
         
-        # Check if there's anything to commit
-        status_result = subprocess.run(
-            ["git", "status", "--porcelain"],
-            cwd=WORKFLOW_REPO_DIR,
-            check=True,
-            capture_output=True,
-            text=True
-        )
+        status_result = subprocess.run(["git", "status", "--porcelain"], cwd=WORKFLOW_REPO_DIR, check=True, capture_output=True, text=True)
         if status_result.stdout.strip():
             subprocess.run(["git", "commit", "-m", commit_message], cwd=WORKFLOW_REPO_DIR, check=True)
         else:
@@ -828,6 +927,7 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
         return {
             "message": "Workflow saved successfully.",
             "filename": new_filename,
+            "uuid": data['workflow']['uuid']
         }
     except subprocess.CalledProcessError as e:
         err_msg = f"Git operation failed: {e.stderr}"
@@ -835,7 +935,6 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
         raise HTTPException(status_code=500, detail=err_msg)
     except Exception as e:
         logger.error(f"Error in /api/workflow/yaml: {e}", exc_info=True)
-        # Re-raise HTTPException so FastAPI can handle it and return the correct status code
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Failed to save workflow: {e}")

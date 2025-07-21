@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { Table, Spin, Alert, Typography } from 'antd';
+import { Table, Spin, Alert, Typography, Button, App as AntApp } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { Diff, Hunk, parseDiff } from 'react-diff-view';
 import 'react-diff-view/style/index.css';
@@ -8,6 +8,11 @@ import { Commit } from '../types';
 import api from '../api';
 
 const { Title } = Typography;
+
+interface DeletedWorkflow {
+  filename: string;
+  commit_hash: string;
+}
 
 const DiffViewer: React.FC<{ commit: Commit; workflowName: string }> = ({ commit, workflowName }) => {
   const [diff, setDiff] = useState<string | null>(null);
@@ -44,8 +49,10 @@ const DiffViewer: React.FC<{ commit: Commit; workflowName: string }> = ({ commit
 const WorkflowHistoryPage: React.FC = () => {
   const { workflowName } = useParams<{ workflowName: string }>();
   const [history, setHistory] = useState<Commit[]>([]);
+  const [deletedWorkflows, setDeletedWorkflows] = useState<DeletedWorkflow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const { message } = AntApp.useApp();
 
   const fetchHistory = useCallback(async () => {
     if (!workflowName) return;
@@ -64,7 +71,30 @@ const WorkflowHistoryPage: React.FC = () => {
 
   useEffect(() => {
     fetchHistory();
+    fetchDeletedWorkflows();
   }, [fetchHistory]);
+
+  const fetchDeletedWorkflows = async () => {
+    try {
+      const data = await api.get<DeletedWorkflow[]>('/api/workflows/deleted');
+      setDeletedWorkflows(data);
+    } catch (err) {
+      message.error('Failed to fetch deleted workflows.');
+    }
+  };
+
+  const handleRestore = async (record: DeletedWorkflow) => {
+    try {
+      await api.post('/api/workflow/restore', {
+        filename: record.filename,
+        commit_hash: record.commit_hash,
+      });
+      message.success(`Workflow '${record.filename}' restored successfully.`);
+      fetchDeletedWorkflows(); // Refresh the list
+    } catch (error: any) {
+      message.error(`Failed to restore workflow: ${error.message}`);
+    }
+  };
 
   const columns: ColumnsType<Commit> = [
     {
@@ -99,6 +129,23 @@ const WorkflowHistoryPage: React.FC = () => {
     return <Alert message="Error" description={error} type="error" showIcon />;
   }
 
+  const deletedColumns: ColumnsType<DeletedWorkflow> = [
+    {
+      title: 'Deleted Workflow',
+      dataIndex: 'filename',
+      key: 'filename',
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record) => (
+        <Button type="primary" onClick={() => handleRestore(record)}>
+          Restore
+        </Button>
+      ),
+    },
+  ];
+
   return (
     <div style={{ padding: '24px', background: '#fff', borderRadius: '8px' }}>
       <Title level={2} style={{ marginBottom: '24px' }}>History for {workflowName}</Title>
@@ -112,6 +159,18 @@ const WorkflowHistoryPage: React.FC = () => {
           rowExpandable: () => true,
         }}
       />
+      
+      {deletedWorkflows.length > 0 && (
+        <div style={{ marginTop: '48px' }}>
+          <Title level={3} style={{ marginBottom: '24px' }}>Deleted Workflows</Title>
+          <Table
+            columns={deletedColumns}
+            dataSource={deletedWorkflows}
+            rowKey="filename"
+            bordered
+          />
+        </div>
+      )}
     </div>
   );
 };

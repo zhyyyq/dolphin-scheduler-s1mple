@@ -25,6 +25,7 @@ const WorkflowEditorPage: React.FC = () => {
   const [nodeName, setNodeName] = useState('');
   const [nodeCommand, setNodeCommand] = useState('');
   const [workflowName, setWorkflowName] = useState('my-workflow');
+  const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
 
   useEffect(() => {
     const initGraph = async () => {
@@ -156,9 +157,10 @@ const WorkflowEditorPage: React.FC = () => {
 
       if (projectCode && workflowCode) {
         try {
-          const response = await api.get<{ name: string; tasks: Task[]; relations: { from: string; to: string }[] }>(`/api/project/${projectCode}/workflow/${workflowCode}`);
-          const { name, tasks, relations } = response;
+          const response = await api.get<{ name: string; uuid: string; tasks: Task[]; relations: { from: string; to: string }[] }>(`/api/project/${projectCode}/workflow/${workflowCode}`);
+          const { name, uuid, tasks, relations } = response;
           setWorkflowName(name.replace(/\.yaml$/, '').replace(/\.yml$/, ''));
+          setWorkflowUuid(uuid);
 
           const nodeMap = new Map();
           tasks.forEach((task: Task, index: number) => {
@@ -243,13 +245,17 @@ const WorkflowEditorPage: React.FC = () => {
         };
       });
 
-      const workflow = {
+      const workflow: any = {
         workflow: {
           name: workflowName,
           schedule: '0 0 0 * * ? *',
         },
         tasks,
       };
+
+      if (workflowUuid) {
+        workflow.workflow.uuid = workflowUuid;
+      }
 
       const yamlStr = yaml.dump(workflow);
       setYamlContent(yamlStr);
@@ -339,31 +345,32 @@ const WorkflowEditorPage: React.FC = () => {
         };
       });
 
-      const workflow = {
+      const workflow: any = {
         workflow: {
           name: workflowName,
           schedule: '0 0 0 * * ? *',
         },
         tasks,
       };
+      
+      if (workflowUuid) {
+        workflow.workflow.uuid = workflowUuid;
+      }
 
       const yamlStr = yaml.dump(workflow);
       
       try {
-        await api.post('/api/workflow/yaml', {
+        const response = await api.post<{ filename: string, uuid: string }>('/api/workflow/yaml', {
           name: workflow.workflow.name,
           content: yamlStr,
           original_filename: projectCode === 'local' ? workflowCode : undefined,
         });
+        setWorkflowUuid(response.uuid); // Update UUID after saving
         message.success('Workflow saved successfully!');
         navigate('/');
       } catch (error: any) {
-        if (error && error.status === 409) {
-          message.error(`Error: ${error.message}`);
-        } else {
-          const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-          message.error(`Error: ${errorMessage}`);
-        }
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        message.error(`Error: ${errorMessage}`);
         console.error('Error saving workflow:', error);
       }
     }
