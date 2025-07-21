@@ -35,9 +35,7 @@ const DiffViewer: React.FC<{ commit: Commit; workflowName: string }> = ({ commit
   return (
     <div style={{ background: '#fff', padding: '12px', border: '1px solid #f0f0f0' }}>
       {files.map(({ oldRevision, newRevision, type, hunks }) => (
-        <Diff key={`${oldRevision}-${newRevision}`} viewType="split" diffType={type} hunks={hunks}>
-          {hunks => hunks.map(hunk => <Hunk key={hunk.content} hunk={hunk} />)}
-        </Diff>
+        <Diff key={`${oldRevision}-${newRevision}`} viewType="split" diffType={type} hunks={hunks} />
       ))}
     </div>
   );

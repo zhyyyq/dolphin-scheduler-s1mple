@@ -541,14 +541,22 @@ async def get_workflow_commit_diff(workflow_name: str, commit_hash: str):
     """Gets the diff for a specific commit of a workflow file."""
     try:
         result = subprocess.run(
-            ["git", "show", commit_hash, "--", workflow_name],
+            ["git", "show", "-m", commit_hash, "--", workflow_name],
             cwd=WORKFLOW_REPO_DIR,
             check=True,
             capture_output=True,
             text=True,
             encoding='utf-8'
         )
-        return {"diff": result.stdout}
+        
+        diff_content = result.stdout
+        # The react-diff-view library expects only the diff part, not the commit metadata.
+        # We find the start of the actual diff content.
+        diff_start_index = diff_content.find("diff --git")
+        if diff_start_index != -1:
+            diff_content = diff_content[diff_start_index:]
+
+        return {"diff": diff_content}
     except subprocess.CalledProcessError as e:
         logger.error(f"Git show failed for {workflow_name} at {commit_hash}: {e.stderr}")
         raise HTTPException(status_code=404, detail="Commit or file not found.")
