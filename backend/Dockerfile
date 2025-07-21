@@ -5,7 +5,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Install uv
-RUN pip install uv
+RUN pip install --index-url https://pypi.tuna.tsinghua.edu.cn/simple uv
 
 # Copy the requirements file into the container at /app
 COPY . /app/

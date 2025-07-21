@@ -146,10 +146,12 @@ services:
 
   backend:
     build: ./backend
+    profiles: ["all"]
     ports:
       - "8000:8000"
     depends_on:
-      - dolphinscheduler-postgresql
+      dolphinscheduler-zookeeper:
+        condition: service_healthy
     networks:
       - dolphinscheduler
 
