@@ -18,15 +18,15 @@ export const ViewYamlModal: React.FC<ViewYamlModalProps> = ({
 }) => {
   return (
     <Modal
-      title="Workflow YAML"
+      title="工作流 YAML"
       open={isModalVisible}
       onCancel={onCancel}
       footer={[
         <Button key="back" onClick={onCancel}>
-          Cancel
+          取消
         </Button>,
         <Button key="submit" type="primary" onClick={onSync}>
-          Sync to Graph
+          同步到画布
         </Button>,
       ]}
       width={800}
