@@ -1,52 +1,57 @@
 import os
-from fastapi import HTTPException
-from ..core.logger import logger
-from .git_service import git_commit
+import shutil
+from fastapi import UploadFile, HTTPException
 
-BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-WORKFLOW_REPO_DIR = os.path.join(BACKEND_DIR, "workflow_repo")
+# Use a dedicated directory for user-uploaded reference files.
+# This keeps them separate from the demo files.
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+UPLOAD_DIR = os.path.join(PROJECT_ROOT, 'workflow_repo', 'resources')
 
-def get_workflow_content(workflow_name: str):
-    """Gets the raw content of a specific workflow file."""
+def list_uploaded_files():
+    """Lists all files in the designated resource directory."""
     try:
-        if ".." in workflow_name or "/" in workflow_name or "\\" in workflow_name:
-            raise HTTPException(status_code=400, detail="Invalid workflow name.")
+        if not os.path.exists(UPLOAD_DIR):
+            os.makedirs(UPLOAD_DIR)
+            return []
 
-        file_path = os.path.join(WORKFLOW_REPO_DIR, workflow_name)
-        
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="Workflow file not found.")
-            
-        with open(file_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        
-        return {"content": content}
-    except HTTPException as e:
-        raise e
+        files_info = []
+        for filename in os.listdir(UPLOAD_DIR):
+            file_path = os.path.join(UPLOAD_DIR, filename)
+            if os.path.isfile(file_path):
+                stat = os.stat(file_path)
+                files_info.append({
+                    "filename": filename,
+                    "size": stat.st_size,
+                    "last_modified": stat.st_mtime,
+                })
+        # Sort by last modified time, newest first
+        files_info.sort(key=lambda x: x['last_modified'], reverse=True)
+        return files_info
     except Exception as e:
-        logger.error(f"Error reading workflow file {workflow_name}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Could not read workflow file: {e}")
+        raise HTTPException(status_code=500, detail=f"Could not list files: {e}")
 
-def delete_workflow_file(workflow_name: str):
-    """Deletes a workflow file and commits the change."""
+
+def save_uploaded_file(file: UploadFile):
+    """Saves an uploaded file to the designated resource directory."""
     try:
-        if ".." in workflow_name or "/" in workflow_name or "\\" in workflow_name:
-            raise HTTPException(status_code=400, detail="Invalid workflow name.")
+        # Basic security: prevent path traversal attacks.
+        filename = os.path.basename(file.filename)
+        if not filename:
+            raise HTTPException(status_code=400, detail="Invalid filename.")
 
-        file_path = os.path.join(WORKFLOW_REPO_DIR, workflow_name)
-        
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="Workflow file not found.")
-            
-        os.remove(file_path)
-        logger.info(f"Deleted workflow file: {file_path}")
+        # Ensure the upload directory exists.
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-        commit_message = f"Delete workflow: {workflow_name}"
-        git_commit(file_path, commit_message)
+        file_path = os.path.join(UPLOAD_DIR, filename)
+
+        # To prevent overwriting existing files, you might want to add a check here.
+        # For now, we will overwrite.
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Return the path relative to the repo, as this is how it should be referenced.
+        relative_path = os.path.relpath(file_path, PROJECT_ROOT).replace('\\', '/')
+        return {"filename": filename, "path": relative_path}
         
-        return {"message": f"Workflow file '{workflow_name}' deleted successfully."}
-    except HTTPException as e:
-        raise e
     except Exception as e:
-        logger.error(f"Error deleting workflow file {workflow_name}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Could not delete workflow file: {e}")
+        raise HTTPException(status_code=500, detail=f"Could not save file: {e}")

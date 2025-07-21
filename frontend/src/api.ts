@@ -38,12 +38,17 @@ const api = {
   },
 
   async post<T>(path: string, data?: any): Promise<T> {
+    const isFormData = data instanceof FormData;
+
+    const headers: HeadersInit = {};
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
+
     const response = await fetch(path, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
+      headers: headers,
+      body: isFormData ? data : JSON.stringify(data),
     });
     return handleResponse(response);
   },

@@ -7,6 +7,7 @@ from .parser import parse_workflow
 from .db.setup import init_db
 from .api.workflow import router as workflow_router
 from .api.ds import router as ds_router
+from .api.file import router as file_router
 from .core.logger import setup_logger, logger
 from .services import git_service, process_service, file_service, ds_service
 
@@ -18,6 +19,7 @@ app = FastAPI()
 
 app.include_router(workflow_router)
 app.include_router(ds_router)
+app.include_router(file_router, prefix="/api/files")
 
 @app.on_event("startup")
 async def startup_event():

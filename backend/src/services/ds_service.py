@@ -156,6 +156,18 @@ async def submit_workflow_to_ds(filename: str):
             # Replace all sub-workflow references with their absolute paths
             processed_content = re.sub(r'\$WORKFLOW\{"([^"}]+)"\}', replace_sub_workflow_path, content)
 
+            def replace_file_path(match):
+                file_ref = match.group(1)
+                # Treat file path as relative to the project root (BACKEND_DIR's parent)
+                project_root = os.path.abspath(os.path.join(BACKEND_DIR, '..'))
+                abs_path = os.path.join(project_root, file_ref).replace('\\', '/')
+                if not os.path.exists(abs_path):
+                    raise FileNotFoundError(f"File reference '{file_ref}' could not be resolved. File not found at '{abs_path}'.")
+                return f'$FILE{{"{abs_path}"}}'
+
+            # Replace all $FILE references with their absolute paths
+            processed_content = re.sub(r'\$FILE\{"([^"}]+)"\}', replace_file_path, processed_content)
+
             yaml = YAML(typ='rt')
             data = yaml.load(processed_content)
 

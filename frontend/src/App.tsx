@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { App as AntApp, Layout, Menu, ConfigProvider, Typography } from 'antd';
-import { DashboardOutlined, ApartmentOutlined, PlusOutlined } from '@ant-design/icons';
+import { DashboardOutlined, ApartmentOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 
 import HomePage from './pages/HomePage';
@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage';
 import WorkflowEditorPage from './pages/WorkflowEditorPage';
 import WorkflowViewerPage from './pages/WorkflowViewerPage';
 import WorkflowHistoryPage from './pages/WorkflowHistoryPage';
+import FileUploadPage from './pages/FileUploadPage';
 
 import './App.css';
 
@@ -34,6 +35,11 @@ const App: React.FC = () => {
       icon: <PlusOutlined />,
       label: <Link to="/workflow/edit">新建工作流</Link>,
     },
+    {
+      key: '/upload',
+      icon: <UploadOutlined />,
+      label: <Link to="/upload">上传资源</Link>,
+    },
   ];
 
   return (
@@ -58,6 +64,7 @@ const App: React.FC = () => {
             <Route path="/workflow/edit/:workflow_uuid" element={<WorkflowEditorPage />} />
             <Route path="/workflow/:workflow_uuid/history" element={<WorkflowHistoryPage />} />
             <Route path="/project/:projectCode/workflow/:workflowCode" element={<WorkflowViewerPage />} />
+            <Route path="/upload" element={<FileUploadPage />} />
           </Routes>
         </Content>
       </Layout>
