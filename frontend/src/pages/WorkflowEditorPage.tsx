@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { App as AntApp } from 'antd';
-import * as yaml from 'js-yaml';
+import yaml from 'yaml';
 import '../components/TaskNode'; // Register custom node
 import { Task, WorkflowDetail } from '../types';
 import api from '../api';
@@ -88,9 +88,17 @@ const WorkflowEditorPage: React.FC = () => {
   const generateYamlStr = () => {
     if (!graph) return '';
 
-    // If we are editing an existing workflow, start with the original YAML
-    // to preserve comments, formatting, and unknown fields.
-    const baseData = originalYaml ? (yaml.load(originalYaml) as any) : { workflow: {}, tasks: [] };
+    const doc = yaml.parseDocument(originalYaml || 'workflow:\n  name: new-workflow\ntasks: []');
+
+    doc.setIn(['workflow', 'name'], workflowName);
+    if (isScheduleEnabled) {
+      doc.setIn(['workflow', 'schedule'], workflowSchedule);
+    } else {
+      doc.deleteIn(['workflow', 'schedule']);
+    }
+    if (workflowUuid) {
+      doc.setIn(['workflow', 'uuid'], workflowUuid);
+    }
 
     const { cells } = graph.toJSON();
     const nodes = cells.filter(cell => cell.shape === 'task-node');
@@ -112,26 +120,14 @@ const WorkflowEditorPage: React.FC = () => {
         deps: deps,
       };
       
-      // Clean up frontend-specific fields
       delete taskPayload.label;
-      
+      delete taskPayload._display_type; // Remove internal display type
       return taskPayload;
     });
 
-    // Update the workflow and tasks sections of the base data
-    baseData.workflow.name = workflowName;
-    baseData.workflow.uuid = workflowUuid || baseData.workflow.uuid || undefined;
-    
-    if (isScheduleEnabled) {
-      baseData.workflow.schedule = workflowSchedule;
-    } else {
-      // If scheduling is disabled, remove the key to keep the YAML clean.
-      delete baseData.workflow.schedule;
-    }
-    
-    baseData.tasks = tasks;
+    doc.set('tasks', tasks);
 
-    return yaml.dump(baseData);
+    return doc.toString();
   };
 
   const handleEditModalOk = () => {
@@ -157,8 +153,8 @@ const WorkflowEditorPage: React.FC = () => {
   const handleSyncYamlToGraph = async () => {
     if (!graph) return;
     try {
-      const parsedWorkflow = yaml.load(yamlContent) as any;
-      const workflowNameFromYaml = parsedWorkflow?.workflow?.name || 'my-workflow';
+      const doc = yaml.parseDocument(yamlContent);
+      const workflowNameFromYaml = doc.getIn(['workflow', 'name']) as string || 'my-workflow';
       const response = await api.post<{ preview: { tasks: Task[], relations: { from: string, to: string }[] } }>('/api/reparse', { code: yamlContent });
       const { tasks, relations } = response.preview;
       graph.clearCells();
@@ -200,7 +196,12 @@ const WorkflowEditorPage: React.FC = () => {
         shape: 'task-node',
         x: contextMenu.px,
         y: contextMenu.py,
-        data: { label: task.label, type: task.type, command: task.command },
+        data: { 
+          label: task.label, 
+          type: task.type, 
+          command: task.command,
+          _display_type: task.type, // Set display type for new nodes
+        },
       });
     }
     setContextMenu({ ...contextMenu, visible: false });
@@ -215,9 +216,9 @@ const WorkflowEditorPage: React.FC = () => {
         setOriginalYaml(content);
         
         try {
-          const parsed = yaml.load(content) as any;
-          const name = parsed?.workflow?.name || 'imported-workflow';
-          const schedule = parsed?.workflow?.schedule;
+          const doc = yaml.parseDocument(content);
+          const name = doc.getIn(['workflow', 'name']) as string || 'imported-workflow';
+          const schedule = doc.getIn(['workflow', 'schedule']);
 
           setWorkflowName(name);
           if (schedule !== undefined && schedule !== null) {

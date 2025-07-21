@@ -102,12 +102,18 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     currentGraph.clearCells(); // Clear previous data before loading new
     const nodeMap = new Map();
     tasks.forEach((task) => {
+      const rawType = task.type || task.task_type;
+      let displayType = rawType;
+      if (rawType === 'SubWorkflow') {
+        displayType = 'SUB_PROCESS';
+      }
+
       const node = currentGraph.createNode({
         shape: 'task-node',
         data: {
           ...task,
           label: task.name,
-          type: task.type === 'SubWorkflow' ? 'SUB_PROCESS' : task.type,
+          _display_type: displayType,
         },
       });
       currentGraph.addNode(node);

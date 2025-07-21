@@ -33,7 +33,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   const data = currentNode.getData();
 
   const renderTaskEditor = () => {
-    switch (data.type?.toUpperCase()) {
+    switch (data._display_type?.toUpperCase()) {
       case 'SHELL':
       case 'PYTHON':
         return <ShellTaskEditor currentNode={currentNode} nodeCommand={nodeCommand} onNodeCommandChange={onNodeCommandChange} />;

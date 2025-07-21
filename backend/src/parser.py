@@ -16,11 +16,9 @@ def parse_workflow(content: str):
         
         tasks = []
         for task_data in tasks_data:
-            # Pass all task data through, just map task_type to type for frontend
-            # This ensures fields for specific task types (like 'condition' for Switch) are preserved.
+            # Pass all task data through, and keep original keys.
+            # The frontend will handle unifying the type key.
             parsed_task = task_data.copy()
-            if 'task_type' in parsed_task:
-                parsed_task['type'] = parsed_task.pop('task_type')
             tasks.append(parsed_task)
             
         relations = []

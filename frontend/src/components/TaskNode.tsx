@@ -6,13 +6,13 @@ import { QuestionCircleOutlined } from '@ant-design/icons';
 
 const TaskNodeComponent: React.FC<{ node: Node }> = ({ node }) => {
   const data = node.getData();
-  const { label, type } = data;
+  const { label, _display_type } = data;
 
-  const taskConfig = taskTypes.find(t => t.type.toUpperCase() === type?.toUpperCase() || (type === 'SUB_PROCESS' && t.type === 'SubWorkflow'));
+  const taskConfig = taskTypes.find(t => t.type.toUpperCase() === _display_type?.toUpperCase());
   const IconComponent = taskConfig?.icon || QuestionCircleOutlined;
 
   return (
-    <div className={`task-node ${type}`}>
+    <div className={`task-node ${_display_type}`}>
       <span className="icon"><IconComponent /></span>
       <span className="label">{label}</span>
     </div>

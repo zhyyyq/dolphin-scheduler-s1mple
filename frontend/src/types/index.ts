@@ -46,7 +46,8 @@ export interface ConditionGroup {
 
 export interface Task {
   name: string;
-  type: string;
+  type?: string;
+  task_type?: string;
   command: string;
   cpu_quota?: number;
   memory_max?: number;
