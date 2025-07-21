@@ -740,20 +740,32 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
         os.makedirs(WORKFLOW_REPO_DIR, exist_ok=True)
         new_file_path = os.path.join(WORKFLOW_REPO_DIR, new_filename)
         
+        # Determine if this is a rename operation
+        is_rename = workflow.original_filename and workflow.original_filename != new_filename
+        # Determine if this is a create operation
+        is_create = not workflow.original_filename
+
+        # If creating a new workflow or renaming to a new name, check for existence.
+        if (is_create or is_rename) and os.path.exists(new_file_path):
+            raise HTTPException(
+                status_code=409, # 409 Conflict is appropriate for duplicate resource
+                detail=f"Workflow with name '{workflow.name}' already exists."
+            )
+
         commit_message = ""
 
-        # If it's an update and the filename has changed, remove the old file.
-        if workflow.original_filename and workflow.original_filename != new_filename:
+        # If it's a rename, remove the old file.
+        if is_rename:
             old_file_path = os.path.join(WORKFLOW_REPO_DIR, workflow.original_filename)
             if os.path.exists(old_file_path):
                 os.remove(old_file_path)
                 commit_message = f"Rename workflow from {workflow.original_filename} to {new_filename}"
             else: # Old file not found, treat as creation
                 commit_message = f"Create workflow: {new_filename}"
-        elif workflow.original_filename:
-            commit_message = f"Update workflow: {new_filename}"
-        else:
+        elif is_create:
             commit_message = f"Create workflow: {new_filename}"
+        else: # It's an update to the same file
+            commit_message = f"Update workflow: {new_filename}"
 
         # Write the new file content.
         with open(new_file_path, "w", encoding="utf-8") as buffer:
@@ -785,6 +797,9 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
         raise HTTPException(status_code=500, detail=err_msg)
     except Exception as e:
         logger.error(f"Error in /api/workflow/yaml: {e}", exc_info=True)
+        # Re-raise HTTPException so FastAPI can handle it and return the correct status code
+        if isinstance(e, HTTPException):
+            raise e
         raise HTTPException(status_code=500, detail=f"Failed to save workflow: {e}")
 
 class SubmitWorkflow(BaseModel):
