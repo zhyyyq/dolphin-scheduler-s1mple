@@ -502,16 +502,38 @@ async def delete_workflow(project_code: str, workflow_code: str):
 
 @app.get("/api/workflow/{workflow_name}/history")
 async def get_workflow_history(workflow_name: str):
-    """Gets the commit history for a specific workflow file."""
+    """
+    Gets the commit history for a specific workflow file, ensuring that the history
+    does not include commits from before the file was last deleted.
+    """
     try:
         file_path = os.path.join(WORKFLOW_REPO_DIR, workflow_name)
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="Workflow file not found.")
 
-        # Using a custom format for easier parsing
-        log_format = "--format=%H%x1f%an%x1f%at%x1f%s"
-        result = subprocess.run(
-            ["git", "log", log_format, "--", workflow_name],
+        # Find the hash of the last commit where this file was deleted.
+        # This helps isolate the history of the *current* version of the file.
+        deletion_log_result = subprocess.run(
+            ["git", "log", "--diff-filter=D", "--format=%H", "-n", "1", "--", workflow_name],
+            cwd=WORKFLOW_REPO_DIR,
+            capture_output=True,
+            text=True,
+            encoding='utf-8'
+        )
+        
+        last_deletion_commit = deletion_log_result.stdout.strip()
+
+        # Construct the git log command.
+        # If a deletion commit was found, start the log from that commit to the present (HEAD).
+        log_cmd = ["git", "log", "--format=%H%x1f%an%x1f%at%x1f%s", "--follow"]
+        if last_deletion_commit:
+            log_cmd.append(f"{last_deletion_commit}..HEAD")
+        
+        log_cmd.extend(["--", workflow_name])
+
+        # Execute the git log command to get the relevant history.
+        history_result = subprocess.run(
+            log_cmd,
             cwd=WORKFLOW_REPO_DIR,
             check=True,
             capture_output=True,
@@ -520,21 +542,37 @@ async def get_workflow_history(workflow_name: str):
         )
         
         history = []
-        for line in result.stdout.strip().split('\n'):
+        # Filter out the deletion commit itself from the history if it appears.
+        for line in history_result.stdout.strip().split('\n'):
             if not line: continue
             parts = line.split('\x1f')
-            history.append({
-                "hash": parts[0],
-                "author": parts[1],
-                "timestamp": int(parts[2]),
-                "message": parts[3],
-            })
+            commit_hash = parts[0]
+            
+            # We need to ensure the file actually exists in the commits we're listing.
+            # `git log --follow` can sometimes include the commit where the file was renamed from.
+            # A simple check is to see if the file exists in that commit's tree.
+            check_file_exists_cmd = ["git", "cat-file", "-e", f"{commit_hash}:{workflow_name}"]
+            file_exists_proc = subprocess.run(check_file_exists_cmd, cwd=WORKFLOW_REPO_DIR, capture_output=True)
+
+            if file_exists_proc.returncode == 0:
+                history.append({
+                    "hash": commit_hash,
+                    "author": parts[1],
+                    "timestamp": int(parts[2]),
+                    "message": parts[3],
+                })
+
         return history
     except subprocess.CalledProcessError as e:
-        logger.error(f"Git log failed for {workflow_name}: {e.stderr}")
-        return [] # Return empty list if no history or an error
+        # This can happen if `git log` fails, which is not expected in normal operation.
+        logger.error(f"Git log command failed for {workflow_name}: {e.stderr}")
+        return [] # Return an empty list on error.
     except FileNotFoundError:
+        # This happens if git is not installed.
         raise HTTPException(status_code=500, detail="Git command not found.")
+    except Exception as e:
+        logger.error(f"An unexpected error occurred while fetching history for {workflow_name}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
 
 @app.get("/api/workflow/{workflow_name}/commit/{commit_hash}")
 async def get_workflow_commit_diff(workflow_name: str, commit_hash: str):
