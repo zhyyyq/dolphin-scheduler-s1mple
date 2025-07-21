@@ -1,6 +1,7 @@
 import os
 from fastapi import HTTPException
 from ..core.logger import logger
+from .git_service import git_commit
 
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 WORKFLOW_REPO_DIR = os.path.join(BACKEND_DIR, "workflow_repo")
@@ -25,3 +26,27 @@ def get_workflow_content(workflow_name: str):
     except Exception as e:
         logger.error(f"Error reading workflow file {workflow_name}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Could not read workflow file: {e}")
+
+def delete_workflow_file(workflow_name: str):
+    """Deletes a workflow file and commits the change."""
+    try:
+        if ".." in workflow_name or "/" in workflow_name or "\\" in workflow_name:
+            raise HTTPException(status_code=400, detail="Invalid workflow name.")
+
+        file_path = os.path.join(WORKFLOW_REPO_DIR, workflow_name)
+        
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Workflow file not found.")
+            
+        os.remove(file_path)
+        logger.info(f"Deleted workflow file: {file_path}")
+
+        commit_message = f"Delete workflow: {workflow_name}"
+        git_commit(file_path, commit_message)
+        
+        return {"message": f"Workflow file '{workflow_name}' deleted successfully."}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error deleting workflow file {workflow_name}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Could not delete workflow file: {e}")

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
 import os
 import subprocess
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from ..parser import parse_workflow
 from ..db.setup import create_db_connection, Workflow
 from ..core.logger import logger
-from ..services import git_service
+from ..services import git_service, ds_service, file_service
 
 WORKFLOW_REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'workflow_repo'))
 
@@ -207,27 +207,39 @@ async def get_workflow_details(workflow_uuid: str, db: Session = Depends(get_db)
         raise HTTPException(status_code=500, detail=f"Could not read local workflow file: {e}")
 
 @router.delete("/api/workflow/{workflow_uuid}")
-async def delete_workflow(workflow_uuid: str, db: Session = Depends(get_db)):
+async def delete_workflow(
+    workflow_uuid: str, 
+    project_code: int = Query(None), 
+    workflow_code: int = Query(None),
+    db: Session = Depends(get_db)
+):
     try:
+        # If DS codes are provided, delete from DolphinScheduler first
+        if project_code and workflow_code:
+            logger.info(f"Deleting workflow from DolphinScheduler: project {project_code}, workflow {workflow_code}")
+            await ds_service.delete_ds_workflow(project_code, workflow_code)
+            logger.info(f"Successfully deleted workflow from DolphinScheduler.")
+
+        # Delete from local repo and DB
+        filename = f"{workflow_uuid}.yaml"
+        
+        # Delete from DB
         db_workflow = db.query(Workflow).filter(Workflow.uuid == workflow_uuid).first()
         if db_workflow:
             db.delete(db_workflow)
             db.commit()
+            logger.info(f"Deleted workflow {workflow_uuid} from database.")
         else:
-            logger.warning(f"No workflow with UUID {workflow_uuid} found in the database to delete.")
+            logger.warning(f"Workflow {workflow_uuid} not found in database for deletion.")
 
-        filename = f"{workflow_uuid}.yaml"
-        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            git_service.git_commit(filename, f"Delete workflow file: {filename}")
-        else:
-            logger.warning(f"Workflow file {filename} not found in repo, but deleted from DB.")
+        # Delete file from repo
+        file_service.delete_workflow_file(filename)
+        logger.info(f"Deleted workflow file {filename} from repository.")
 
-        return {"message": "Workflow deleted successfully."}
+        return {"message": "Workflow deleted successfully from all locations."}
     except Exception as e:
         db.rollback()
-        logger.error(f"Error deleting local workflow file {workflow_uuid}: {e}", exc_info=True)
+        logger.error(f"Error deleting workflow {workflow_uuid}: {e}", exc_info=True)
         if isinstance(e, HTTPException):
             raise e
-        raise HTTPException(status_code=500, detail=f"Could not delete local workflow file: {e}")
+        raise HTTPException(status_code=500, detail=f"Could not delete workflow: {e}")

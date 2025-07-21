@@ -170,3 +170,18 @@ async def submit_workflow_to_ds(filename: str):
     except Exception as e:
         logger.error(f"Error in /api/workflow/submit: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to submit workflow: {e}")
+
+async def delete_ds_workflow(project_code: int, workflow_code: int):
+    """Deletes a DolphinScheduler workflow."""
+    url = f"{DS_URL.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}"
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.delete(url, headers=HEADERS)
+            response.raise_for_status()
+            return response.json()
+    except httpx.RequestError as e:
+        logger.error(f"Could not connect to DolphinScheduler: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail=f"Could not connect to DolphinScheduler: {e}")
+    except Exception as e:
+        logger.error(f"Error deleting workflow: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
