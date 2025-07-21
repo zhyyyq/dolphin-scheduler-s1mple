@@ -118,63 +118,69 @@ const WorkflowEditorPage: React.FC = () => {
           title: 'Components',
           target: graph,
           stencilGraphWidth: 200,
-          stencilGraphHeight: 800,
           collapsable: true,
           groups: [
-            {
-              name: 'group1',
-              title: 'Tasks',
-            },
+            { name: 'general', title: 'General', collapsed: true },
+            { name: 'control_flow', title: 'Control Flow', collapsed: true },
+            { name: 'data', title: 'Data', collapsed: true },
+            { name: 'big_data', title: 'Big Data', collapsed: true },
+            { name: 'cloud_ml', title: 'Cloud/ML', collapsed: true },
+            { name: 'other', title: 'Other', collapsed: true },
           ],
           layoutOptions: {
-            columns: 1,
-            columnWidth: 180,
-            rowHeight: 55,
+            columns: 3,
+            columnWidth: 80,
+            rowHeight: 60,
           },
         });
 
         stencilContainerRef.current.appendChild(stencil.container);
 
         const taskTypes = [
-          { label: 'Shell', type: 'SHELL', command: 'echo "Hello"' },
-          { label: 'SQL', type: 'SQL', command: 'SELECT * FROM table' },
-          { label: 'Python', type: 'PYTHON', command: 'print("Hello")' },
-          { label: 'HTTP', type: 'HTTP', command: 'curl http://example.com' },
-          { label: 'Sub Process', type: 'SUB_PROCESS', command: '' },
-          { label: 'Switch', type: 'SWITCH', command: '' },
-          { label: 'Conditions', type: 'CONDITIONS', command: '' },
-          { label: 'Dependent', type: 'DEPENDENT', command: '' },
-          { label: 'Spark', type: 'SPARK', command: '' },
-          { label: 'Flink', type: 'FLINK', command: '' },
-          { label: 'Map Reduce', type: 'MR', command: '' },
-          { label: 'Procedure', type: 'PROCEDURE', command: '' },
-          { label: 'Kubernetes', type: 'K8S', command: '' },
-          { label: 'DataX', type: 'DATAX', command: '' },
-          { label: 'SageMaker', type: 'SAGEMAKER', command: '' },
-          { label: 'MLflow', type: 'MLFLOW', command: '' },
-          { label: 'OpenMLDB', type: 'OPENMLDB', command: '' },
-          { label: 'PyTorch', type: 'PYTORCH', command: '' },
-          { label: 'DVC', type: 'DVC', command: '' },
+          { label: 'Shell', type: 'SHELL', command: 'echo "Hello"', category: 'general' },
+          { label: 'Python', type: 'PYTHON', command: 'print("Hello")', category: 'general' },
+          { label: 'Conditions', type: 'CONDITIONS', command: '', category: 'control_flow' },
+          { label: 'Switch', type: 'SWITCH', command: '', category: 'control_flow' },
+          { label: 'Dependent', type: 'DEPENDENT', command: '', category: 'control_flow' },
+          { label: 'Sub Process', type: 'SUB_PROCESS', command: '', category: 'control_flow' },
+          { label: 'SQL', type: 'SQL', command: 'SELECT * FROM table', category: 'data' },
+          { label: 'DataX', type: 'DATAX', command: '', category: 'data' },
+          { label: 'Spark', type: 'SPARK', command: '', category: 'big_data' },
+          { label: 'Flink', type: 'FLINK', command: '', category: 'big_data' },
+          { label: 'Map Reduce', type: 'MR', command: '', category: 'big_data' },
+          { label: 'Kubernetes', type: 'K8S', command: '', category: 'cloud_ml' },
+          { label: 'SageMaker', type: 'SAGEMAKER', command: '', category: 'cloud_ml' },
+          { label: 'MLflow', type: 'MLFLOW', command: '', category: 'cloud_ml' },
+          { label: 'OpenMLDB', type: 'OPENMLDB', command: '', category: 'cloud_ml' },
+          { label: 'PyTorch', type: 'PYTORCH', command: '', category: 'cloud_ml' },
+          { label: 'DVC', type: 'DVC', command: '', category: 'cloud_ml' },
+          { label: 'HTTP', type: 'HTTP', command: 'curl http://example.com', category: 'other' },
+          { label: 'Procedure', type: 'PROCEDURE', command: '', category: 'other' },
         ];
 
-        const nodes = taskTypes.map(task =>
-          graph.createNode({
-            shape: 'task-node',
-            data: {
-              label: task.label,
-              taskType: task.type,
-              command: task.command,
-            },
-            ports: {
-              items: [
-                { id: 'in', group: 'left' },
-                { id: 'out', group: 'right' },
-              ],
-            },
-          })
-        );
+        const nodesByCategory: { [key: string]: any[] } = {};
+        taskTypes.forEach(task => {
+          if (!nodesByCategory[task.category]) {
+            nodesByCategory[task.category] = [];
+          }
+          nodesByCategory[task.category].push(
+            graph.createNode({
+              shape: 'task-node',
+              width: 60,
+              height: 40,
+              data: {
+                label: task.label,
+                taskType: task.type,
+                command: task.command,
+                isStencil: true,
+              },
+            })
+          );
+        });
 
-        stencil.load(nodes, 'group1');
+        Object.keys(nodesByCategory).forEach(category => {
+          stencil.load(nodesByCategory[category], category);
+        });
       }
 
       graph.on('node:dblclick', ({ node }) => {
@@ -493,7 +499,7 @@ const WorkflowEditorPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
-      <div ref={stencilContainerRef} style={{ width: '250px', borderRight: '1px solid #dfe3e8', position: 'relative' }}></div>
+      <div ref={stencilContainerRef} style={{ width: '250px', borderRight: '1px solid #dfe3e8', position: 'relative', height: '100%', overflowY: 'auto' }}></div>
       <div style={{ flex: 1, position: 'relative' }}>
         <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px', background: 'white', padding: '8px', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>

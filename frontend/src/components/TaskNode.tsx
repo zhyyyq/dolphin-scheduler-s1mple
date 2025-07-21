@@ -30,7 +30,17 @@ const taskIcons: { [key: string]: React.ReactNode } = {
 // The component that will be rendered
 const TaskNodeComponent: React.FC<{ node: Node }> = ({ node }) => {
   const data = node.getData();
-  const { label, taskType } = data;
+  const { label, taskType, isStencil } = data;
+
+  if (isStencil) {
+    return (
+      <div className={`task-node-stencil ${taskType}`}>
+        <span className="icon">
+          {taskIcons[taskType] || <ShellIcon />}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className={`task-node ${taskType}`}>
