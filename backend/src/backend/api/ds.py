@@ -1,11 +1,15 @@
 from fastapi import APIRouter, HTTPException
 import httpx
+import os
+from dotenv import load_dotenv
 from ..core.logger import logger
+
+load_dotenv()
 
 router = APIRouter()
 
-DS_URL = "http://dolphinscheduler-api:12345/dolphinscheduler"
-TOKEN = "8b6c34a254ca718549ac877b10804235"
+DS_URL = os.getenv("DS_URL")
+TOKEN = os.getenv("TOKEN")
 HEADERS = {"token": TOKEN}
 
 @router.get("/api/workflows")

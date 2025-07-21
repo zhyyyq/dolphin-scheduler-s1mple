@@ -17,6 +17,7 @@ dependencies = [
     "loguru>=0.7.3",
     "psycopg2-binary>=2.9.10",
     "sqlalchemy>=2.0.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [tool.setuptools]

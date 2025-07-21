@@ -1,9 +1,12 @@
 from sqlalchemy import create_engine, Column, String, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
+from dotenv import load_dotenv
 from ..core.logger import logger
 
-DATABASE_URL = "postgresql+psycopg2://root:root@dolphinscheduler-postgresql:5432/dolphinscheduler"
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
