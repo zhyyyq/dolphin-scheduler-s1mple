@@ -1,9 +1,13 @@
 import httpx
 from fastapi import HTTPException
+import os
+from dotenv import load_dotenv
 from ..core.logger import logger
 
-DS_URL = "http://localhost:12345/dolphinscheduler"
-TOKEN = "8b6c34a254ca718549ac877b10804235"
+load_dotenv()
+
+DS_URL = os.getenv("DS_URL")
+TOKEN = os.getenv("TOKEN")
 HEADERS = {"token": TOKEN}
 
 async def get_ds_workflow_details(project_code: int, workflow_code: int):
