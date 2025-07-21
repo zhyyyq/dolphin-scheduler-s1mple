@@ -240,6 +240,8 @@ async def get_workflows():
                 # Add project name to each workflow for context
                 for wf in project_workflows:
                     wf['projectName'] = project.get('name')
+                    # Create a stable UUID for DS workflows
+                    wf['uuid'] = f"ds-{project_code}-{wf.get('code')}"
                 all_workflows.extend(project_workflows)
 
             return all_workflows
@@ -513,32 +515,36 @@ async def delete_workflow(workflow_uuid: str):
     try:
         filename = f"{workflow_uuid}.yaml"
         file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            # Manually handle git commit for deletion
-            subprocess.run(["git", "add", "-u", "."], cwd=WORKFLOW_REPO_DIR, check=True)
-            # Check if there's anything to commit
-            status_result = subprocess.run(
-                ["git", "status", "--porcelain"],
+        if not os.path.exists(file_path):
+             raise HTTPException(status_code=404, detail="Local workflow file not found.")
+
+        os.remove(file_path)
+        # Manually handle git commit for deletion
+        subprocess.run(["git", "add", "-u", "."], cwd=WORKFLOW_REPO_DIR, check=True)
+        # Check if there's anything to commit
+        status_result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=WORKFLOW_REPO_DIR,
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        if status_result.stdout.strip():
+            subprocess.run(
+                ["git", "commit", "-m", f"Delete workflow file: {filename}"],
                 cwd=WORKFLOW_REPO_DIR,
-                check=True,
-                capture_output=True,
-                text=True
+                check=True
             )
-            if status_result.stdout.strip():
-                subprocess.run(
-                    ["git", "commit", "-m", f"Delete workflow file: {filename}"],
-                    cwd=WORKFLOW_REPO_DIR,
-                    check=True
-                )
-            return {"message": "Local workflow file deleted successfully."}
-        else:
-            raise HTTPException(status_code=404, detail="Local workflow file not found.")
+        return {"message": "Local workflow file deleted successfully."}
     except Exception as e:
         logger.error(f"Error deleting local workflow file {workflow_uuid}: {e}", exc_info=True)
+        if isinstance(e, HTTPException):
+            raise e
         raise HTTPException(status_code=500, detail=f"Could not delete local workflow file: {e}")
 
-    # --- Original DolphinScheduler logic ---
+@app.delete("/api/ds/project/{project_code}/workflow/{workflow_code}")
+async def delete_ds_workflow(project_code: int, workflow_code: int):
+    """Deletes a workflow from DolphinScheduler."""
     ds_url = "http://localhost:12345/dolphinscheduler"
     token = "8b6c34a254ca718549ac877b10804235"
     headers = {"token": token}
@@ -558,7 +564,6 @@ async def delete_workflow(workflow_uuid: str):
             if workflow_data.get("processDefinition", {}).get("releaseState") == "ONLINE":
                 logger.info(f"Workflow {workflow_code} is ONLINE. Taking it offline before deletion.")
                 release_url = f"{ds_url.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}/release"
-                # The API expects form data for this endpoint
                 release_payload = {'releaseState': 'OFFLINE'}
                 release_response = await client.post(release_url, headers=headers, data=release_payload)
                 release_response.raise_for_status()
@@ -574,7 +579,6 @@ async def delete_workflow(workflow_uuid: str):
             delete_response.raise_for_status()
             delete_data = delete_response.json()
             if delete_data.get("code") != 0:
-                # Re-raise with the specific error from DS
                 raise HTTPException(status_code=500, detail=f"DS API error (delete): {delete_data.get('msg')}")
 
             return {"message": "Workflow deleted successfully."}

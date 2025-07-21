@@ -47,15 +47,31 @@ const HomePage: React.FC = () => {
         api.get<Workflow[]>('/api/workflows/local')
       ]);
 
-      const dsWorkflowCodes = new Set(dsWorkflows.map(wf => wf.code));
-      const combinedWorkflows = [...dsWorkflows];
+      const localWorkflowsMap = new Map(localWorkflows.map(wf => [wf.name, wf]));
+      const dsWorkflowsMap = new Map(dsWorkflows.map(wf => [wf.name, wf]));
 
-      localWorkflows.forEach(localWf => {
-        if (!dsWorkflowCodes.has(localWf.code)) {
-          localWf.releaseState = 'UNSUBMITTED'; // Mark as to be submitted
-          combinedWorkflows.push(localWf);
+      const allWorkflowNames = new Set([...Array.from(localWorkflowsMap.keys()), ...Array.from(dsWorkflowsMap.keys())]);
+
+      const combinedWorkflows = Array.from(allWorkflowNames).map(name => {
+        const localWf = localWorkflowsMap.get(name);
+        const dsWf = dsWorkflowsMap.get(name);
+
+        if (dsWf && localWf) {
+          // Both exist, merge them. DS is the source of truth for state.
+          return {
+            ...localWf, // start with local to get uuid, updateTime
+            ...dsWf,    // overwrite with DS data
+            uuid: localWf.uuid, // IMPORTANT: keep local uuid for editing
+            isLocal: true, // It's editable locally
+          };
+        } else if (dsWf) {
+          // Only exists in DolphinScheduler, not editable locally
+          return { ...dsWf, isLocal: false, uuid: dsWf.uuid || `${dsWf.projectCode}-${dsWf.code}` };
+        } else {
+          // Only exists locally
+          return { ...localWf, releaseState: 'UNSUBMITTED', isLocal: true };
         }
-      });
+      }).filter(wf => wf) as Workflow[];
 
       setWorkflows(combinedWorkflows);
     } catch (err) {
@@ -72,7 +88,11 @@ const HomePage: React.FC = () => {
 
   const handleDelete = useCallback(async (record: Workflow) => {
     try {
-      await api.delete(`/api/workflow/${record.uuid}`);
+      if (record.isLocal) {
+        await api.delete(`/api/workflow/${record.uuid}`);
+      } else {
+        await api.delete(`/api/ds/project/${record.projectCode}/workflow/${record.code}`);
+      }
       message.success('Workflow deleted successfully.');
       fetchWorkflows();
     } catch (err) {
@@ -155,7 +175,7 @@ const HomePage: React.FC = () => {
       <Table 
         columns={columns} 
         dataSource={workflows} 
-        rowKey="code" 
+        rowKey="uuid" 
         bordered
       />
     </div>

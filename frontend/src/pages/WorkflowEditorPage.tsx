@@ -7,7 +7,7 @@ import { Selection } from '@antv/x6-plugin-selection';
 import { Button, Modal, Input, App as AntApp } from 'antd';
 import * as yaml from 'js-yaml';
 import '../components/TaskNode'; // Register custom node
-import { Task } from '../types';
+import { Task, Workflow } from '../types';
 import api from '../api';
 
 const WorkflowEditorPage: React.FC = () => {
@@ -206,7 +206,18 @@ const WorkflowEditorPage: React.FC = () => {
   }, [workflow_uuid, message]);
 
   const handleOk = () => {
-    if (currentNode) {
+    if (currentNode && graphRef.current) {
+      const allNodes = graphRef.current.getNodes();
+      const isDuplicate = allNodes.some(
+        (node) =>
+          node.getData().label === nodeName && node.id !== currentNode.id
+      );
+
+      if (isDuplicate) {
+        message.error('A task with this name already exists in the workflow.');
+        return;
+      }
+
       currentNode.setData({
         ...currentNode.getData(),
         label: nodeName,
@@ -324,6 +335,26 @@ const WorkflowEditorPage: React.FC = () => {
 
   const handleSave = async () => {
     if (graphRef.current) {
+      // Check for duplicate workflow name
+      try {
+        const [dsWorkflows, localWorkflows] = await Promise.all([
+          api.get<Workflow[]>('/api/workflows'),
+          api.get<Workflow[]>('/api/workflows/local')
+        ]);
+        const allWorkflows = [...dsWorkflows, ...localWorkflows];
+        const isDuplicate = allWorkflows.some(
+          (wf) => wf.name === workflowName && wf.uuid !== workflowUuid
+        );
+
+        if (isDuplicate) {
+          message.error('A workflow with this name already exists.');
+          return;
+        }
+      } catch (error) {
+        message.error('Failed to verify workflow name. Please try again.');
+        return;
+      }
+
       const { cells } = graphRef.current.toJSON();
       const nodes = cells.filter(cell => cell.shape === 'task-node');
       const edges = cells.filter(cell => cell.shape === 'edge');
