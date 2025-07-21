@@ -2,6 +2,7 @@ import httpx
 from fastapi import HTTPException
 import os
 import subprocess
+import tempfile
 from ruamel.yaml import YAML
 from dotenv import load_dotenv
 from ..core.logger import logger
@@ -122,7 +123,7 @@ async def get_dashboard_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 async def submit_workflow_to_ds(filename: str):
-    """Submits a local YAML workflow file to DolphinScheduler, creating separate commits for status change and tool-based reformatting."""
+    """Submits a local YAML workflow file to DolphinScheduler using the CLI without modifying the original file's format."""
     try:
         if ".." in filename or "/" in filename or "\\" in filename:
             raise HTTPException(status_code=400, detail="Invalid workflow filename.")
@@ -132,7 +133,31 @@ async def submit_workflow_to_ds(filename: str):
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail=f"Workflow file '{filename}' not found.")
 
-        # Step 1: Add 'status: online' and create a clean commit for it.
+        # Step 1: Run pydolphinscheduler on a temporary copy to avoid reformatting the original.
+        tmp_path = None
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                original_content = f.read()
+
+            with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix=".yaml", encoding='utf-8') as tmp:
+                tmp.write(original_content)
+                tmp_path = tmp.name
+            
+            result = subprocess.run(
+                ["pydolphinscheduler", "yaml", "-f", tmp_path],
+                cwd=BACKEND_DIR,
+                check=True,
+                capture_output=True,
+                text=True,
+                encoding='utf-8'
+            )
+            logger.info(f"pydolphinscheduler CLI output for {filename}:\n{result.stdout}")
+
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                os.remove(tmp_path)
+
+        # Step 2: Now that DS is updated, update the original file cleanly.
         try:
             yaml = YAML()
             yaml.preserve_quotes = True
@@ -151,31 +176,13 @@ async def submit_workflow_to_ds(filename: str):
             logger.error(f"Failed to update and commit 'online' status for {filename}: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Failed to update YAML status: {e}")
 
-        # Step 2: Run the pydolphinscheduler CLI tool.
-        try:
-            result = subprocess.run(
-                ["pydolphinscheduler", "yaml", "-f", file_path],
-                cwd=BACKEND_DIR,
-                check=True,
-                capture_output=True,
-                text=True,
-                encoding='utf-8'
-            )
-            logger.info(f"pydolphinscheduler CLI output for {filename}:\n{result.stdout}")
-        except subprocess.CalledProcessError as e:
-            logger.error(f"pydolphinscheduler CLI failed for {filename}: {e.stderr}")
-            raise HTTPException(status_code=500, detail=f"Failed to submit workflow to DolphinScheduler: {e.stderr}")
-        except FileNotFoundError:
-            logger.error("pydolphinscheduler command not found.")
-            raise HTTPException(status_code=500, detail="pydolphinscheduler command not found.")
-
-        # Step 3: Commit any reformatting changes made by the CLI tool.
-        try:
-            git_commit(file_path, f"Sync with DolphinScheduler: {filename}")
-        except Exception as e:
-            logger.warning(f"Could not commit sync changes for {filename}: {e}", exc_info=True)
-
         return {"message": f"Workflow '{filename}' submitted successfully."}
+    except subprocess.CalledProcessError as e:
+        logger.error(f"pydolphinscheduler CLI failed for {filename}: {e.stderr}")
+        raise HTTPException(status_code=500, detail=f"Failed to submit workflow to DolphinScheduler: {e.stderr}")
+    except FileNotFoundError:
+        logger.error("pydolphinscheduler command not found.")
+        raise HTTPException(status_code=500, detail="pydolphinscheduler command not found.")
     except Exception as e:
         logger.error(f"Error in /api/workflow/submit: {e}", exc_info=True)
         if isinstance(e, HTTPException):
