@@ -109,11 +109,13 @@ const WorkflowEditorPage: React.FC = () => {
       const taskPayload: any = {
         ...nodeData,
         name: nodeData.label,
-        task_type: nodeData.taskType,
+        task_type: nodeData.type, // Use 'type' from node data
         deps: deps,
       };
+      
+      // Clean up frontend-specific fields
       delete taskPayload.label;
-      delete taskPayload.taskType;
+      delete taskPayload.type;
       return taskPayload;
     });
 
@@ -199,7 +201,7 @@ const WorkflowEditorPage: React.FC = () => {
         shape: 'task-node',
         x: contextMenu.px,
         y: contextMenu.py,
-        data: { label: task.label, taskType: task.type, command: task.command },
+        data: { label: task.label, type: task.type, command: task.command },
       });
     }
     setContextMenu({ ...contextMenu, visible: false });
