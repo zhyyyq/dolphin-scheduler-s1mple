@@ -15,9 +15,10 @@ interface ActionButtonsProps {
   onDelete: (record: Workflow) => void;
   onSubmit: (record: Workflow) => void;
   onExecute: (record: Workflow) => void;
+  onOnline: (record: Workflow) => void;
 }
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({ record, onDelete, onSubmit, onExecute }) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({ record, onDelete, onSubmit, onExecute, onOnline }) => {
   const workflowUuid = record.uuid;
 
   return (
@@ -27,6 +28,9 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ record, onDelete, onSubmi
       )}
       {record.releaseState === 'UNSUBMITTED' && (
         <Button type="primary" onClick={() => onSubmit(record)}>提交</Button>
+      )}
+      {record.releaseState === 'OFFLINE' && (
+        <Button type="primary" onClick={() => onOnline(record)}>上线</Button>
       )}
       <Link to={`/workflow/edit/${workflowUuid}`}>编辑</Link>
       <Link to={`/workflow/${workflowUuid}/history`}>历史</Link>
@@ -102,6 +106,17 @@ const HomePage: React.FC = () => {
     }
   }, [message]);
 
+  const handleOnline = useCallback(async (record: Workflow) => {
+    try {
+      await api.post(`/api/workflow/${record.uuid}/online`);
+      message.success('工作流上线成功。');
+      fetchWorkflows();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      message.error(errorMessage);
+    }
+  }, [fetchWorkflows, message]);
+
   const columns: ColumnsType<Workflow> = useMemo(() => [
     {
       title: '工作流名称',
@@ -153,7 +168,7 @@ const HomePage: React.FC = () => {
     {
       title: '操作',
       key: 'actions',
-      render: (_, record) => <ActionButtons record={record} onDelete={handleDelete} onSubmit={handleSubmit} onExecute={handleExecute} />,
+      render: (_, record) => <ActionButtons record={record} onDelete={handleDelete} onSubmit={handleSubmit} onExecute={handleExecute} onOnline={handleOnline} />,
     },
   ], [handleDelete]);
 

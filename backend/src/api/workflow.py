@@ -239,6 +239,23 @@ async def get_combined_workflows(db: Session = Depends(get_db)):
         logger.error(f"Error fetching combined workflows: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to fetch combined workflows.")
 
+@router.post("/api/workflow/{workflow_uuid}/online")
+async def online_workflow(workflow_uuid: str, db: Session = Depends(get_db)):
+    try:
+        db_workflow = db.query(Workflow).filter(Workflow.uuid == workflow_uuid).first()
+        if not db_workflow:
+            raise HTTPException(status_code=404, detail="Workflow not found in database.")
+
+        filename = f"{workflow_uuid}.yaml"
+        await ds_service.submit_workflow_to_ds(filename)
+        
+        return {"message": "Workflow successfully put online."}
+    except Exception as e:
+        logger.error(f"Error putting workflow {workflow_uuid} online: {e}", exc_info=True)
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Could not put workflow online: {e}")
+
 @router.delete("/api/workflow/{workflow_uuid}")
 async def delete_workflow(
     workflow_uuid: str, 
