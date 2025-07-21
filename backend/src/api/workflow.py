@@ -99,13 +99,21 @@ async def get_local_workflows(db: Session = Depends(get_db)):
     try:
         workflows = db.query(Workflow).all()
         logger.info(f"Found {len(workflows)} workflows in the database.")
-        logger.info(f"workflow_repo directory contents: {os.listdir(WORKFLOW_REPO_DIR)}")
+        
         local_files = []
+        yaml = YAML(typ='rt')
         for wf in workflows:
             filename = f"{wf.uuid}.yaml"
             file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
-            mod_time = os.path.getmtime(file_path) if os.path.exists(file_path) else None
-            
+            mod_time = None
+            schedule = None
+
+            if os.path.exists(file_path):
+                mod_time = os.path.getmtime(file_path)
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = yaml.load(f)
+                    schedule = data.get('workflow', {}).get('schedule')
+
             local_files.append({
                 "name": wf.name,
                 "uuid": wf.uuid,
@@ -114,6 +122,7 @@ async def get_local_workflows(db: Session = Depends(get_db)):
                 "updateTime": mod_time,
                 "code": filename,
                 "isLocal": True,
+                "schedule": schedule,
             })
         return local_files
     except Exception as e:
@@ -173,25 +182,38 @@ async def get_combined_workflows(db: Session = Depends(get_db)):
             local_wf = local_workflows_map.get(name)
             ds_wf = ds_workflows_map.get(name)
 
+            combined_wf = {}
             if ds_wf and local_wf:
-                combined_workflows.append({
+                combined_wf = {
                     **local_wf,
                     **ds_wf,
                     'uuid': local_wf['uuid'],
                     'isLocal': True,
-                })
+                }
             elif ds_wf:
-                combined_workflows.append({
+                combined_wf = {
                     **ds_wf,
                     'isLocal': False,
                     'uuid': ds_wf.get('uuid') or f"ds-{ds_wf.get('projectCode')}-{ds_wf.get('code')}"
-                })
+                }
             elif local_wf:
-                combined_workflows.append({
+                combined_wf = {
                     **local_wf,
                     'releaseState': 'UNSUBMITTED',
                     'isLocal': True,
-                })
+                }
+            
+            # Standardize schedule display text
+            schedule_text = None
+            schedule_obj = combined_wf.get('schedule')
+            if schedule_obj:
+                if isinstance(schedule_obj, dict): # From DS
+                    schedule_text = schedule_obj.get('crontab')
+                else: # From local file
+                    schedule_text = str(schedule_obj)
+            
+            combined_wf['schedule_text'] = schedule_text
+            combined_workflows.append(combined_wf)
         
         return combined_workflows
     except Exception as e:

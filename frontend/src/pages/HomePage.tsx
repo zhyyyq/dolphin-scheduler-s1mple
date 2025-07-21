@@ -109,6 +109,12 @@ const HomePage: React.FC = () => {
       key: 'name',
     },
     {
+      title: '定时设置',
+      dataIndex: 'schedule_text',
+      key: 'schedule_text',
+      render: (text: string) => text || '-',
+    },
+    {
       title: '状态',
       dataIndex: 'releaseState',
       key: 'releaseState',
