@@ -3,6 +3,30 @@ import { ShellIcon } from './ShellIcon';
 import React from 'react';
 import { Node } from '@antv/x6';
 
+// A simple mapping for task types to icons.
+// In a real app, you'd have different icons for each task.
+const taskIcons: { [key: string]: React.ReactNode } = {
+  SHELL: <ShellIcon />,
+  SQL: <ShellIcon />,
+  PYTHON: <ShellIcon />,
+  HTTP: <ShellIcon />,
+  SUB_PROCESS: <ShellIcon />,
+  SWITCH: <ShellIcon />,
+  CONDITIONS: <ShellIcon />,
+  DEPENDENT: <ShellIcon />,
+  SPARK: <ShellIcon />,
+  FLINK: <ShellIcon />,
+  MR: <ShellIcon />,
+  PROCEDURE: <ShellIcon />,
+  K8S: <ShellIcon />,
+  DATAX: <ShellIcon />,
+  SAGEMAKER: <ShellIcon />,
+  MLFLOW: <ShellIcon />,
+  OPENMLDB: <ShellIcon />,
+  PYTORCH: <ShellIcon />,
+  DVC: <ShellIcon />,
+};
+
 // The component that will be rendered
 const TaskNodeComponent: React.FC<{ node: Node }> = ({ node }) => {
   const data = node.getData();
@@ -11,7 +35,7 @@ const TaskNodeComponent: React.FC<{ node: Node }> = ({ node }) => {
   return (
     <div className={`task-node ${taskType}`}>
       <span className="icon">
-        {taskType === 'SHELL' && <ShellIcon />}
+        {taskIcons[taskType] || <ShellIcon />}
       </span>
       <span className="label">{label}</span>
     </div>
@@ -29,67 +53,77 @@ register({
       top: {
         position: 'top',
         attrs: {
-          portBody: {
+          circle: {
+            r: 4,
             magnet: true,
-          },
-          portDot: {
-            fill: '#8f8f8f',
-          },
-        },
-      },
-      bottom: {
-        position: 'bottom',
-        attrs: {
-          portBody: {
-            magnet: true,
-          },
-          portDot: {
-            fill: '#8f8f8f',
-          },
-        },
-      },
-      left: {
-        position: 'left',
-        attrs: {
-          portBody: {
-            magnet: true,
-          },
-          portDot: {
-            fill: '#8f8f8f',
+            stroke: '#5F95FF',
+            strokeWidth: 1,
+            fill: '#fff',
+            style: {
+              visibility: 'hidden',
+            },
           },
         },
       },
       right: {
         position: 'right',
         attrs: {
-          portBody: {
+          circle: {
+            r: 4,
             magnet: true,
-          },
-          portDot: {
-            fill: '#8f8f8f',
+            stroke: '#5F95FF',
+            strokeWidth: 1,
+            fill: '#fff',
+            style: {
+              visibility: 'hidden',
+            },
           },
         },
-        allowMulti: true,
+      },
+      bottom: {
+        position: 'bottom',
+        attrs: {
+          circle: {
+            r: 4,
+            magnet: true,
+            stroke: '#5F95FF',
+            strokeWidth: 1,
+            fill: '#fff',
+            style: {
+              visibility: 'hidden',
+            },
+          },
+        },
+      },
+      left: {
+        position: 'left',
+        attrs: {
+          circle: {
+            r: 4,
+            magnet: true,
+            stroke: '#5F95FF',
+            strokeWidth: 1,
+            fill: '#fff',
+            style: {
+              visibility: 'hidden',
+            },
+          },
+        },
       },
     },
+    items: [
+      {
+        group: 'top',
+      },
+      {
+        group: 'right',
+      },
+      {
+        group: 'bottom',
+      },
+      {
+        group: 'left',
+      },
+    ],
   },
-  portMarkup: [
-    {
-      tagName: 'circle',
-      selector: 'portBody',
-      attrs: {
-        r: 10,
-        fill: 'transparent',
-        stroke: 'none',
-      },
-    },
-    {
-      tagName: 'circle',
-      selector: 'portDot',
-      attrs: {
-        r: 5,
-        fill: '#8f8f8f',
-      },
-    },
-  ],
 });

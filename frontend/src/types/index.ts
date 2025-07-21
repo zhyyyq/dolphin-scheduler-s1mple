@@ -9,10 +9,55 @@ export interface Workflow {
   isLocal?: boolean;
 }
 
+export interface HttpParam {
+  prop: string;
+  httpParametersType: 'PARAMETER' | 'HEADER';
+  value: string;
+}
+
+export interface SwitchBranch {
+  task: string;
+  condition?: string;
+}
+
+export interface SwitchCondition {
+  dependTaskList: SwitchBranch[];
+}
+
+export interface ConditionTask {
+  task: string;
+  flag: boolean;
+}
+
+export interface ConditionGroup {
+  op: 'AND' | 'OR';
+  groups: (ConditionGroup | ConditionTask)[];
+}
+
 export interface Task {
   name: string;
   type: string;
   command: string;
+  cpu_quota?: number;
+  memory_max?: number;
+  datasource_name?: string;
+  sql_type?: 'SELECT' | 'NOT_SELECT';
+  pre_statements?: string[];
+  post_statements?: string[];
+  display_rows?: number;
+  url?: string;
+  http_method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD';
+  http_params?: HttpParam[];
+  http_check_condition?: 'STATUS_CODE_DEFAULT' | 'STATUS_CODE_CUSTOM' | 'BODY_CONTAINS' | 'BODY_NOT_CONTAINS';
+  condition?: string;
+  connect_timeout?: number;
+  socket_timeout?: number;
+  workflow_name?: string;
+  switch_condition?: SwitchCondition;
+  success_task?: string;
+  failed_task?: string;
+  op?: 'AND' | 'OR';
+  groups?: (ConditionGroup | ConditionTask)[];
 }
 
 export interface Relation {

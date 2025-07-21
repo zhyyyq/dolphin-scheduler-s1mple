@@ -105,8 +105,10 @@ async def delete_ds_workflow(project_code: int, workflow_code: int):
         logger.error(f"Error deleting workflow: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
+from fastapi import APIRouter, HTTPException, Body
+
 @router.post("/api/ds/execute/{project_code}/{process_definition_code}")
-async def execute_ds_workflow(project_code: int, process_definition_code: int, scheduleTime: str):
+async def execute_ds_workflow(project_code: int, process_definition_code: int, scheduleTime: str = Body(..., embed=True)):
     """Executes a DolphinScheduler workflow."""
     url = f"{DS_URL.rstrip('/')}/projects/{project_code}/executors/start-process-instance"
     payload = {

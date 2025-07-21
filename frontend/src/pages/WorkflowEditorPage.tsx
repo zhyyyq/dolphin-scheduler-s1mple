@@ -5,7 +5,7 @@ import { Stencil } from '@antv/x6-plugin-stencil';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
 import { Selection } from '@antv/x6-plugin-selection';
 import { History } from '@antv/x6-plugin-history';
-import { Button, Modal, Input, App as AntApp, Switch } from 'antd';
+import { Button, Modal, Input, App as AntApp, Switch, Select } from 'antd';
 import * as yaml from 'js-yaml';
 import '../components/TaskNode'; // Register custom node
 import { Task, Workflow } from '../types';
@@ -118,7 +118,7 @@ const WorkflowEditorPage: React.FC = () => {
           title: 'Components',
           target: graph,
           stencilGraphWidth: 200,
-          stencilGraphHeight: 180,
+          stencilGraphHeight: 800,
           collapsable: true,
           groups: [
             {
@@ -135,22 +135,46 @@ const WorkflowEditorPage: React.FC = () => {
 
         stencilContainerRef.current.appendChild(stencil.container);
 
-        const shellNode = graph.createNode({
-          shape: 'task-node',
-          data: {
-            label: 'Shell Task',
-            taskType: 'SHELL',
-            command: 'echo "Hello"',
-          },
-          ports: {
-            items: [
-              { id: 'in', group: 'left' },
-              { id: 'out', group: 'right' },
-            ]
-          }
-        });
+        const taskTypes = [
+          { label: 'Shell', type: 'SHELL', command: 'echo "Hello"' },
+          { label: 'SQL', type: 'SQL', command: 'SELECT * FROM table' },
+          { label: 'Python', type: 'PYTHON', command: 'print("Hello")' },
+          { label: 'HTTP', type: 'HTTP', command: 'curl http://example.com' },
+          { label: 'Sub Process', type: 'SUB_PROCESS', command: '' },
+          { label: 'Switch', type: 'SWITCH', command: '' },
+          { label: 'Conditions', type: 'CONDITIONS', command: '' },
+          { label: 'Dependent', type: 'DEPENDENT', command: '' },
+          { label: 'Spark', type: 'SPARK', command: '' },
+          { label: 'Flink', type: 'FLINK', command: '' },
+          { label: 'Map Reduce', type: 'MR', command: '' },
+          { label: 'Procedure', type: 'PROCEDURE', command: '' },
+          { label: 'Kubernetes', type: 'K8S', command: '' },
+          { label: 'DataX', type: 'DATAX', command: '' },
+          { label: 'SageMaker', type: 'SAGEMAKER', command: '' },
+          { label: 'MLflow', type: 'MLFLOW', command: '' },
+          { label: 'OpenMLDB', type: 'OPENMLDB', command: '' },
+          { label: 'PyTorch', type: 'PYTORCH', command: '' },
+          { label: 'DVC', type: 'DVC', command: '' },
+        ];
 
-        stencil.load([shellNode], 'group1');
+        const nodes = taskTypes.map(task =>
+          graph.createNode({
+            shape: 'task-node',
+            data: {
+              label: task.label,
+              taskType: task.type,
+              command: task.command,
+            },
+            ports: {
+              items: [
+                { id: 'in', group: 'left' },
+                { id: 'out', group: 'right' },
+              ],
+            },
+          })
+        );
+
+        stencil.load(nodes, 'group1');
       }
 
       graph.on('node:dblclick', ({ node }) => {
@@ -197,7 +221,7 @@ const WorkflowEditorPage: React.FC = () => {
               data: {
                 label: task.name,
                 taskType: task.type,
-                command: task.command,
+                ...task,
               },
               ports: {
                 items: [
@@ -271,6 +295,7 @@ const WorkflowEditorPage: React.FC = () => {
       const edges = cells.filter(cell => cell.shape === 'edge');
 
       const tasks = nodes.map(node => {
+        const nodeData = node.data;
         const deps = edges
           .filter(edge => edge.target.cell === node.id)
           .map(edge => {
@@ -278,13 +303,55 @@ const WorkflowEditorPage: React.FC = () => {
             return sourceNode ? sourceNode.data.label : '';
           })
           .filter(name => name);
-        
-        return {
-          name: node.data.label,
-          task_type: node.data.taskType,
-          command: node.data.command,
+
+        const task: any = {
+          name: nodeData.label,
+          task_type: nodeData.taskType,
           deps: deps,
         };
+
+        if (nodeData.taskType === 'SHELL' || nodeData.taskType === 'PYTHON') {
+          task.command = nodeData.command;
+        }
+        
+        if (nodeData.cpu_quota) task.cpu_quota = nodeData.cpu_quota;
+        if (nodeData.memory_max) task.memory_max = nodeData.memory_max;
+
+        if (nodeData.taskType === 'SQL') {
+          task.sql = nodeData.command;
+          if (nodeData.datasource_name) task.datasource_name = nodeData.datasource_name;
+          if (nodeData.sql_type) task.sql_type = nodeData.sql_type;
+          if (nodeData.pre_statements) task.pre_statements = nodeData.pre_statements;
+          if (nodeData.post_statements) task.post_statements = nodeData.post_statements;
+          if (nodeData.display_rows) task.display_rows = nodeData.display_rows;
+        }
+
+        if (nodeData.taskType === 'HTTP') {
+          task.url = nodeData.url;
+          if (nodeData.http_method) task.http_method = nodeData.http_method;
+          if (nodeData.http_params) task.http_params = nodeData.http_params;
+          if (nodeData.http_check_condition) task.http_check_condition = nodeData.http_check_condition;
+          if (nodeData.condition) task.condition = nodeData.condition;
+          if (nodeData.connect_timeout) task.connect_timeout = nodeData.connect_timeout;
+          if (nodeData.socket_timeout) task.socket_timeout = nodeData.socket_timeout;
+        }
+
+        if (nodeData.taskType === 'SUB_PROCESS') {
+          task.workflow_name = nodeData.workflow_name;
+        }
+
+        if (nodeData.taskType === 'SWITCH') {
+          task.condition = nodeData.switch_condition;
+        }
+
+        if (nodeData.taskType === 'CONDITIONS') {
+          task.success_task = nodeData.success_task;
+          task.failed_task = nodeData.failed_task;
+          task.op = nodeData.op;
+          task.groups = nodeData.groups;
+        }
+
+        return task;
       });
 
       const workflow: any = {
@@ -330,7 +397,7 @@ const WorkflowEditorPage: React.FC = () => {
           data: {
             label: task.name,
             taskType: task.type,
-            command: task.command,
+            ...task,
           },
           ports: {
             items: [
@@ -453,8 +520,109 @@ const WorkflowEditorPage: React.FC = () => {
       <Modal title="Edit Task" open={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
         <p>Name:</p>
         <Input value={nodeName} onChange={e => setNodeName(e.target.value)} />
-        <p>Command:</p>
+        <p>{currentNode?.getData().taskType === 'PYTHON' ? 'Definition:' : 'Command:'}</p>
         <Input.TextArea value={nodeCommand} onChange={e => setNodeCommand(e.target.value)} rows={4} />
+        {(currentNode?.getData().taskType === 'SHELL' || currentNode?.getData().taskType === 'PYTHON') && (
+          <>
+            <p>CPU Quota:</p>
+            <Input type="number" value={currentNode.getData().cpu_quota} onChange={e => currentNode.setData({ ...currentNode.getData(), cpu_quota: Number(e.target.value) })} />
+            <p>Max Memory (MB):</p>
+            <Input type="number" value={currentNode.getData().memory_max} onChange={e => currentNode.setData({ ...currentNode.getData(), memory_max: Number(e.target.value) })} />
+          </>
+        )}
+        {currentNode?.getData().taskType === 'SQL' && (
+          <>
+            <p>Datasource Name:</p>
+            <Input value={currentNode.getData().datasource_name} onChange={e => currentNode.setData({ ...currentNode.getData(), datasource_name: e.target.value })} />
+            <p>SQL Type:</p>
+            <Input value={currentNode.getData().sql_type} onChange={e => currentNode.setData({ ...currentNode.getData(), sql_type: e.target.value })} />
+            <p>Pre Statements:</p>
+            <Input.TextArea value={currentNode.getData().pre_statements?.join('\n')} onChange={e => currentNode.setData({ ...currentNode.getData(), pre_statements: e.target.value.split('\n') })} rows={2} />
+            <p>Post Statements:</p>
+            <Input.TextArea value={currentNode.getData().post_statements?.join('\n')} onChange={e => currentNode.setData({ ...currentNode.getData(), post_statements: e.target.value.split('\n') })} rows={2} />
+            <p>Display Rows:</p>
+            <Input type="number" value={currentNode.getData().display_rows} onChange={e => currentNode.setData({ ...currentNode.getData(), display_rows: Number(e.target.value) })} />
+          </>
+        )}
+        {currentNode?.getData().taskType === 'HTTP' && (
+          <>
+            <p>URL:</p>
+            <Input value={currentNode.getData().url} onChange={e => currentNode.setData({ ...currentNode.getData(), url: e.target.value })} />
+            <p>HTTP Method:</p>
+            <Input value={currentNode.getData().http_method} onChange={e => currentNode.setData({ ...currentNode.getData(), http_method: e.target.value })} />
+            <p>HTTP Check Condition:</p>
+            <Input value={currentNode.getData().http_check_condition} onChange={e => currentNode.setData({ ...currentNode.getData(), http_check_condition: e.target.value })} />
+            <p>Condition:</p>
+            <Input value={currentNode.getData().condition} onChange={e => currentNode.setData({ ...currentNode.getData(), condition: e.target.value })} />
+            <p>Connect Timeout (ms):</p>
+            <Input type="number" value={currentNode.getData().connect_timeout} onChange={e => currentNode.setData({ ...currentNode.getData(), connect_timeout: Number(e.target.value) })} />
+            <p>Socket Timeout (ms):</p>
+            <Input type="number" value={currentNode.getData().socket_timeout} onChange={e => currentNode.setData({ ...currentNode.getData(), socket_timeout: Number(e.target.value) })} />
+          </>
+        )}
+        {currentNode?.getData().taskType === 'SUB_PROCESS' && (
+          <>
+            <p>Workflow Name:</p>
+            <Input value={currentNode.getData().workflow_name} onChange={e => currentNode.setData({ ...currentNode.getData(), workflow_name: e.target.value })} />
+          </>
+        )}
+        {currentNode?.getData().taskType === 'SWITCH' && (
+          <>
+            <p>Conditions:</p>
+            {currentNode.getData().switch_condition?.dependTaskList.map((branch: any, index: number) => (
+              <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                <Input
+                  placeholder="Condition"
+                  value={branch.condition}
+                  onChange={e => {
+                    const newBranches = [...currentNode.getData().switch_condition.dependTaskList];
+                    newBranches[index].condition = e.target.value;
+                    currentNode.setData({ ...currentNode.getData(), switch_condition: { dependTaskList: newBranches } });
+                  }}
+                />
+                <Input
+                  placeholder="Task Name"
+                  value={branch.task}
+                  onChange={e => {
+                    const newBranches = [...currentNode.getData().switch_condition.dependTaskList];
+                    newBranches[index].task = e.target.value;
+                    currentNode.setData({ ...currentNode.getData(), switch_condition: { dependTaskList: newBranches } });
+                  }}
+                />
+              </div>
+            ))}
+          </>
+        )}
+        {currentNode?.getData().taskType === 'CONDITIONS' && (
+          <>
+            <p>Success Task:</p>
+            <Input value={currentNode.getData().success_task} onChange={e => currentNode.setData({ ...currentNode.getData(), success_task: e.target.value })} />
+            <p>Failed Task:</p>
+            <Input value={currentNode.getData().failed_task} onChange={e => currentNode.setData({ ...currentNode.getData(), failed_task: e.target.value })} />
+            <p>Operator:</p>
+            <Select
+              value={currentNode.getData().op}
+              onChange={value => currentNode.setData({ ...currentNode.getData(), op: value })}
+              style={{ width: '100%' }}
+            >
+              <Select.Option value="AND">AND</Select.Option>
+              <Select.Option value="OR">OR</Select.Option>
+            </Select>
+            <p>Groups (JSON):</p>
+            <Input.TextArea
+              rows={6}
+              value={JSON.stringify(currentNode.getData().groups, null, 2)}
+              onChange={e => {
+                try {
+                  const groups = JSON.parse(e.target.value);
+                  currentNode.setData({ ...currentNode.getData(), groups });
+                } catch (err) {
+                  // Ignore invalid JSON
+                }
+              }}
+            />
+          </>
+        )}
       </Modal>
       <Modal
         title="Workflow YAML"

@@ -118,7 +118,9 @@ const HomePage: React.FC = () => {
 
   const handleExecute = useCallback(async (record: Workflow) => {
     try {
-      await api.post(`/api/ds/execute/${record.projectCode}/${record.code}?scheduleTime=`);
+      await api.post(`/api/ds/execute/${record.projectCode}/${record.code}`, {
+        scheduleTime: ''
+      });
       message.success('Workflow execution started successfully.');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
