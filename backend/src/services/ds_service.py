@@ -1,11 +1,13 @@
 import httpx
 from fastapi import HTTPException
 import os
+import subprocess
 from dotenv import load_dotenv
-from core.logger import logger
+from ..core.logger import logger
 
 load_dotenv()
 
+BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 DS_URL = os.getenv("DS_URL")
 TOKEN = os.getenv("TOKEN")
 HEADERS = {"token": TOKEN}
@@ -123,6 +125,7 @@ async def submit_workflow_to_ds(filename: str):
         if ".." in filename or "/" in filename or "\\" in filename:
             raise HTTPException(status_code=400, detail="Invalid workflow filename.")
 
+        WORKFLOW_REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'workflow_repo'))
         file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail=f"Workflow file '{filename}' not found.")

@@ -149,6 +149,8 @@ services:
     profiles: ["diy"]
     env_file:
       - ./backend/docker.env
+    environment:
+      PYTHONPATH: /app/src
     ports:
       - "8000:8000"
     networks:

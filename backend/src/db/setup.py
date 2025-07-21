@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, String, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 import os
 from dotenv import load_dotenv
-from core.logger import logger
+from ..core.logger import logger
 
 load_dotenv()
 

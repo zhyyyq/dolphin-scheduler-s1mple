@@ -3,12 +3,12 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import subprocess
-from parser import parse_workflow
-from db.setup import init_db
-from api.workflow import router as workflow_router
-from api.ds import router as ds_router
-from core.logger import setup_logger, logger
-from services import git_service, process_service, file_service, ds_service
+from .parser import parse_workflow
+from .db.setup import init_db
+from .api.workflow import router as workflow_router
+from .api.ds import router as ds_router
+from .core.logger import setup_logger, logger
+from .services import git_service, process_service, file_service, ds_service
 
 # Define project root and workflow repo directory consistently
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
