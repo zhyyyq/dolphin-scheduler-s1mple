@@ -30,9 +30,19 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
         anchor: 'center',
         connectionPoint: 'anchor',
         allowBlank: false,
-        allowNode: true,
-        allowMulti: true,
+        allowMulti: 'withPort',
         snap: { radius: 20 },
+        createEdge() {
+          return this.createEdge({
+            attrs: {
+              line: {
+                stroke: '#8f8f8f',
+                strokeWidth: 1,
+              },
+            },
+            zIndex: -1,
+          });
+        },
       },
       highlighting: {
         magnetAdsorbed: {
