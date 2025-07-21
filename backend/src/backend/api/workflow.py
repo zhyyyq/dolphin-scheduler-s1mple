@@ -98,6 +98,58 @@ async def save_workflow_yaml(workflow: WorkflowYaml, db: Session = Depends(get_d
 async def get_local_workflows(db: Session = Depends(get_db)):
     try:
         workflows = db.query(Workflow).all()
+        if not workflows:
+            logger.info("No workflows found in the database. Loading demo workflow.")
+            demo_workflow_content = """
+# Define the workflow
+workflow:
+  name: "tutorial"
+  schedule: "0 0 0 * * ? *"
+  start_time: "2021-01-01"
+  release_state: "offline"
+  run: true
+
+# Define the tasks within the workflow
+tasks:
+  - name: task_parent
+    task_type: Shell
+    command: echo hello pydolphinscheduler
+
+  - name: task_child_one
+    task_type: Shell
+    deps: [task_parent]
+    command: echo "child one"
+
+  - name: task_child_two
+    task_type: Shell
+    deps: [task_parent]
+    command: echo "child two"
+
+  - name: task_union
+    task_type: Shell
+    deps: [task_child_one, task_child_two]
+    command: echo "union"
+"""
+            yaml = YAML()
+            data = yaml.load(demo_workflow_content)
+            workflow_name = data['workflow']['name']
+            workflow_uuid = str(uuid.uuid4())
+            data['workflow']['uuid'] = workflow_uuid
+            
+            new_workflow = Workflow(uuid=workflow_uuid, name=workflow_name)
+            db.add(new_workflow)
+            db.commit()
+            
+            filename = f"{workflow_uuid}.yaml"
+            file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
+            with open(file_path, "w", encoding="utf-8") as buffer:
+                buffer.write(demo_workflow_content)
+            
+            git_service.git_commit(filename, "Add demo workflow")
+            workflows = db.query(Workflow).all()
+
+        logger.info(f"Found {len(workflows)} workflows in the database.")
+        logger.info(f"workflow_repo directory contents: {os.listdir(WORKFLOW_REPO_DIR)}")
         local_files = []
         for wf in workflows:
             filename = f"{wf.uuid}.yaml"

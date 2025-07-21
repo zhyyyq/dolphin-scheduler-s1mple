@@ -3,7 +3,7 @@ import os
 from ..core.logger import logger
 
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-WORKFLOW_REPO_DIR = os.path.join(BACKEND_DIR, "workflow_repo")
+WORKFLOW_REPO_DIR = os.path.join(BACKEND_DIR, "workflow_repo").replace('\\', '/')
 
 def git_commit(file_path, message):
     """Commits a file to the git repository."""
