@@ -15,8 +15,8 @@ import uuid
 from ruamel.yaml import YAML
 from .parser import parse_workflow
 from .db import init_db
-from .routers import workflow as workflow_router
-from .routers import ds as ds_router
+from .routers.workflow import router as workflow_router
+from .routers.ds import router as ds_router
 
 # Define project root and workflow repo directory consistently
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
