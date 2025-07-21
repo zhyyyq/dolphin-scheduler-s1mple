@@ -53,7 +53,7 @@ const WorkflowEditorPage: React.FC = () => {
           anchor: 'center',
           connectionPoint: 'anchor',
           allowBlank: false,
-          allowMulti: 'withPort',
+          allowMulti: true,
           snap: {
             radius: 20,
           },
