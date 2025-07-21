@@ -7,6 +7,8 @@ export interface Workflow {
   releaseState: 'ONLINE' | 'OFFLINE' | 'UNSUBMITTED';
   updateTime: string | number;
   isLocal?: boolean;
+  schedule_text?: string;
+  schedule_human_readable?: string;
 }
 
 export interface HttpParam {

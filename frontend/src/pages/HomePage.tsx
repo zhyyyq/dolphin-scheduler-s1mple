@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  Table, Spin, Alert, Typography, Tag, Button, Space,
+  Table, Spin, Alert, Typography, Tag, Button, Space, Tooltip,
   App as AntApp
 } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
@@ -110,9 +110,13 @@ const HomePage: React.FC = () => {
     },
     {
       title: '定时设置',
-      dataIndex: 'schedule_text',
-      key: 'schedule_text',
-      render: (text: string) => text || '-',
+      dataIndex: 'schedule_human_readable',
+      key: 'schedule_human_readable',
+      render: (text: string, record: Workflow) => (
+        <Tooltip title={record.schedule_text}>
+          <span>{text || '-'}</span>
+        </Tooltip>
+      ),
     },
     {
       title: '状态',

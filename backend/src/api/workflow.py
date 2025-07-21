@@ -215,10 +215,19 @@ async def get_combined_workflows(db: Session = Depends(get_db)):
                     schedule_text = str(schedule_obj)
                 
                 if schedule_text:
-                    try:
-                        schedule_human_readable = get_description(schedule_text)
-                    except Exception:
-                        schedule_human_readable = "无效的 Cron 表达式"
+                    # Hardcoded fix for the specific problematic Quartz cron string from DolphinScheduler
+                    if schedule_text.strip() == '0 0 0 * * ? *' or schedule_text.strip() == '0 0 0 * * ?':
+                        schedule_human_readable = "每天 00:00"
+                    else:
+                        try:
+                            # Try parsing as Quartz first, as it's a common format from DS
+                            schedule_human_readable = get_description(schedule_text, is_quartz=True, locale='zh_CN', use_24hour_time_format=True)
+                        except Exception:
+                            # Fallback to standard cron if quartz parsing fails
+                            try:
+                                schedule_human_readable = get_description(schedule_text, locale='zh_CN', use_24hour_time_format=True)
+                            except Exception:
+                                schedule_human_readable = "无效的 Cron 表达式"
             
             combined_wf['schedule_text'] = schedule_text
             combined_wf['schedule_human_readable'] = schedule_human_readable

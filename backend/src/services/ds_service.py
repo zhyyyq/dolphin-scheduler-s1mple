@@ -136,11 +136,17 @@ async def submit_workflow_to_ds(filename: str):
         # Step 1: Run pydolphinscheduler on a temporary copy to avoid reformatting the original.
         tmp_path = None
         try:
+            yaml = YAML(typ='rt')
             with open(file_path, 'r', encoding='utf-8') as f:
-                original_content = f.read()
+                data = yaml.load(f)
+
+            # Ensure schedule key exists for pydolphinscheduler CLI, as it's required.
+            # If it's missing, the user has disabled scheduling. We'll add `schedule: null`.
+            if 'workflow' in data and 'schedule' not in data['workflow']:
+                data['workflow']['schedule'] = None
 
             with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix=".yaml", encoding='utf-8') as tmp:
-                tmp.write(original_content)
+                yaml.dump(data, tmp)
                 tmp_path = tmp.name
             
             result = subprocess.run(
