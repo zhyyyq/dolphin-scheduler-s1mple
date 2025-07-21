@@ -21,5 +21,6 @@ dependencies = [
 [tool.setuptools]
 package-dir = {"" = "src"}
 
-[tool.pip]
-index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+[[tool.uv.index]]
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
