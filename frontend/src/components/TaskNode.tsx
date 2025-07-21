@@ -1,37 +1,20 @@
 import { register } from '@antv/x6-react-shape';
-import { ShellIcon } from './ShellIcon';
 import React from 'react';
 import { Node } from '@antv/x6';
-
-const taskIcons: { [key: string]: React.ReactNode } = {
-  SHELL: <ShellIcon />,
-  SQL: <ShellIcon />,
-  PYTHON: <ShellIcon />,
-  HTTP: <ShellIcon />,
-  SUB_PROCESS: <ShellIcon />,
-  SWITCH: <ShellIcon />,
-  CONDITIONS: <ShellIcon />,
-  DEPENDENT: <ShellIcon />,
-  SPARK: <ShellIcon />,
-  FLINK: <ShellIcon />,
-  MR: <ShellIcon />,
-  PROCEDURE: <ShellIcon />,
-  K8S: <ShellIcon />,
-  DATAX: <ShellIcon />,
-  SAGEMAKER: <ShellIcon />,
-  MLFLOW: <ShellIcon />,
-  OPENMLDB: <ShellIcon />,
-  PYTORCH: <ShellIcon />,
-  DVC: <ShellIcon />,
-};
+import { taskTypes } from '../config/taskTypes';
+import { QuestionCircleOutlined } from '@ant-design/icons';
 
 const TaskNodeComponent: React.FC<{ node: Node }> = ({ node }) => {
   const data = node.getData();
-  const { label, taskType } = data;
+  const { label, type, taskType } = data;
+  const currentType = type || taskType;
+
+  const taskConfig = taskTypes.find(t => t.type.toUpperCase() === currentType?.toUpperCase());
+  const IconComponent = taskConfig?.icon || QuestionCircleOutlined;
 
   return (
-    <div className={`task-node ${taskType}`}>
-      <span className="icon">{taskIcons[taskType] || <ShellIcon />}</span>
+    <div className={`task-node ${currentType}`}>
+      <span className="icon"><IconComponent /></span>
       <span className="label">{label}</span>
     </div>
   );

@@ -104,7 +104,11 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     tasks.forEach((task) => {
       const node = currentGraph.createNode({
         shape: 'task-node',
-        data: { label: task.name, taskType: task.type, ...task },
+        data: {
+          ...task,
+          label: task.name,
+          type: task.type, // Ensure type is passed correctly
+        },
       });
       currentGraph.addNode(node);
       nodeMap.set(task.name, node);
