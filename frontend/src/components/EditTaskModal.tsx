@@ -1,5 +1,7 @@
 import React from 'react';
-import { Modal, Input, Select } from 'antd';
+import {
+  Modal, Input, Select, Button
+ } from 'antd';
 
 interface EditTaskModalProps {
   isModalVisible: boolean;
@@ -26,13 +28,60 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
 
   const data = currentNode.getData();
 
+  const handleSwitchChange = (index: number, field: 'condition' | 'task', value: string) => {
+    const newConditions = [...(data.condition || [])];
+    newConditions[index] = { ...newConditions[index], [field]: value };
+    currentNode.setData({ ...data, condition: newConditions });
+  };
+
+  const addSwitchBranch = () => {
+    const newConditions = [...(data.condition || []), { task: '', condition: '' }];
+    currentNode.setData({ ...data, condition: newConditions });
+  };
+
+  const removeSwitchBranch = (index: number) => {
+    const newConditions = [...(data.condition || [])];
+    newConditions.splice(index, 1);
+    currentNode.setData({ ...data, condition: newConditions });
+  };
+
   return (
     <Modal title="编辑任务" open={isModalVisible} onOk={onOk} onCancel={onCancel}>
       <p>名称:</p>
       <Input value={nodeName} onChange={e => onNodeNameChange(e.target.value)} />
-      <p>{data.taskType === 'PYTHON' ? '定义:' : '命令:'}</p>
-      <Input.TextArea value={nodeCommand} onChange={e => onNodeCommandChange(e.target.value)} rows={4} />
-      {(data.taskType === 'SHELL' || data.taskType === 'PYTHON') && (
+
+      {data.type === 'Switch' ? (
+        <>
+          <p>分支条件:</p>
+          {data.condition?.map((branch: any, index: number) => (
+            <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+              <Input
+                placeholder="条件 (例如 ${var} > 1)"
+                value={branch.condition}
+                onChange={e => handleSwitchChange(index, 'condition', e.target.value)}
+                style={{ flex: 1 }}
+              />
+              <Input
+                placeholder="任务名称"
+                value={branch.task}
+                onChange={e => handleSwitchChange(index, 'task', e.target.value)}
+                style={{ flex: 1 }}
+              />
+              <Button onClick={() => removeSwitchBranch(index)} danger type="text">X</Button>
+            </div>
+          ))}
+          <Button onClick={addSwitchBranch} type="dashed" style={{ width: '100%' }}>
+            + 添加分支
+          </Button>
+        </>
+      ) : (
+        <>
+          <p>{data.type === 'PYTHON' ? '定义:' : '命令:'}</p>
+          <Input.TextArea value={nodeCommand} onChange={e => onNodeCommandChange(e.target.value)} rows={4} />
+        </>
+      )}
+
+      {(data.type === 'SHELL' || data.type === 'PYTHON') && (
         <>
           <p>CPU 配额:</p>
           <Input type="number" value={data.cpu_quota} onChange={e => currentNode.setData({ ...data, cpu_quota: Number(e.target.value) })} />
@@ -40,7 +89,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           <Input type="number" value={data.memory_max} onChange={e => currentNode.setData({ ...data, memory_max: Number(e.target.value) })} />
         </>
       )}
-      {data.taskType === 'SQL' && (
+      {data.type === 'SQL' && (
         <>
           <p>数据源名称:</p>
           <Input value={data.datasource_name} onChange={e => currentNode.setData({ ...data, datasource_name: e.target.value })} />
@@ -54,7 +103,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           <Input type="number" value={data.display_rows} onChange={e => currentNode.setData({ ...data, display_rows: Number(e.target.value) })} />
         </>
       )}
-      {data.taskType === 'HTTP' && (
+      {data.type === 'HTTP' && (
         <>
           <p>URL:</p>
           <Input value={data.url} onChange={e => currentNode.setData({ ...data, url: e.target.value })} />
@@ -70,40 +119,13 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
           <Input type="number" value={data.socket_timeout} onChange={e => currentNode.setData({ ...data, socket_timeout: Number(e.target.value) })} />
         </>
       )}
-      {data.taskType === 'SUB_PROCESS' && (
+      {data.type === 'SUB_PROCESS' && (
         <>
           <p>工作流名称:</p>
           <Input value={data.workflow_name} onChange={e => currentNode.setData({ ...data, workflow_name: e.target.value })} />
         </>
       )}
-      {data.taskType === 'SWITCH' && (
-        <>
-          <p>条件:</p>
-          {data.switch_condition?.dependTaskList.map((branch: any, index: number) => (
-            <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-              <Input
-                placeholder="条件"
-                value={branch.condition}
-                onChange={e => {
-                  const newBranches = [...data.switch_condition.dependTaskList];
-                  newBranches[index].condition = e.target.value;
-                  currentNode.setData({ ...data, switch_condition: { dependTaskList: newBranches } });
-                }}
-              />
-              <Input
-                placeholder="任务名称"
-                value={branch.task}
-                onChange={e => {
-                  const newBranches = [...data.switch_condition.dependTaskList];
-                  newBranches[index].task = e.target.value;
-                  currentNode.setData({ ...data, switch_condition: { dependTaskList: newBranches } });
-                }}
-              />
-            </div>
-          ))}
-        </>
-      )}
-      {data.taskType === 'CONDITIONS' && (
+      {data.type === 'CONDITIONS' && (
         <>
           <p>成功执行任务:</p>
           <Input value={data.success_task} onChange={e => currentNode.setData({ ...data, success_task: e.target.value })} />
