@@ -5,7 +5,7 @@ import { Stencil } from '@antv/x6-plugin-stencil';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
 import { Selection } from '@antv/x6-plugin-selection';
 import { History } from '@antv/x6-plugin-history';
-import { Button, Modal, Input, App as AntApp } from 'antd';
+import { Button, Modal, Input, App as AntApp, Switch } from 'antd';
 import * as yaml from 'js-yaml';
 import '../components/TaskNode'; // Register custom node
 import { Task, Workflow } from '../types';
@@ -27,6 +27,7 @@ const WorkflowEditorPage: React.FC = () => {
   const [nodeCommand, setNodeCommand] = useState('');
   const [workflowName, setWorkflowName] = useState('my-workflow');
   const [workflowSchedule, setWorkflowSchedule] = useState('0 0 0 * * ? *');
+  const [isScheduleEnabled, setIsScheduleEnabled] = useState(true);
   const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
 
   useEffect(() => {
@@ -288,7 +289,7 @@ const WorkflowEditorPage: React.FC = () => {
       const workflow: any = {
         workflow: {
           name: workflowName,
-          schedule: workflowSchedule,
+          schedule: isScheduleEnabled ? workflowSchedule : '',
         },
         tasks,
       };
@@ -413,7 +414,7 @@ const WorkflowEditorPage: React.FC = () => {
       const workflow: any = {
         workflow: {
           name: workflowName,
-          schedule: workflowSchedule,
+          schedule: isScheduleEnabled ? workflowSchedule : '',
         },
         tasks,
       };
@@ -452,7 +453,13 @@ const WorkflowEditorPage: React.FC = () => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <span style={{ marginRight: '8px', fontWeight: '500', width: '120px' }}>Schedule (Cron):</span>
-            <Input value={workflowSchedule} onChange={e => setWorkflowSchedule(e.target.value)} style={{ width: '200px' }} />
+            <Input
+              value={workflowSchedule}
+              onChange={e => setWorkflowSchedule(e.target.value)}
+              style={{ width: '200px', marginRight: '8px' }}
+              disabled={!isScheduleEnabled}
+            />
+            <Switch checked={isScheduleEnabled} onChange={setIsScheduleEnabled} />
           </div>
         </div>
         <div ref={containerRef} style={{ width: '100%', height: '100%' }}></div>
