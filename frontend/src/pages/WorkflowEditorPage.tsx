@@ -24,7 +24,6 @@ const WorkflowEditorPage: React.FC = () => {
   }, []);
 
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; px: number; py: number }>({ visible: false, x: 0, y: 0, px: 0, py: 0 });
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isYamlModalVisible, setIsYamlModalVisible] = useState(false);
   const [yamlContent, setYamlContent] = useState('');
   const [currentNode, setCurrentNode] = useState<any>(null);
@@ -40,7 +39,6 @@ const WorkflowEditorPage: React.FC = () => {
   const handleNodeDoubleClick = useCallback((node: any) => {
     const nodeData = node.getData();
     setCurrentNode({ ...nodeData, id: node.id });
-    setIsEditModalVisible(true);
   }, []);
 
   const handleBlankContextMenu = useCallback((e: any, x: number, y: number) => {
@@ -142,12 +140,10 @@ const WorkflowEditorPage: React.FC = () => {
         node.setData(newData);
       }
     }
-    setIsEditModalVisible(false);
     setCurrentNode(null);
   };
 
   const handleCancelTask = () => {
-    setIsEditModalVisible(false);
     setCurrentNode(null);
   };
 
@@ -269,6 +265,7 @@ const WorkflowEditorPage: React.FC = () => {
         />
         <div ref={containerRefCallback} style={{ width: '100%', height: '100%' }}></div>
         <EditTaskModal
+          open={!!currentNode}
           task={currentNode}
           onCancel={handleCancelTask}
           onSave={handleSaveTask}
