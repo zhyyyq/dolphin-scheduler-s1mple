@@ -14,13 +14,17 @@ interface ActionButtonsProps {
   record: Workflow;
   onDelete: (record: Workflow) => void;
   onSubmit: (record: Workflow) => void;
+  onExecute: (record: Workflow) => void;
 }
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({ record, onDelete, onSubmit }) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({ record, onDelete, onSubmit, onExecute }) => {
   const workflowUuid = record.uuid;
 
   return (
     <Space size="middle">
+      {record.releaseState === 'ONLINE' && (
+        <Button type="primary" onClick={() => onExecute(record)}>立即执行</Button>
+      )}
       {record.releaseState === 'UNSUBMITTED' && (
         <Button type="primary" onClick={() => onSubmit(record)}>提交</Button>
       )}
@@ -112,6 +116,16 @@ const HomePage: React.FC = () => {
     }
   }, [fetchWorkflows, message]);
 
+  const handleExecute = useCallback(async (record: Workflow) => {
+    try {
+      await api.post(`/api/ds/execute/${record.projectCode}/${record.code}`);
+      message.success('Workflow execution started successfully.');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      message.error(errorMessage);
+    }
+  }, [message]);
+
   const columns: ColumnsType<Workflow> = useMemo(() => [
     {
       title: '工作流名称',
@@ -153,7 +167,7 @@ const HomePage: React.FC = () => {
     {
       title: '操作',
       key: 'actions',
-      render: (_, record) => <ActionButtons record={record} onDelete={handleDelete} onSubmit={handleSubmit} />,
+      render: (_, record) => <ActionButtons record={record} onDelete={handleDelete} onSubmit={handleSubmit} onExecute={handleExecute} />,
     },
   ], [handleDelete]);
 
