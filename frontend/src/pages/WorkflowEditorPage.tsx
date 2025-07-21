@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 import * as yaml from 'js-yaml';
@@ -16,7 +16,12 @@ const WorkflowEditorPage: React.FC = () => {
   const navigate = useNavigate();
   const { workflow_uuid } = useParams<{ workflow_uuid: string }>();
   const { message } = AntApp.useApp();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const containerRefCallback = useCallback((node: HTMLDivElement) => {
+    if (node) {
+      setContainer(node);
+    }
+  }, []);
 
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; px: number; py: number }>({ visible: false, x: 0, y: 0, px: 0, py: 0 });
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -30,20 +35,20 @@ const WorkflowEditorPage: React.FC = () => {
   const [isScheduleEnabled, setIsScheduleEnabled] = useState(true);
   const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
 
-  const handleNodeDoubleClick = (node: any) => {
+  const handleNodeDoubleClick = useCallback((node: any) => {
     setCurrentNode(node);
     setNodeName(node.getData().label);
     setNodeCommand(node.getData().command);
     setIsEditModalVisible(true);
-  };
+  }, []);
 
-  const handleBlankContextMenu = (e: any, x: number, y: number) => {
+  const handleBlankContextMenu = useCallback((e: any, x: number, y: number) => {
     e.preventDefault();
     setContextMenu({ visible: true, x: e.clientX, y: e.clientY, px: x, py: y });
-  };
+  }, []);
 
   const { graph, loadGraphData } = useGraph({
-    container: containerRef.current,
+    container: container,
     onNodeDoubleClick: handleNodeDoubleClick,
     onBlankContextMenu: handleBlankContextMenu,
   });
@@ -144,13 +149,12 @@ const WorkflowEditorPage: React.FC = () => {
     if (!graph) return;
     const task = taskTypes.find(t => t.type === e.key);
     if (task) {
-      const node = graph.addNode({
+      graph.addNode({
         shape: 'task-node',
         x: contextMenu.px,
         y: contextMenu.py,
         data: { label: task.label, taskType: task.type, command: task.command },
       });
-      node.addPorts([{ group: 'top' }, { group: 'right' }, { group: 'bottom' }, { group: 'left' }]);
     }
     setContextMenu({ ...contextMenu, visible: false });
   };
@@ -168,7 +172,7 @@ const WorkflowEditorPage: React.FC = () => {
           onShowYaml={handleShowYaml}
           onSave={handleSave}
         />
-        <div ref={containerRef} style={{ width: '100%', height: '100%' }}></div>
+        <div ref={containerRefCallback} style={{ width: '100%', height: '100%' }}></div>
         <EditTaskModal
           isModalVisible={isEditModalVisible}
           onOk={handleEditModalOk}

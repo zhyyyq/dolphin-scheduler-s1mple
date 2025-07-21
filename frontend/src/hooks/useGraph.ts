@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Graph } from '@antv/x6';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
 import { Selection } from '@antv/x6-plugin-selection';
@@ -12,12 +12,13 @@ interface UseGraphProps {
 }
 
 export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: UseGraphProps) => {
+  const [graph, setGraph] = useState<Graph | null>(null);
   const graphRef = useRef<Graph | null>(null);
 
   useEffect(() => {
     if (!container || graphRef.current) return;
 
-    const graph = new Graph({
+    const graphInstance = new Graph({
       container,
       autoResize: true,
       panning: true,
@@ -41,29 +42,30 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
       },
     });
 
-    graph.use(new Selection({ enabled: true, rubberband: true, showNodeSelectionBox: true, showEdgeSelectionBox: true }));
-    graph.use(new Keyboard({ enabled: true, global: true }));
-    graph.use(new History({ enabled: true }));
+    graphInstance.use(new Selection({ enabled: true, rubberband: true, showNodeSelectionBox: true, showEdgeSelectionBox: true }));
+    graphInstance.use(new Keyboard({ enabled: true, global: true }));
+    graphInstance.use(new History({ enabled: true }));
 
-    graphRef.current = graph;
+    graphRef.current = graphInstance;
+    setGraph(graphInstance);
 
-    graph.bindKey(['delete', 'backspace'], () => {
-      const selectedCells = graph.getSelectedCells();
+    graphInstance.bindKey(['delete', 'backspace'], () => {
+      const selectedCells = graphInstance.getSelectedCells();
       if (selectedCells.length) {
-        graph.removeCells(selectedCells);
+        graphInstance.removeCells(selectedCells);
       }
     });
 
-    graph.bindKey('ctrl+z', () => graph.undo());
-    graph.bindKey('ctrl+y', () => graph.redo());
+    graphInstance.bindKey('ctrl+z', () => graphInstance.undo());
+    graphInstance.bindKey('ctrl+y', () => graphInstance.redo());
 
-    graph.on('node:dblclick', ({ node }) => onNodeDoubleClick(node));
-    graph.on('blank:contextmenu', ({ e, x, y }) => onBlankContextMenu(e, x, y));
-    graph.on('node:contextmenu', ({ e }) => e.preventDefault());
-    graph.on('edge:contextmenu', ({ e }) => e.preventDefault());
+    graphInstance.on('node:dblclick', ({ node }) => onNodeDoubleClick(node));
+    graphInstance.on('blank:contextmenu', ({ e, x, y }) => onBlankContextMenu(e, x, y));
+    graphInstance.on('node:contextmenu', ({ e }) => e.preventDefault());
+    graphInstance.on('edge:contextmenu', ({ e }) => e.preventDefault());
 
-    graph.on('node:added', ({ node }) => {
-      const allNodes = graph.getNodes();
+    graphInstance.on('node:added', ({ node }) => {
+      const allNodes = graphInstance.getNodes();
       const baseName = node.getData().label;
       let newName = baseName;
       let counter = 1;
@@ -77,24 +79,24 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     });
 
     return () => {
-      graph.dispose();
+      graphInstance.dispose();
     };
   }, [container, onNodeDoubleClick, onBlankContextMenu]);
 
-  const loadGraphData = (tasks: Task[], relations: { from: string; to: string }[]) => {
-    const graph = graphRef.current;
-    if (!graph) return;
+  const loadGraphData = useCallback((tasks: Task[], relations: { from: string; to: string }[]) => {
+    const currentGraph = graphRef.current;
+    if (!currentGraph) return;
 
+    currentGraph.clearCells(); // Clear previous data before loading new
     const nodeMap = new Map();
     tasks.forEach((task, index) => {
-      const node = graph.createNode({
+      const node = currentGraph.createNode({
         shape: 'task-node',
         x: (index % 4) * 250,
         y: Math.floor(index / 4) * 150,
         data: { label: task.name, taskType: task.type, ...task },
-        ports: { items: [{ id: 'in', group: 'left' }, { id: 'out', group: 'right' }] }
       });
-      graph.addNode(node);
+      currentGraph.addNode(node);
       nodeMap.set(task.name, node);
     });
 
@@ -102,7 +104,7 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
       const sourceNode = nodeMap.get(rel.from);
       const targetNode = nodeMap.get(rel.to);
       if (sourceNode && targetNode) {
-        graph.addEdge({
+        currentGraph.addEdge({
           source: sourceNode,
           target: targetNode,
           shape: 'edge',
@@ -111,8 +113,8 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
         });
       }
     });
-    graph.centerContent();
-  };
+    currentGraph.centerContent();
+  }, []);
 
-  return { graph: graphRef.current, loadGraphData };
+  return { graph, loadGraphData };
 };
