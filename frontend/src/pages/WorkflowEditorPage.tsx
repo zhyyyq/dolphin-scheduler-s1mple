@@ -259,9 +259,13 @@ const WorkflowEditorPage: React.FC = () => {
         });
         message.success('Workflow saved successfully!');
         navigate('/');
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-        message.error(`Error: ${errorMessage}`);
+      } catch (error: any) {
+        if (error && error.status === 409) {
+          message.error(`Error: ${error.message}`);
+        } else {
+          const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+          message.error(`Error: ${errorMessage}`);
+        }
         console.error('Error saving workflow:', error);
       }
     }

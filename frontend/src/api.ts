@@ -1,14 +1,30 @@
+class HttpError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'HttpError';
+    this.status = status;
+  }
+}
+
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
     const errorText = await response.text();
+    let errorMessage = 'An unknown error occurred';
     try {
       const errorJson = JSON.parse(errorText);
-      throw new Error(errorJson.message || 'An unknown error occurred');
+      errorMessage = errorJson.detail || errorJson.message || 'An unknown error occurred';
     } catch (e) {
-      throw new Error(errorText || 'An unknown error occurred');
+      errorMessage = errorText || 'An unknown error occurred';
     }
+    throw new HttpError(errorMessage, response.status);
   }
-  return response.json();
+  // Handle cases where the response is successful but has no content
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.indexOf("application/json") !== -1) {
+    return response.json();
+  }
+  return response.text();
 };
 
 const api = {
