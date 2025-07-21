@@ -2,7 +2,7 @@ import httpx
 from fastapi import HTTPException
 import os
 import subprocess
-import yaml
+from ruamel.yaml import YAML
 from dotenv import load_dotenv
 from ..core.logger import logger
 from .git_service import git_commit
@@ -122,7 +122,7 @@ async def get_dashboard_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 async def submit_workflow_to_ds(filename: str):
-    """Submits a local YAML workflow file to DolphinScheduler using the CLI."""
+    """Submits a local YAML workflow file to DolphinScheduler, creating separate commits for status change and tool-based reformatting."""
     try:
         if ".." in filename or "/" in filename or "\\" in filename:
             raise HTTPException(status_code=400, detail="Invalid workflow filename.")
@@ -132,43 +132,54 @@ async def submit_workflow_to_ds(filename: str):
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail=f"Workflow file '{filename}' not found.")
 
-        result = subprocess.run(
-            ["pydolphinscheduler", "yaml", "-f", file_path],
-            cwd=BACKEND_DIR,
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding='utf-8'
-        )
-        logger.info(f"pydolphinscheduler CLI output for {filename}:\n{result.stdout}")
-
+        # Step 1: Add 'status: online' and create a clean commit for it.
         try:
-            with open(file_path, 'r+', encoding='utf-8') as f:
-                data = yaml.safe_load(f)
-                if 'workflow' in data:
-                    data['workflow']['status'] = 'online'
-                    f.seek(0)
-                    yaml.dump(data, f, allow_unicode=True)
-                    f.truncate()
+            yaml = YAML()
+            yaml.preserve_quotes = True
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = yaml.load(f)
+            
+            if 'workflow' in data:
+                data['workflow']['status'] = 'online'
+            
+            with open(file_path, 'w', encoding='utf-8') as f:
+                yaml.dump(data, f)
+            
             logger.info(f"Updated status to 'online' for workflow {filename}")
+            git_commit(file_path, f"Online workflow: {filename}")
         except Exception as e:
-            logger.error(f"Could not update YAML status for {filename}: {e}", exc_info=True)
+            logger.error(f"Failed to update and commit 'online' status for {filename}: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to update YAML status: {e}")
 
+        # Step 2: Run the pydolphinscheduler CLI tool.
         try:
-            commit_message = f"Online workflow: {filename}"
-            git_commit(file_path, commit_message)
+            result = subprocess.run(
+                ["pydolphinscheduler", "yaml", "-f", file_path],
+                cwd=BACKEND_DIR,
+                check=True,
+                capture_output=True,
+                text=True,
+                encoding='utf-8'
+            )
+            logger.info(f"pydolphinscheduler CLI output for {filename}:\n{result.stdout}")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"pydolphinscheduler CLI failed for {filename}: {e.stderr}")
+            raise HTTPException(status_code=500, detail=f"Failed to submit workflow to DolphinScheduler: {e.stderr}")
+        except FileNotFoundError:
+            logger.error("pydolphinscheduler command not found.")
+            raise HTTPException(status_code=500, detail="pydolphinscheduler command not found.")
+
+        # Step 3: Commit any reformatting changes made by the CLI tool.
+        try:
+            git_commit(file_path, f"Sync with DolphinScheduler: {filename}")
         except Exception as e:
-            logger.error(f"Could not commit workflow {filename}: {e}", exc_info=True)
+            logger.warning(f"Could not commit sync changes for {filename}: {e}", exc_info=True)
 
         return {"message": f"Workflow '{filename}' submitted successfully."}
-    except subprocess.CalledProcessError as e:
-        logger.error(f"pydolphinscheduler CLI failed for {filename}: {e.stderr}")
-        raise HTTPException(status_code=500, detail=f"Failed to submit workflow to DolphinScheduler: {e.stderr}")
-    except FileNotFoundError:
-        logger.error("pydolphinscheduler command not found.")
-        raise HTTPException(status_code=500, detail="pydolphinscheduler command not found.")
     except Exception as e:
         logger.error(f"Error in /api/workflow/submit: {e}", exc_info=True)
+        if isinstance(e, HTTPException):
+            raise e
         raise HTTPException(status_code=500, detail=f"Failed to submit workflow: {e}")
 
 async def delete_ds_workflow(project_code: int, workflow_code: int):
@@ -194,7 +205,7 @@ async def delete_ds_workflow(project_code: int, workflow_code: int):
                 logger.info(f"Workflow {workflow_code} is ONLINE. Taking it offline before deletion.")
                 release_url = f"{DS_URL.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}/release"
                 release_payload = {'releaseState': 'OFFLINE'}
-                release_response = await client.post(release_url, headers=HEADERS, json=release_payload)
+                release_response = await client.post(release_url, headers=HEADERS, params=release_payload)
                 release_response.raise_for_status()
                 release_data = release_response.json()
                 if release_data.get("code") != 0:
