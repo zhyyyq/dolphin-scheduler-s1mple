@@ -715,39 +715,41 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
 
         os.makedirs(WORKFLOW_REPO_DIR, exist_ok=True)
         new_file_path = os.path.join(WORKFLOW_REPO_DIR, new_filename)
-
-        commit_message = ""
         
-        # --- Handle Update/Rename ---
-        if workflow.original_filename:
+        commit_message = ""
+
+        # If it's an update and the filename has changed, remove the old file.
+        if workflow.original_filename and workflow.original_filename != new_filename:
             old_file_path = os.path.join(WORKFLOW_REPO_DIR, workflow.original_filename)
-            
-            # If filename has changed, it's a rename.
-            if workflow.original_filename != new_filename:
-                if os.path.exists(old_file_path):
-                    # Use git mv for proper rename tracking
-                    subprocess.run(
-                        ["git", "mv", old_file_path, new_file_path],
-                        cwd=WORKFLOW_REPO_DIR,
-                        check=True
-                    )
-                    commit_message = f"Rename workflow from {workflow.original_filename} to {new_filename}"
-                else:
-                    # Old file doesn't exist, treat as new file creation
-                    commit_message = f"Create workflow: {new_filename}"
-            else:
-                commit_message = f"Update workflow: {new_filename}"
-        # --- Handle Create ---
+            if os.path.exists(old_file_path):
+                os.remove(old_file_path)
+                commit_message = f"Rename workflow from {workflow.original_filename} to {new_filename}"
+            else: # Old file not found, treat as creation
+                commit_message = f"Create workflow: {new_filename}"
+        elif workflow.original_filename:
+            commit_message = f"Update workflow: {new_filename}"
         else:
             commit_message = f"Create workflow: {new_filename}"
 
-        # Write the new content
+        # Write the new file content.
         with open(new_file_path, "w", encoding="utf-8") as buffer:
             buffer.write(workflow.content)
         
-        # Add and commit all changes (add new file, stage rename)
-        subprocess.run(["git", "add", new_file_path], cwd=WORKFLOW_REPO_DIR, check=True)
-        subprocess.run(["git", "commit", "-m", commit_message], cwd=WORKFLOW_REPO_DIR, check=True)
+        # Stage all changes (creations, deletions, modifications) and commit.
+        subprocess.run(["git", "add", "."], cwd=WORKFLOW_REPO_DIR, check=True)
+        
+        # Check if there's anything to commit
+        status_result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=WORKFLOW_REPO_DIR,
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        if status_result.stdout.strip():
+            subprocess.run(["git", "commit", "-m", commit_message], cwd=WORKFLOW_REPO_DIR, check=True)
+        else:
+            logger.info("No changes to commit.")
 
         return {
             "message": "Workflow saved successfully.",
