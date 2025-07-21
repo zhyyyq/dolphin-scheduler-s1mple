@@ -1,8 +1,6 @@
 from fastapi import APIRouter, HTTPException
-import logging
 import httpx
-
-logger = logging.getLogger(__name__)
+from ..logger import logger
 
 router = APIRouter()
 

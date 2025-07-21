@@ -1,8 +1,6 @@
 import mysql.connector
-from mysql.connector import Error
-import logging
-
-logger = logging.getLogger(__name__)
+import os
+from .logger import logger
 
 def create_db_connection():
     """Creates a connection to the MySQL database."""
