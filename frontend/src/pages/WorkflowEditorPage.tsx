@@ -63,7 +63,7 @@ const WorkflowEditorPage: React.FC = () => {
           setWorkflowData(response);
           setOriginalYaml(response.yaml_content);
         } catch (error) {
-          message.error('Failed to load workflow data.');
+          message.error('加载工作流数据失败。');
         }
       };
       fetchWorkflow();
@@ -138,7 +138,7 @@ const WorkflowEditorPage: React.FC = () => {
       const allNodes = graph.getNodes();
       const isDuplicate = allNodes.some(node => node.getData().label === nodeName && node.id !== currentNode.id);
       if (isDuplicate) {
-        message.error('A task with this name already exists in the workflow.');
+        message.error('工作流中已存在同名任务。');
         return;
       }
       currentNode.setData({ ...currentNode.getData(), label: nodeName, command: nodeCommand });
@@ -163,17 +163,17 @@ const WorkflowEditorPage: React.FC = () => {
       graph.clearCells();
       loadGraphData(tasks, relations);
       setWorkflowName(workflowNameFromYaml);
-      message.success('Graph updated from YAML successfully!');
+      message.success('从 YAML 更新画布成功！');
       setIsYamlModalVisible(false);
     } catch (error: any) {
-      message.error(`Failed to sync YAML to graph: ${error.message}`);
+      message.error(`从 YAML 同步到画布失败: ${error.message}`);
     }
   };
 
   const handleSave = async () => {
     const yamlStr = generateYamlStr();
     if (!yamlStr) {
-      message.error('Graph is empty or not initialized.');
+      message.error('画布为空或未初始化。');
       return;
     }
 
@@ -184,10 +184,10 @@ const WorkflowEditorPage: React.FC = () => {
         original_filename: workflow_uuid ? `${workflow_uuid}.yaml` : undefined,
       });
       setWorkflowUuid(response.uuid);
-      message.success('Workflow saved successfully!');
+      message.success('工作流保存成功！');
       navigate('/');
     } catch (error: any) {
-      message.error(`Error saving workflow: ${error.message}`);
+      message.error(`保存工作流时出错: ${error.message}`);
     }
   };
 
@@ -232,9 +232,9 @@ const WorkflowEditorPage: React.FC = () => {
           graph?.clearCells();
           loadGraphData(tasks, relations);
 
-          message.success('YAML imported successfully!');
+          message.success('YAML 导入成功！');
         } catch (err) {
-          message.error('Failed to parse or load the imported YAML file.');
+          message.error('解析或加载导入的 YAML 文件失败。');
         }
       };
       reader.readAsText(file);

@@ -91,11 +91,11 @@ const DashboardPage: React.FC = () => {
   }
 
   if (error) {
-    return <Alert message="Error" description={error} type="error" showIcon />;
+    return <Alert message="错误" description={error} type="error" showIcon />;
   }
 
   if (!stats) {
-    return <Alert message="No data" description="Could not load dashboard statistics." type="info" showIcon />;
+    return <Alert message="无数据" description="无法加载仪表盘统计信息。" type="info" showIcon />;
   }
 
   return (

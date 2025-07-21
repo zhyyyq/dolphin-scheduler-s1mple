@@ -27,30 +27,30 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
   const data = currentNode.getData();
 
   return (
-    <Modal title="Edit Task" open={isModalVisible} onOk={onOk} onCancel={onCancel}>
-      <p>Name:</p>
+    <Modal title="编辑任务" open={isModalVisible} onOk={onOk} onCancel={onCancel}>
+      <p>名称:</p>
       <Input value={nodeName} onChange={e => onNodeNameChange(e.target.value)} />
-      <p>{data.taskType === 'PYTHON' ? 'Definition:' : 'Command:'}</p>
+      <p>{data.taskType === 'PYTHON' ? '定义:' : '命令:'}</p>
       <Input.TextArea value={nodeCommand} onChange={e => onNodeCommandChange(e.target.value)} rows={4} />
       {(data.taskType === 'SHELL' || data.taskType === 'PYTHON') && (
         <>
-          <p>CPU Quota:</p>
+          <p>CPU 配额:</p>
           <Input type="number" value={data.cpu_quota} onChange={e => currentNode.setData({ ...data, cpu_quota: Number(e.target.value) })} />
-          <p>Max Memory (MB):</p>
+          <p>最大内存 (MB):</p>
           <Input type="number" value={data.memory_max} onChange={e => currentNode.setData({ ...data, memory_max: Number(e.target.value) })} />
         </>
       )}
       {data.taskType === 'SQL' && (
         <>
-          <p>Datasource Name:</p>
+          <p>数据源名称:</p>
           <Input value={data.datasource_name} onChange={e => currentNode.setData({ ...data, datasource_name: e.target.value })} />
-          <p>SQL Type:</p>
+          <p>SQL 类型:</p>
           <Input value={data.sql_type} onChange={e => currentNode.setData({ ...data, sql_type: e.target.value })} />
-          <p>Pre Statements:</p>
+          <p>前置 SQL:</p>
           <Input.TextArea value={data.pre_statements?.join('\n')} onChange={e => currentNode.setData({ ...data, pre_statements: e.target.value.split('\n') })} rows={2} />
-          <p>Post Statements:</p>
+          <p>后置 SQL:</p>
           <Input.TextArea value={data.post_statements?.join('\n')} onChange={e => currentNode.setData({ ...data, post_statements: e.target.value.split('\n') })} rows={2} />
-          <p>Display Rows:</p>
+          <p>显示行数:</p>
           <Input type="number" value={data.display_rows} onChange={e => currentNode.setData({ ...data, display_rows: Number(e.target.value) })} />
         </>
       )}
@@ -58,31 +58,31 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
         <>
           <p>URL:</p>
           <Input value={data.url} onChange={e => currentNode.setData({ ...data, url: e.target.value })} />
-          <p>HTTP Method:</p>
+          <p>HTTP 方法:</p>
           <Input value={data.http_method} onChange={e => currentNode.setData({ ...data, http_method: e.target.value })} />
-          <p>HTTP Check Condition:</p>
+          <p>HTTP 检查条件:</p>
           <Input value={data.http_check_condition} onChange={e => currentNode.setData({ ...data, http_check_condition: e.target.value })} />
-          <p>Condition:</p>
+          <p>条件:</p>
           <Input value={data.condition} onChange={e => currentNode.setData({ ...data, condition: e.target.value })} />
-          <p>Connect Timeout (ms):</p>
+          <p>连接超时 (ms):</p>
           <Input type="number" value={data.connect_timeout} onChange={e => currentNode.setData({ ...data, connect_timeout: Number(e.target.value) })} />
-          <p>Socket Timeout (ms):</p>
+          <p>套接字超时 (ms):</p>
           <Input type="number" value={data.socket_timeout} onChange={e => currentNode.setData({ ...data, socket_timeout: Number(e.target.value) })} />
         </>
       )}
       {data.taskType === 'SUB_PROCESS' && (
         <>
-          <p>Workflow Name:</p>
+          <p>工作流名称:</p>
           <Input value={data.workflow_name} onChange={e => currentNode.setData({ ...data, workflow_name: e.target.value })} />
         </>
       )}
       {data.taskType === 'SWITCH' && (
         <>
-          <p>Conditions:</p>
+          <p>条件:</p>
           {data.switch_condition?.dependTaskList.map((branch: any, index: number) => (
             <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
               <Input
-                placeholder="Condition"
+                placeholder="条件"
                 value={branch.condition}
                 onChange={e => {
                   const newBranches = [...data.switch_condition.dependTaskList];
@@ -91,7 +91,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
                 }}
               />
               <Input
-                placeholder="Task Name"
+                placeholder="任务名称"
                 value={branch.task}
                 onChange={e => {
                   const newBranches = [...data.switch_condition.dependTaskList];
@@ -105,20 +105,20 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({
       )}
       {data.taskType === 'CONDITIONS' && (
         <>
-          <p>Success Task:</p>
+          <p>成功执行任务:</p>
           <Input value={data.success_task} onChange={e => currentNode.setData({ ...data, success_task: e.target.value })} />
-          <p>Failed Task:</p>
+          <p>失败执行任务:</p>
           <Input value={data.failed_task} onChange={e => currentNode.setData({ ...data, failed_task: e.target.value })} />
-          <p>Operator:</p>
+          <p>操作符:</p>
           <Select
             value={data.op}
             onChange={value => currentNode.setData({ ...data, op: value })}
             style={{ width: '100%' }}
           >
-            <Select.Option value="AND">AND</Select.Option>
-            <Select.Option value="OR">OR</Select.Option>
+            <Select.Option value="AND">与</Select.Option>
+            <Select.Option value="OR">或</Select.Option>
           </Select>
-          <p>Groups (JSON):</p>
+          <p>分组 (JSON):</p>
           <Input.TextArea
             rows={6}
             value={JSON.stringify(data.groups, null, 2)}

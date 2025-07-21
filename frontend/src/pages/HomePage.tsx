@@ -71,7 +71,7 @@ const HomePage: React.FC = () => {
       }
 
       await api.delete(`/api/workflow/${record.uuid}`, params);
-      message.success('Workflow deleted successfully.');
+      message.success('工作流删除成功。');
       fetchWorkflows();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -82,7 +82,7 @@ const HomePage: React.FC = () => {
   const handleSubmit = useCallback(async (record: Workflow) => {
     try {
       await api.post('/api/workflow/submit', { filename: record.code });
-      message.success('Workflow submitted successfully.');
+      message.success('工作流提交成功。');
       fetchWorkflows();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -95,7 +95,7 @@ const HomePage: React.FC = () => {
       await api.post(`/api/ds/execute/${record.projectCode}/${record.code}`, {
         scheduleTime: ''
       });
-      message.success('Workflow execution started successfully.');
+      message.success('工作流执行成功启动。');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       message.error(errorMessage);
@@ -162,7 +162,7 @@ const HomePage: React.FC = () => {
   }
 
   if (error) {
-    return <Alert message="Error" description={error} type="error" showIcon />;
+    return <Alert message="错误" description={error} type="error" showIcon />;
   }
 
   return (
