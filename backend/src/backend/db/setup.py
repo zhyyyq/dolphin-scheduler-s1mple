@@ -1,4 +1,5 @@
 import mysql.connector
+from mysql.connector import Error
 import os
 from ..core.logger import logger
 
@@ -20,7 +21,11 @@ def create_db_connection():
 def init_db():
     """Initializes the database table."""
     connection = create_db_connection()
-    if connection:
+    if connection is None:
+        logger.error("Failed to connect to the database. Aborting table initialization.")
+        return
+
+    try:
         cursor = connection.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS workflows (
@@ -28,5 +33,9 @@ def init_db():
                 name VARCHAR(255) NOT NULL
             )
         """)
-        connection.close()
         logger.info("Workflow table initialized successfully.")
+    except Error as e:
+        logger.error(f"Error during table initialization: {e}")
+    finally:
+        if connection.is_connected():
+            connection.close()

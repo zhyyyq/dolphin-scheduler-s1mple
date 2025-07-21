@@ -1,16 +1,8 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-import shutil
 import os
 import subprocess
-import sys
-import asyncio
-import functools
-import httpx
-import ast
-import yaml
-import uuid
 from .parser import parse_workflow
 from .db.setup import init_db
 from .api.workflow import router as workflow_router
@@ -34,10 +26,6 @@ async def startup_event():
     """
     setup_logger()
     init_db()
-    """
-    Initializes the Git repository on application startup if it doesn't exist,
-    and ensures a default user is configured.
-    """
     if not os.path.exists(WORKFLOW_REPO_DIR):
         os.makedirs(WORKFLOW_REPO_DIR)
 
