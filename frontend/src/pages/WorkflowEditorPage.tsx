@@ -4,6 +4,7 @@ import { Graph } from '@antv/x6';
 import { Stencil } from '@antv/x6-plugin-stencil';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
 import { Selection } from '@antv/x6-plugin-selection';
+import { History } from '@antv/x6-plugin-history';
 import { Button, Modal, Input, App as AntApp } from 'antd';
 import * as yaml from 'js-yaml';
 import '../components/TaskNode'; // Register custom node
@@ -51,22 +52,21 @@ const WorkflowEditorPage: React.FC = () => {
           anchor: 'center',
           connectionPoint: 'anchor',
           allowBlank: false,
+          allowMulti: true,
           snap: {
             radius: 20,
           },
           validateConnection({ sourceView, targetView, sourceMagnet, targetMagnet }) {
-            // 确保连接桩不为空
+            // Basic validation: ensure magnets are present
             if (!sourceMagnet || !targetMagnet) {
               return false;
             }
-            // 只能从输出连接桩连接到输入连接桩
-            if (sourceMagnet.getAttribute('port-group') === 'in' || targetMagnet.getAttribute('port-group') === 'out') {
-              return false;
-            }
-            // 不能连接到自身
+            // Prevent connecting to the same node
             if (sourceView === targetView) {
               return false;
             }
+            // Allow multiple connections from the same source port
+            // Allow multiple connections to the same target port
             return true;
           },
         },
@@ -89,6 +89,7 @@ const WorkflowEditorPage: React.FC = () => {
           enabled: true,
           rubberband: true,
           showNodeSelectionBox: true,
+          showEdgeSelectionBox: true,
         }),
       );
 
@@ -96,6 +97,12 @@ const WorkflowEditorPage: React.FC = () => {
         new Keyboard({
           enabled: true,
           global: true,
+        }),
+      );
+
+      graph.use(
+        new History({
+          enabled: true,
         }),
       );
 
@@ -107,6 +114,14 @@ const WorkflowEditorPage: React.FC = () => {
         if (selectedCells.length) {
           graph.removeCells(selectedCells);
         }
+      });
+
+      // Bind undo/redo keys
+      graph.bindKey('ctrl+z', () => {
+        graph.undo();
+      });
+      graph.bindKey('ctrl+y', () => {
+        graph.redo();
       });
 
       if (stencilContainerRef.current) {
@@ -154,6 +169,24 @@ const WorkflowEditorPage: React.FC = () => {
         setNodeName(node.getData().label);
         setNodeCommand(node.getData().command);
         setIsModalVisible(true);
+      });
+
+      graph.on('node:added', ({ node }) => {
+        const allNodes = graph.getNodes();
+        const baseName = node.getData().label;
+        let newName = baseName;
+        let counter = 1;
+
+        // Check for duplicates and generate a new name if needed
+        while (allNodes.some(n => n.getData().label === newName && n.id !== node.id)) {
+          newName = `${baseName}-${counter}`;
+          counter++;
+        }
+
+        // Update the node's label if a new name was generated
+        if (newName !== baseName) {
+          node.setData({ ...node.getData(), label: newName });
+        }
       });
 
       if (workflow_uuid) {

@@ -6,6 +6,7 @@
     "@ant-design/icons": "^6.0.0",
     "@antv/layout": "^1.2.14-beta.8",
     "@antv/x6": "^2.18.1",
+    "@antv/x6-plugin-history": "^2.2.4",
     "@antv/x6-plugin-keyboard": "^2.2.3",
     "@antv/x6-plugin-selection": "^2.2.2",
     "@antv/x6-plugin-stencil": "^2.1.5",
