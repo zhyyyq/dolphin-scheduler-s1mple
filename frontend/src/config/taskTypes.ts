@@ -23,7 +23,20 @@ export const taskTypes = [
   { label: 'Switch', type: 'SWITCH', command: '', category: 'control_flow', icon: ForkOutlined },
   { label: 'Dependent', type: 'DEPENDENT', command: '', category: 'control_flow', icon: NodeIndexOutlined },
   { label: 'Sub Process', type: 'SUB_PROCESS', command: '', category: 'control_flow', icon: PartitionOutlined },
-  { label: 'SQL', type: 'SQL', command: 'SELECT * FROM table', category: 'data', icon: DatabaseOutlined },
+  { 
+    label: 'SQL', 
+    type: 'SQL', 
+    category: 'data', 
+    icon: DatabaseOutlined,
+    default_params: {
+      datasource_name: 'db',
+      sql_type: '0',
+      sql: 'SELECT * FROM table',
+      pre_sql: '',
+      post_sql: '',
+      display_rows: 10,
+    } 
+  },
   { label: 'DataX', type: 'DATAX', command: '', category: 'data', icon: SendOutlined },
   { label: 'Spark', type: 'SPARK', command: '', category: 'big_data', icon: RocketOutlined },
   { label: 'Flink', type: 'FLINK', command: '', category: 'big_data', icon: RocketOutlined },

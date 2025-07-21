@@ -1,67 +1,66 @@
-import React from 'react';
-import { Modal, Input } from 'antd';
-import { ShellTaskEditor } from './tasks/ShellTaskEditor';
-import { SqlTaskEditor } from './tasks/SqlTaskEditor';
-import { HttpTaskEditor } from './tasks/HttpTaskEditor';
-import { SubProcessTaskEditor } from './tasks/SubProcessTaskEditor';
-import { ConditionsTaskEditor } from './tasks/ConditionsTaskEditor';
-import { SwitchTaskEditor } from './tasks/SwitchTaskEditor';
+import React, { useEffect } from 'react';
+import { Modal, Input, Form } from 'antd';
+import { Task } from '../types';
+import SqlTaskEditor from './tasks/SqlTaskEditor';
+// Import other specific editors as needed
 
 interface EditTaskModalProps {
-  isModalVisible: boolean;
-  onOk: () => void;
+  task: Task | null;
   onCancel: () => void;
-  currentNode: any;
-  nodeName: string;
-  onNodeNameChange: (name: string) => void;
-  nodeCommand: string;
-  onNodeCommandChange: (command: string) => void;
+  onSave: (updated_task: Task) => void;
 }
 
-export const EditTaskModal: React.FC<EditTaskModalProps> = ({
-  isModalVisible,
-  onOk,
-  onCancel,
-  currentNode,
-  nodeName,
-  onNodeNameChange,
-  nodeCommand,
-  onNodeCommandChange,
-}) => {
-  if (!currentNode) return null;
+const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, onCancel, onSave }) => {
+  const [form] = Form.useForm();
 
-  const data = currentNode.getData();
+  useEffect(() => {
+    if (task) {
+      form.setFieldsValue(task);
+    }
+  }, [task, form]);
+
+  if (!task) {
+    return null;
+  }
+
+  const handleOk = () => {
+    form.validateFields().then(values => {
+      onSave({ ...task, ...values });
+    }).catch(info => {
+      console.log('Validate Failed:', info);
+    });
+  };
 
   const renderTaskEditor = () => {
-    switch (data._display_type?.toUpperCase()) {
-      case 'SHELL':
-      case 'PYTHON':
-        return <ShellTaskEditor currentNode={currentNode} nodeCommand={nodeCommand} onNodeCommandChange={onNodeCommandChange} />;
-      case 'SQL':
-        return <SqlTaskEditor currentNode={currentNode} />;
-      case 'HTTP':
-        return <HttpTaskEditor currentNode={currentNode} />;
-      case 'SUB_PROCESS':
-        return <SubProcessTaskEditor currentNode={currentNode} />;
-      case 'CONDITIONS':
-        return <ConditionsTaskEditor currentNode={currentNode} />;
-      case 'SWITCH':
-        return <SwitchTaskEditor currentNode={currentNode} />;
+    switch (task.task_type) {
+      case 'Sql':
+        return <SqlTaskEditor task={task} onChange={(new_task) => form.setFieldsValue(new_task)} />;
+      // Add cases for other task types here
       default:
-        return (
-          <>
-            <p>命令:</p>
-            <Input.TextArea value={nodeCommand} onChange={e => onNodeCommandChange(e.target.value)} rows={4} />
-          </>
-        );
+        return <p>此任务类型没有可用的自定义编辑器。</p>;
     }
   };
 
   return (
-    <Modal title="编辑任务" open={isModalVisible} onOk={onOk} onCancel={onCancel}>
-      <p>名称:</p>
-      <Input value={nodeName} onChange={e => onNodeNameChange(e.target.value)} />
-      {renderTaskEditor()}
+    <Modal
+      title={`编辑任务: ${task.name}`}
+      visible={!!task}
+      onOk={handleOk}
+      onCancel={onCancel}
+      destroyOnClose
+    >
+      <Form form={form} layout="vertical" initialValues={task}>
+        <Form.Item
+          label="任务名称"
+          name="name"
+          rules={[{ required: true, message: '请输入任务名称' }]}
+        >
+          <Input />
+        </Form.Item>
+        {renderTaskEditor()}
+      </Form>
     </Modal>
   );
 };
+
+export default EditTaskModal;

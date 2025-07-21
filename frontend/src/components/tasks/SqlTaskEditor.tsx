@@ -1,25 +1,49 @@
 import React from 'react';
-import { Input } from 'antd';
+import { Input, Form, Select } from 'antd';
+import { Task } from '../../types';
+
+const { TextArea } = Input;
+const { Option } = Select;
 
 interface SqlTaskEditorProps {
-  currentNode: any;
+  task: Task;
+  onChange: (new_task: Task) => void;
 }
 
-export const SqlTaskEditor: React.FC<SqlTaskEditorProps> = ({ currentNode }) => {
-  const data = currentNode.getData();
+const SqlTaskEditor: React.FC<SqlTaskEditorProps> = ({ task, onChange }) => {
+  const handleChange = (changedValues: any) => {
+    onChange({ ...task, ...changedValues });
+  };
 
   return (
-    <>
-      <p>数据源名称:</p>
-      <Input value={data.datasource_name} onChange={e => currentNode.setData({ ...data, datasource_name: e.target.value })} />
-      <p>SQL 类型:</p>
-      <Input value={data.sql_type} onChange={e => currentNode.setData({ ...data, sql_type: e.target.value })} />
-      <p>前置 SQL:</p>
-      <Input.TextArea value={data.pre_statements?.join('\n')} onChange={e => currentNode.setData({ ...data, pre_statements: e.target.value.split('\n') })} rows={2} />
-      <p>后置 SQL:</p>
-      <Input.TextArea value={data.post_statements?.join('\n')} onChange={e => currentNode.setData({ ...data, post_statements: e.target.value.split('\n') })} rows={2} />
-      <p>显示行数:</p>
-      <Input type="number" value={data.display_rows} onChange={e => currentNode.setData({ ...data, display_rows: Number(e.target.value) })} />
-    </>
+    <Form
+      layout="vertical"
+      initialValues={task}
+      onValuesChange={handleChange}
+    >
+      <Form.Item label="数据源名称" name="datasource_name" rules={[{ required: true }]}>
+        <Input />
+      </Form.Item>
+      <Form.Item label="SQL 类型" name="sql_type">
+        <Select placeholder="选择 SQL 类型">
+          <Option value="0">查询</Option>
+          <Option value="1">非查询</Option>
+        </Select>
+      </Form.Item>
+      <Form.Item label="SQL" name="sql" rules={[{ required: true }]}>
+        <TextArea rows={6} placeholder="输入 SQL 语句或 $FILE{...} 引用" />
+      </Form.Item>
+      <Form.Item label="前置 SQL" name="pre_sql">
+        <TextArea rows={2} />
+      </Form.Item>
+      <Form.Item label="后置 SQL" name="post_sql">
+        <TextArea rows={2} />
+      </Form.Item>
+      <Form.Item label="显示行数" name="display_rows">
+        <Input type="number" />
+      </Form.Item>
+    </Form>
   );
 };
+
+export default SqlTaskEditor;
