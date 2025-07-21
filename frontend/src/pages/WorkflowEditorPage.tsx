@@ -48,7 +48,7 @@ const WorkflowEditorPage: React.FC = () => {
     setContextMenu({ visible: true, x: e.clientX, y: e.clientY, px: x, py: y });
   }, []);
 
-  const { graph, loadGraphData } = useGraph({
+  const { graph, loadGraphData, autoLayout } = useGraph({
     container: container,
     onNodeDoubleClick: handleNodeDoubleClick,
     onBlankContextMenu: handleBlankContextMenu,
@@ -213,6 +213,7 @@ const WorkflowEditorPage: React.FC = () => {
           onIsScheduleEnabledChange={setIsScheduleEnabled}
           onShowYaml={handleShowYaml}
           onSave={handleSave}
+          onAutoLayout={autoLayout}
         />
         <div ref={containerRefCallback} style={{ width: '100%', height: '100%' }}></div>
         <EditTaskModal

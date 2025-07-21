@@ -48,8 +48,8 @@ register({
       ...metadata,
       ports: {
         groups: {
-          top: { position: 'top', attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 4, fill: '#fff', style: { visibility: 'visible' } } } },
-          bottom: { position: 'bottom', attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 4, fill: '#fff', style: { visibility: 'visible' } } } },
+          top: { position: 'top', attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff', style: { visibility: 'visible' } } } },
+          bottom: { position: 'bottom', attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff', style: { visibility: 'visible' } } } },
         },
         items: [
           { id: 'top', group: 'top' },

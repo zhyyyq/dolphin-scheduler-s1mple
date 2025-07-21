@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Graph } from '@antv/x6';
 import { Keyboard } from '@antv/x6-plugin-keyboard';
 import { Selection } from '@antv/x6-plugin-selection';
+import dagre from 'dagre';
 import { History } from '@antv/x6-plugin-history';
 import { Task } from '../types';
 
@@ -25,7 +26,7 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
       mousewheel: true,
       background: { color: '#F2F7FA' },
       connecting: {
-        router: 'metro',
+        router: 'manhattan',
         connector: { name: 'rounded', args: { radius: 8 } },
         anchor: 'center',
         connectionPoint: 'anchor',
@@ -127,5 +128,42 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     currentGraph.centerContent();
   }, []);
 
-  return { graph, loadGraphData };
+  const autoLayout = useCallback(() => {
+    const currentGraph = graphRef.current;
+    if (!currentGraph) return;
+
+    const nodes = currentGraph.getNodes();
+    const edges = currentGraph.getEdges();
+    const g = new dagre.graphlib.Graph();
+    g.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 40 });
+    g.setDefaultEdgeLabel(() => ({}));
+
+    const width = 180;
+    const height = 36;
+    nodes.forEach((node) => {
+      g.setNode(node.id, { width, height });
+    });
+
+    edges.forEach((edge) => {
+      const source = edge.getSource() as any;
+      const target = edge.getTarget() as any;
+      if (source && target && source.cell && target.cell) {
+        g.setEdge(source.cell, target.cell);
+      }
+    });
+
+    dagre.layout(g);
+
+    g.nodes().forEach((id) => {
+      const node = currentGraph.getCellById(id) as any;
+      if (node) {
+        const pos = g.node(id);
+        node.position(pos.x, pos.y);
+      }
+    });
+
+    currentGraph.centerContent();
+  }, []);
+
+  return { graph, loadGraphData, autoLayout };
 };

@@ -1,5 +1,0 @@
-workflow:
-  name: my-workflow-test
-  schedule: 0 0 0 * * ? *
-  uuid: acba9360-ff44-47c6-99c0-db614a7511de
-tasks: []

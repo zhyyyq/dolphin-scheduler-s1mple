@@ -10,6 +10,7 @@ interface WorkflowToolbarProps {
   onIsScheduleEnabledChange: (enabled: boolean) => void;
   onShowYaml: () => void;
   onSave: () => void;
+  onAutoLayout: () => void;
 }
 
 export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
@@ -21,6 +22,7 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
   onIsScheduleEnabledChange,
   onShowYaml,
   onSave,
+  onAutoLayout,
 }) => {
   return (
     <>
@@ -41,6 +43,7 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
         </div>
       </div>
       <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, display: 'flex', gap: '8px' }}>
+        <Button onClick={onAutoLayout}>Auto Layout</Button>
         <Button onClick={onShowYaml}>View YAML</Button>
         <Button type="primary" onClick={onSave}>Save Workflow</Button>
       </div>

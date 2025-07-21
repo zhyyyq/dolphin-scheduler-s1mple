@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { Graph, Node } from '@antv/x6';
 import { PreviewData, Task } from '../types';
 import dagre from 'dagre';
-import './TaskNode'; // Ensure the custom node is registered
 
 interface DagGraphProps {
   data: PreviewData | null;
