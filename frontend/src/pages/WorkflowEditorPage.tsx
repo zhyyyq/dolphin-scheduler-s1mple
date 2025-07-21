@@ -109,13 +109,12 @@ const WorkflowEditorPage: React.FC = () => {
       const taskPayload: any = {
         ...nodeData,
         name: nodeData.label,
-        task_type: nodeData.type, // Use 'type' from node data
         deps: deps,
       };
       
       // Clean up frontend-specific fields
       delete taskPayload.label;
-      delete taskPayload.type;
+      
       return taskPayload;
     });
 

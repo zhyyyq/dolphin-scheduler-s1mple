@@ -107,7 +107,7 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
         data: {
           ...task,
           label: task.name,
-          type: task.type, // Ensure type is passed correctly
+          type: task.type === 'SubWorkflow' ? 'SUB_PROCESS' : task.type,
         },
       });
       currentGraph.addNode(node);

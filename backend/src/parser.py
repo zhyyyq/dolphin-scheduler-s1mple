@@ -38,6 +38,13 @@ def parse_workflow(content: str):
                 for branch in conditions:
                     if 'task' in branch:
                         relations.append({'from': task_name, 'to': branch['task']})
+            
+            if task_data.get('task_type') == 'SubWorkflow':
+                if 'workflow_name' in task_data:
+                    # This is a simplification. Proper handling might require
+                    # parsing the sub-workflow to find its start and end nodes.
+                    # For now, we just create a dependency on the sub-workflow itself.
+                    pass
 
         return {
             "schedule": schedule,
