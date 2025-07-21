@@ -16,7 +16,7 @@ const DagGraph: React.FC<DagGraphProps> = ({ data, onNodeDoubleClick }) => {
     const nodes = graph.getNodes();
     const edges = graph.getEdges();
     const g = new dagre.graphlib.Graph();
-    g.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 40 });
+    g.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 80 });
     g.setDefaultEdgeLabel(() => ({}));
 
     const width = 180;

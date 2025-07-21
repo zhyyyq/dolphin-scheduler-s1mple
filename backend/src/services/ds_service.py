@@ -131,7 +131,7 @@ async def submit_workflow_to_ds(filename: str):
             raise HTTPException(status_code=404, detail=f"Workflow file '{filename}' not found.")
 
         result = subprocess.run(
-            ["pydolphinscheduler", "yaml", "-f", file_path, "--worker-group", "default"],
+            ["pydolphinscheduler", "yaml", "-f", file_path],
             cwd=BACKEND_DIR,
             check=True,
             capture_output=True,

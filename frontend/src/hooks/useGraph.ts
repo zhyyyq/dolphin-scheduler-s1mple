@@ -101,11 +101,9 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
 
     currentGraph.clearCells(); // Clear previous data before loading new
     const nodeMap = new Map();
-    tasks.forEach((task, index) => {
+    tasks.forEach((task) => {
       const node = currentGraph.createNode({
         shape: 'task-node',
-        x: (index % 4) * 250,
-        y: Math.floor(index / 4) * 150,
         data: { label: task.name, taskType: task.type, ...task },
       });
       currentGraph.addNode(node);
@@ -125,6 +123,37 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
         });
       }
     });
+
+    const nodes = currentGraph.getNodes();
+    const edges = currentGraph.getEdges();
+    const g = new dagre.graphlib.Graph();
+    g.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 80 });
+    g.setDefaultEdgeLabel(() => ({}));
+
+    const width = 180;
+    const height = 36;
+    nodes.forEach((node) => {
+      g.setNode(node.id, { width, height });
+    });
+
+    edges.forEach((edge) => {
+      const source = edge.getSource() as any;
+      const target = edge.getTarget() as any;
+      if (source && target && source.cell && target.cell) {
+        g.setEdge(source.cell, target.cell);
+      }
+    });
+
+    dagre.layout(g);
+
+    g.nodes().forEach((id) => {
+      const node = currentGraph.getCellById(id) as any;
+      if (node) {
+        const pos = g.node(id);
+        node.position(pos.x, pos.y);
+      }
+    });
+
     currentGraph.centerContent();
   }, []);
 
@@ -135,7 +164,7 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     const nodes = currentGraph.getNodes();
     const edges = currentGraph.getEdges();
     const g = new dagre.graphlib.Graph();
-    g.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 40 });
+    g.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 80 });
     g.setDefaultEdgeLabel(() => ({}));
 
     const width = 180;
