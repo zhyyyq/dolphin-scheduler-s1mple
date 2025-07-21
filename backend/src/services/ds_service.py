@@ -2,8 +2,10 @@ import httpx
 from fastapi import HTTPException
 import os
 import subprocess
+import yaml
 from dotenv import load_dotenv
 from ..core.logger import logger
+from .git_service import git_commit
 
 load_dotenv()
 
@@ -139,7 +141,25 @@ async def submit_workflow_to_ds(filename: str):
             encoding='utf-8'
         )
         logger.info(f"pydolphinscheduler CLI output for {filename}:\n{result.stdout}")
-        
+
+        try:
+            with open(file_path, 'r+', encoding='utf-8') as f:
+                data = yaml.safe_load(f)
+                if 'workflow' in data:
+                    data['workflow']['status'] = 'online'
+                    f.seek(0)
+                    yaml.dump(data, f, allow_unicode=True)
+                    f.truncate()
+            logger.info(f"Updated status to 'online' for workflow {filename}")
+        except Exception as e:
+            logger.error(f"Could not update YAML status for {filename}: {e}", exc_info=True)
+
+        try:
+            commit_message = f"Online workflow: {filename}"
+            git_commit(file_path, commit_message)
+        except Exception as e:
+            logger.error(f"Could not commit workflow {filename}: {e}", exc_info=True)
+
         return {"message": f"Workflow '{filename}' submitted successfully."}
     except subprocess.CalledProcessError as e:
         logger.error(f"pydolphinscheduler CLI failed for {filename}: {e.stderr}")
