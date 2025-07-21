@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Graph } from '@antv/x6';
 import { Stencil } from '@antv/x6-plugin-stencil';
 import { Button, Modal, Input, App as AntApp } from 'antd';
@@ -8,6 +9,7 @@ import { Task } from '../types';
 import api from '../api';
 
 const WorkflowEditorPage: React.FC = () => {
+  const navigate = useNavigate();
   const { message } = AntApp.useApp();
   const containerRef = useRef<HTMLDivElement>(null);
   const stencilContainerRef = useRef<HTMLDivElement>(null);
@@ -192,6 +194,7 @@ const WorkflowEditorPage: React.FC = () => {
           content: yamlStr,
         });
         message.success('Workflow saved successfully!');
+        navigate('/');
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
         message.error(`Error: ${errorMessage}`);
