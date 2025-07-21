@@ -34,6 +34,7 @@ const WorkflowEditorPage: React.FC = () => {
   const [workflowSchedule, setWorkflowSchedule] = useState('0 0 0 * * ? *');
   const [isScheduleEnabled, setIsScheduleEnabled] = useState(true);
   const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
+  const [workflowData, setWorkflowData] = useState<{ name: string; uuid: string; schedule: string; tasks: Task[]; relations: { from: string; to: string }[] } | null>(null);
 
   const handleNodeDoubleClick = useCallback((node: any) => {
     setCurrentNode(node);
@@ -58,18 +59,29 @@ const WorkflowEditorPage: React.FC = () => {
       const fetchWorkflow = async () => {
         try {
           const response = await api.get<{ name: string; uuid: string; schedule: string; tasks: Task[]; relations: { from: string; to: string }[] }>(`/api/workflow/${workflow_uuid}`);
-          const { name, uuid, schedule, tasks, relations } = response;
-          setWorkflowName(name);
-          setWorkflowUuid(uuid);
-          if (schedule) setWorkflowSchedule(schedule);
-          if (graph) loadGraphData(tasks, relations);
+          setWorkflowData(response);
         } catch (error) {
           message.error('Failed to load workflow data.');
         }
       };
       fetchWorkflow();
     }
-  }, [workflow_uuid, graph, loadGraphData, message]);
+  }, [workflow_uuid, message]);
+
+  useEffect(() => {
+    if (graph && workflowData) {
+      const { name, uuid, schedule, tasks, relations } = workflowData;
+      setWorkflowName(name);
+      setWorkflowUuid(uuid);
+      if (schedule) {
+        setWorkflowSchedule(schedule);
+        setIsScheduleEnabled(true);
+      } else {
+        setIsScheduleEnabled(false);
+      }
+      loadGraphData(tasks, relations);
+    }
+  }, [graph, workflowData, loadGraphData]);
 
   const generateYamlStr = () => {
     if (!graph) return '';

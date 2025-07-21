@@ -116,9 +116,9 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
       const targetNode = nodeMap.get(rel.to);
       if (sourceNode && targetNode) {
         currentGraph.addEdge({
-          source: sourceNode,
-          target: targetNode,
           shape: 'edge',
+          source: { cell: sourceNode.id, port: 'bottom' },
+          target: { cell: targetNode.id, port: 'top' },
           attrs: { line: { stroke: '#8f8f8f', strokeWidth: 1 } },
           zIndex: -1,
         });

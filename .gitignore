@@ -2,6 +2,6 @@
 node_modules
 dist
 .vscode
-backend.log
 backend/backend.log
 backend/backend.log
+backend/workflow_repo/

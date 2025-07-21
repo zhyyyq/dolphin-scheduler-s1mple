@@ -170,12 +170,18 @@ tasks:
         return []
 
 @router.get("/api/workflow/{workflow_uuid}")
-async def get_workflow_details(workflow_uuid: str):
+async def get_workflow_details(workflow_uuid: str, db: Session = Depends(get_db)):
     try:
+        db_workflow = db.query(Workflow).filter(Workflow.uuid == workflow_uuid).first()
+        if not db_workflow:
+            raise HTTPException(status_code=404, detail="Workflow not found in database.")
+
         filename = f"{workflow_uuid}.yaml"
         file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
         if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="Local workflow file not found.")
+            # If the file doesn't exist but the DB entry does, it's an inconsistent state.
+            # For now, we'll treat it as "not found" from the user's perspective.
+            raise HTTPException(status_code=404, detail="Workflow file not found, though a DB record exists.")
         
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -187,15 +193,17 @@ async def get_workflow_details(workflow_uuid: str):
         workflow_meta = raw_data.get('workflow', {})
         
         return {
-            "name": workflow_meta.get('name', filename),
-            "uuid": workflow_meta.get('uuid'),
+            "name": db_workflow.name, # Use the name from the DB as the source of truth
+            "uuid": db_workflow.uuid,
             "schedule": workflow_meta.get('schedule'),
-            "tasks": parsed_data.get("tasks"),
-            "relations": parsed_data.get("relations"),
+            "tasks": parsed_data.get("tasks", []), # Default to empty list
+            "relations": parsed_data.get("relations", []), # Default to empty list
             "filename": filename
         }
     except Exception as e:
         logger.error(f"Error reading local workflow file {workflow_uuid}: {e}", exc_info=True)
+        if isinstance(e, HTTPException):
+            raise e
         raise HTTPException(status_code=500, detail=f"Could not read local workflow file: {e}")
 
 @router.delete("/api/workflow/{workflow_uuid}")
