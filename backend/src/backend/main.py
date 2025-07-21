@@ -394,6 +394,7 @@ async def get_workflow_details(workflow_uuid: str):
         return {
             "name": parsed_data.get('workflow', {}).get('name', filename),
             "uuid": raw_data.get('workflow', {}).get('uuid'),
+            "schedule": parsed_data.get('workflow', {}).get('schedule'),
             "tasks": parsed_data.get("tasks"),
             "relations": parsed_data.get("relations"),
             "filename": filename
@@ -670,41 +671,46 @@ async def get_workflow_commit_diff(workflow_uuid: str, commit_hash: str):
     """Gets the diff for a specific commit of a workflow file."""
     try:
         filename = f"{workflow_uuid}.yaml"
-        # Using `git diff` is cleaner than `git show` for getting only the diff.
-        # The `^!` notation shows changes against all parents, handling merge commits.
-        result = subprocess.run(
-            ["git", "diff", f"{commit_hash}^!", "--", filename],
-            cwd=WORKFLOW_REPO_DIR,
-            check=True,
-            capture_output=True,
-            text=True,
-            encoding='utf-8'
-        )
-        return {"diff": result.stdout.strip()}
-    except subprocess.CalledProcessError as e:
-        # This can fail for the very first commit, which has no parents.
-        # Fallback to `git show` for the initial commit.
-        if "bad revision" in e.stderr:
-             try:
-                # For the first commit, `show` will display the creation of the file.
-                # We use --pretty=format: to remove commit metadata.
-                show_result = subprocess.run(
-                    ["git", "show", "--pretty=format:", commit_hash, "--", filename],
-                    cwd=WORKFLOW_REPO_DIR,
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                    encoding='utf-8'
-                )
-                return {"diff": show_result.stdout.strip()}
-             except subprocess.CalledProcessError as show_e:
-                logger.error(f"Git show fallback failed for {filename} at {commit_hash}: {show_e.stderr}")
-                raise HTTPException(status_code=404, detail="Commit or file not found.")
         
-        logger.error(f"Git diff failed for {filename} at {commit_hash}: {e.stderr}")
+        # Check if the commit has parents. If not, it's the initial commit.
+        parent_check = subprocess.run(
+            ["git", "rev-parse", "--verify", f"{commit_hash}^"],
+            cwd=WORKFLOW_REPO_DIR,
+            capture_output=True,
+            text=True
+        )
+
+        if parent_check.returncode != 0:
+            # No parents, this is the initial commit. Use `git show`.
+            show_result = subprocess.run(
+                ["git", "show", "--pretty=format:", commit_hash, "--", filename],
+                cwd=WORKFLOW_REPO_DIR,
+                check=True,
+                capture_output=True,
+                text=True,
+                encoding='utf-8'
+            )
+            return {"diff": show_result.stdout.strip()}
+        else:
+            # Commit has parents, use `git diff`.
+            diff_result = subprocess.run(
+                ["git", "diff", f"{commit_hash}^!", "--", filename],
+                cwd=WORKFLOW_REPO_DIR,
+                check=True,
+                capture_output=True,
+                text=True,
+                encoding='utf-8'
+            )
+            return {"diff": diff_result.stdout.strip()}
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Git operation failed for {filename} at {commit_hash}: {e.stderr}")
         raise HTTPException(status_code=404, detail="Commit or file not found.")
     except FileNotFoundError:
         raise HTTPException(status_code=500, detail="Git command not found.")
+    except Exception as e:
+        logger.error(f"An unexpected error occurred while fetching commit diff: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")
 
 
 @app.put("/api/project/{project_code}/workflow/{workflow_code}")

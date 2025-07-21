@@ -119,11 +119,6 @@ const HomePage: React.FC = () => {
       key: 'name',
     },
     {
-      title: '所属项目',
-      dataIndex: 'projectName',
-      key: 'projectName',
-    },
-    {
       title: '状态',
       dataIndex: 'releaseState',
       key: 'releaseState',
@@ -147,7 +142,13 @@ const HomePage: React.FC = () => {
       title: '最后更新时间',
       dataIndex: 'updateTime',
       key: 'updateTime',
-      render: (timestamp: number) => new Date(timestamp * 1000).toLocaleString(),
+      render: (time: string | number) => {
+        if (typeof time === 'number') {
+          return new Date(time * 1000).toLocaleString();
+        }
+        // Assuming it's a date string from DS
+        return new Date(time).toLocaleString();
+      },
     },
     {
       title: '操作',

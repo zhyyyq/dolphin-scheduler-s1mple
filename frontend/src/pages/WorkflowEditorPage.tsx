@@ -25,6 +25,7 @@ const WorkflowEditorPage: React.FC = () => {
   const [nodeName, setNodeName] = useState('');
   const [nodeCommand, setNodeCommand] = useState('');
   const [workflowName, setWorkflowName] = useState('my-workflow');
+  const [workflowSchedule, setWorkflowSchedule] = useState('0 0 0 * * ? *');
   const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
 
   useEffect(() => {
@@ -157,10 +158,13 @@ const WorkflowEditorPage: React.FC = () => {
 
       if (workflow_uuid) {
         try {
-          const response = await api.get<{ name: string; uuid: string; tasks: Task[]; relations: { from: string; to: string }[], filename: string }>(`/api/workflow/${workflow_uuid}`);
-          const { name, uuid, tasks, relations } = response;
+          const response = await api.get<{ name: string; uuid: string; schedule: string; tasks: Task[]; relations: { from: string; to: string }[], filename: string }>(`/api/workflow/${workflow_uuid}`);
+          const { name, uuid, schedule, tasks, relations } = response;
           setWorkflowName(name.replace(/\.yaml$/, '').replace(/\.yml$/, ''));
           setWorkflowUuid(uuid);
+          if (schedule) {
+            setWorkflowSchedule(schedule);
+          }
 
           const nodeMap = new Map();
           tasks.forEach((task: Task, index: number) => {
@@ -259,7 +263,7 @@ const WorkflowEditorPage: React.FC = () => {
       const workflow: any = {
         workflow: {
           name: workflowName,
-          schedule: '0 0 0 * * ? *',
+          schedule: workflowSchedule,
         },
         tasks,
       };
@@ -379,7 +383,7 @@ const WorkflowEditorPage: React.FC = () => {
       const workflow: any = {
         workflow: {
           name: workflowName,
-          schedule: '0 0 0 * * ? *',
+          schedule: workflowSchedule,
         },
         tasks,
       };
@@ -411,9 +415,15 @@ const WorkflowEditorPage: React.FC = () => {
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
       <div ref={stencilContainerRef} style={{ width: '250px', borderRight: '1px solid #dfe3e8', position: 'relative' }}></div>
       <div style={{ flex: 1, position: 'relative' }}>
-        <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, display: 'flex', alignItems: 'center', background: 'white', padding: '8px', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <span style={{ marginRight: '8px', fontWeight: '500' }}>Workflow Name:</span>
-          <Input value={workflowName} onChange={e => setWorkflowName(e.target.value)} style={{ width: '200px' }} />
+        <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px', background: 'white', padding: '8px', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ marginRight: '8px', fontWeight: '500', width: '120px' }}>Workflow Name:</span>
+            <Input value={workflowName} onChange={e => setWorkflowName(e.target.value)} style={{ width: '200px' }} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ marginRight: '8px', fontWeight: '500', width: '120px' }}>Schedule (Cron):</span>
+            <Input value={workflowSchedule} onChange={e => setWorkflowSchedule(e.target.value)} style={{ width: '200px' }} />
+          </div>
         </div>
         <div ref={containerRef} style={{ width: '100%', height: '100%' }}></div>
         <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, display: 'flex', gap: '8px' }}>
