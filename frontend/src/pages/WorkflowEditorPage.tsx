@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 import * as yaml from 'js-yaml';
 import '../components/TaskNode'; // Register custom node
-import { Task } from '../types';
+import { Task, WorkflowDetail } from '../types';
 import api from '../api';
 import { useGraph } from '../hooks/useGraph';
 import { WorkflowToolbar } from '../components/WorkflowToolbar';
@@ -34,7 +34,8 @@ const WorkflowEditorPage: React.FC = () => {
   const [workflowSchedule, setWorkflowSchedule] = useState('0 0 0 * * ? *');
   const [isScheduleEnabled, setIsScheduleEnabled] = useState(true);
   const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
-  const [workflowData, setWorkflowData] = useState<{ name: string; uuid: string; schedule: string; tasks: Task[]; relations: { from: string; to: string }[] } | null>(null);
+  const [workflowData, setWorkflowData] = useState<WorkflowDetail | null>(null);
+  const [originalYaml, setOriginalYaml] = useState<string>('');
 
   const handleNodeDoubleClick = useCallback((node: any) => {
     setCurrentNode(node);
@@ -58,8 +59,9 @@ const WorkflowEditorPage: React.FC = () => {
     if (workflow_uuid) {
       const fetchWorkflow = async () => {
         try {
-          const response = await api.get<{ name: string; uuid: string; schedule: string; tasks: Task[]; relations: { from: string; to: string }[] }>(`/api/workflow/${workflow_uuid}`);
+          const response = await api.get<WorkflowDetail>(`/api/workflow/${workflow_uuid}`);
           setWorkflowData(response);
+          setOriginalYaml(response.yaml_content);
         } catch (error) {
           message.error('Failed to load workflow data.');
         }
@@ -73,8 +75,8 @@ const WorkflowEditorPage: React.FC = () => {
       const { name, uuid, schedule, tasks, relations } = workflowData;
       setWorkflowName(name);
       setWorkflowUuid(uuid);
-      if (schedule) {
-        setWorkflowSchedule(schedule);
+      if (schedule !== undefined && schedule !== null) {
+        setWorkflowSchedule(String(schedule));
         setIsScheduleEnabled(true);
       } else {
         setIsScheduleEnabled(false);
@@ -86,14 +88,16 @@ const WorkflowEditorPage: React.FC = () => {
   const generateYamlStr = () => {
     if (!graph) return '';
 
+    // If we are editing an existing workflow, start with the original YAML
+    // to preserve comments, formatting, and unknown fields.
+    const baseData = originalYaml ? (yaml.load(originalYaml) as any) : { workflow: {}, tasks: [] };
+
     const { cells } = graph.toJSON();
     const nodes = cells.filter(cell => cell.shape === 'task-node');
     const edges = cells.filter(cell => cell.shape === 'edge');
 
     const tasks = nodes.map(node => {
-      const nodeData = { ...node.data }; // Create a copy
-
-      // Calculate dependencies
+      const nodeData = { ...node.data };
       const deps = edges
         .filter(edge => edge.target.cell === node.id)
         .map(edge => {
@@ -102,31 +106,31 @@ const WorkflowEditorPage: React.FC = () => {
         })
         .filter(Boolean);
 
-      // Transform keys for the backend
       const taskPayload: any = {
         ...nodeData,
         name: nodeData.label,
         task_type: nodeData.taskType,
         deps: deps,
       };
-
-      // Remove frontend-specific or redundant keys
       delete taskPayload.label;
       delete taskPayload.taskType;
-
       return taskPayload;
     });
 
-    const workflow = {
-      workflow: {
-        name: workflowName,
-        schedule: isScheduleEnabled ? workflowSchedule : '',
-        uuid: workflowUuid || undefined,
-      },
-      tasks,
-    };
+    // Update the workflow and tasks sections of the base data
+    baseData.workflow.name = workflowName;
+    baseData.workflow.uuid = workflowUuid || baseData.workflow.uuid || undefined;
+    
+    if (isScheduleEnabled) {
+      baseData.workflow.schedule = workflowSchedule;
+    } else {
+      // If scheduling is disabled, remove the key to keep the YAML clean.
+      delete baseData.workflow.schedule;
+    }
+    
+    baseData.tasks = tasks;
 
-    return yaml.dump(JSON.parse(JSON.stringify(workflow)));
+    return yaml.dump(baseData);
   };
 
   const handleEditModalOk = () => {

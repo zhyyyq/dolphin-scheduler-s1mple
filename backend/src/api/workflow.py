@@ -159,7 +159,8 @@ async def get_workflow_details(workflow_uuid: str, db: Session = Depends(get_db)
             "schedule": workflow_meta.get('schedule'),
             "tasks": parsed_data.get("tasks", []), # Default to empty list
             "relations": parsed_data.get("relations", []), # Default to empty list
-            "filename": filename
+            "filename": filename,
+            "yaml_content": content
         }
     except Exception as e:
         logger.error(f"Error reading local workflow file {workflow_uuid}: {e}", exc_info=True)

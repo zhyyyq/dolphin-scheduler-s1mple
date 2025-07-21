@@ -11,6 +11,13 @@ export interface Workflow {
   schedule_human_readable?: string;
 }
 
+export interface WorkflowDetail extends Workflow {
+  tasks: Task[];
+  relations: Relation[];
+  filename: string;
+  yaml_content: string;
+}
+
 export interface HttpParam {
   prop: string;
   httpParametersType: 'PARAMETER' | 'HEADER';
