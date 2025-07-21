@@ -30,8 +30,8 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
         anchor: 'center',
         connectionPoint: 'anchor',
         allowBlank: false,
-        allowMulti: true,
         allowNode: true,
+        allowMulti: true,
         snap: { radius: 20 },
       },
       highlighting: {
@@ -63,6 +63,7 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     graphInstance.on('blank:contextmenu', ({ e, x, y }) => onBlankContextMenu(e, x, y));
     graphInstance.on('node:contextmenu', ({ e }) => e.preventDefault());
     graphInstance.on('edge:contextmenu', ({ e }) => e.preventDefault());
+
 
     graphInstance.on('node:added', ({ node }) => {
       const allNodes = graphInstance.getNodes();

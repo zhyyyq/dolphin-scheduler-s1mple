@@ -71,6 +71,52 @@ const WorkflowEditorPage: React.FC = () => {
     }
   }, [workflow_uuid, graph, loadGraphData, message]);
 
+  const generateYamlStr = () => {
+    if (!graph) return '';
+
+    const { cells } = graph.toJSON();
+    const nodes = cells.filter(cell => cell.shape === 'task-node');
+    const edges = cells.filter(cell => cell.shape === 'edge');
+
+    const tasks = nodes.map(node => {
+      const nodeData = { ...node.data }; // Create a copy
+
+      // Calculate dependencies
+      const deps = edges
+        .filter(edge => edge.target.cell === node.id)
+        .map(edge => {
+          const sourceNode = nodes.find(n => n.id === edge.source.cell);
+          return sourceNode ? sourceNode.data.label : null;
+        })
+        .filter(Boolean);
+
+      // Transform keys for the backend
+      const taskPayload: any = {
+        ...nodeData,
+        name: nodeData.label,
+        task_type: nodeData.taskType,
+        deps: deps,
+      };
+
+      // Remove frontend-specific or redundant keys
+      delete taskPayload.label;
+      delete taskPayload.taskType;
+
+      return taskPayload;
+    });
+
+    const workflow = {
+      workflow: {
+        name: workflowName,
+        schedule: isScheduleEnabled ? workflowSchedule : '',
+        uuid: workflowUuid || undefined,
+      },
+      tasks,
+    };
+
+    return yaml.dump(JSON.parse(JSON.stringify(workflow)));
+  };
+
   const handleEditModalOk = () => {
     if (currentNode && graph) {
       const allNodes = graph.getNodes();
@@ -86,26 +132,9 @@ const WorkflowEditorPage: React.FC = () => {
   };
 
   const handleShowYaml = () => {
-    if (graph) {
-      const { cells } = graph.toJSON();
-      const nodes = cells.filter(cell => cell.shape === 'task-node');
-      const edges = cells.filter(cell => cell.shape === 'edge');
-      const tasks = nodes.map(node => {
-        const nodeData = node.data;
-        const deps = edges.filter(edge => edge.target.cell === node.id).map(edge => {
-          const sourceNode = nodes.find(n => n.id === edge.source.cell);
-          return sourceNode ? sourceNode.data.label : '';
-        }).filter(name => name);
-        const task: any = { name: nodeData.label, task_type: nodeData.taskType, deps };
-        if (nodeData.taskType === 'SHELL' || nodeData.taskType === 'PYTHON') task.command = nodeData.command;
-        // ... (add other task types properties)
-        return task;
-      });
-      const workflow: any = { workflow: { name: workflowName, schedule: isScheduleEnabled ? workflowSchedule : '' }, tasks };
-      if (workflowUuid) workflow.workflow.uuid = workflowUuid;
-      setYamlContent(yaml.dump(workflow));
-      setIsYamlModalVisible(true);
-    }
+    const yamlStr = generateYamlStr();
+    setYamlContent(yamlStr);
+    setIsYamlModalVisible(true);
   };
 
   const handleSyncYamlToGraph = async () => {
@@ -126,22 +155,23 @@ const WorkflowEditorPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (graph) {
-      const { cells } = graph.toJSON();
-      // ... (logic to generate yaml from graph)
-      const yamlStr = ''; // Placeholder
-      try {
-        const response = await api.post<{ filename: string, uuid: string }>('/api/workflow/yaml', {
-          name: workflowName,
-          content: yamlStr,
-          original_filename: workflow_uuid ? `${workflow_uuid}.yaml` : undefined,
-        });
-        setWorkflowUuid(response.uuid);
-        message.success('Workflow saved successfully!');
-        navigate('/');
-      } catch (error: any) {
-        message.error(`Error: ${error.message}`);
-      }
+    const yamlStr = generateYamlStr();
+    if (!yamlStr) {
+      message.error('Graph is empty or not initialized.');
+      return;
+    }
+
+    try {
+      const response = await api.post<{ filename: string; uuid: string }>('/api/workflow/yaml', {
+        name: workflowName,
+        content: yamlStr,
+        original_filename: workflow_uuid ? `${workflow_uuid}.yaml` : undefined,
+      });
+      setWorkflowUuid(response.uuid);
+      message.success('Workflow saved successfully!');
+      navigate('/');
+    } catch (error: any) {
+      message.error(`Error saving workflow: ${error.message}`);
     }
   };
 
