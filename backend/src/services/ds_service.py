@@ -1,12 +1,13 @@
 import httpx
 from fastapi import HTTPException
 import os
+import re
 import subprocess
 import tempfile
 from ruamel.yaml import YAML
 from dotenv import load_dotenv
 from ..core.logger import logger
-from .git_service import git_commit
+from .git_service import git_commit, find_workflow_file_by_name
 
 load_dotenv()
 
@@ -123,7 +124,7 @@ async def get_dashboard_stats():
         raise HTTPException(status_code=500, detail=str(e))
 
 async def submit_workflow_to_ds(filename: str):
-    """Submits a local YAML workflow file to DolphinScheduler using the CLI without modifying the original file's format."""
+    """Submits a local YAML workflow file to DolphinScheduler, resolving sub-workflow paths."""
     try:
         if ".." in filename or "/" in filename or "\\" in filename:
             raise HTTPException(status_code=400, detail="Invalid workflow filename.")
@@ -133,15 +134,28 @@ async def submit_workflow_to_ds(filename: str):
         if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail=f"Workflow file '{filename}' not found.")
 
-        # Step 1: Run pydolphinscheduler on a temporary copy to avoid reformatting the original.
         tmp_path = None
         try:
-            yaml = YAML(typ='rt')
             with open(file_path, 'r', encoding='utf-8') as f:
-                data = yaml.load(f)
+                content = f.read()
 
-            # Ensure schedule key exists for pydolphinscheduler CLI, as it's required.
-            # If it's missing, the user has disabled scheduling. We'll add `schedule: null`.
+            def replace_sub_workflow_path(match):
+                sub_workflow_name = match.group(1)
+                # Find the actual file in the repo
+                actual_file = find_workflow_file_by_name(sub_workflow_name)
+                if not actual_file:
+                    raise FileNotFoundError(f"Sub-workflow '{sub_workflow_name}' not found in repository.")
+                
+                # pydolphinscheduler needs an absolute path to resolve correctly
+                abs_path = os.path.join(WORKFLOW_REPO_DIR, actual_file)
+                return f'$WORKFLOW{{"{abs_path}"}}'
+
+            # Replace all sub-workflow references with their absolute paths
+            processed_content = re.sub(r'\$WORKFLOW\{"([^"}]+)"\}', replace_sub_workflow_path, content)
+
+            yaml = YAML(typ='rt')
+            data = yaml.load(processed_content)
+
             if 'workflow' in data and 'schedule' not in data['workflow']:
                 data['workflow']['schedule'] = None
 

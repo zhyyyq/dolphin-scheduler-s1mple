@@ -1,5 +1,6 @@
 import subprocess
 import os
+import yaml
 from ..core.logger import logger
 
 WORKFLOW_REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'workflow_repo')).replace('\\', '/')
@@ -148,6 +149,20 @@ def get_workflow_history(workflow_uuid: str):
     except Exception as e:
         logger.error(f"An unexpected error occurred while fetching history for {filename}: {e}", exc_info=True)
         raise
+
+def find_workflow_file_by_name(name_to_find: str):
+    """Finds a workflow file in the repo by its 'name' attribute."""
+    for filename in os.listdir(WORKFLOW_REPO_DIR):
+        if filename.endswith('.yaml'):
+            file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = yaml.safe_load(f)
+                    if data and data.get('workflow', {}).get('name') == name_to_find:
+                        return filename
+            except Exception as e:
+                logger.warning(f"Could not parse {filename}: {e}")
+    return None
 
 def get_workflow_commit_diff(workflow_uuid: str, commit_hash: str):
     """Gets the diff for a specific commit of a workflow file."""
