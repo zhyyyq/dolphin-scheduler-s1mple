@@ -370,25 +370,6 @@ const WorkflowEditorPage: React.FC = () => {
 
   const handleSave = async () => {
     if (graphRef.current) {
-      // Check for duplicate workflow name
-      try {
-        const [dsWorkflows, localWorkflows] = await Promise.all([
-          api.get<Workflow[]>('/api/workflows'),
-          api.get<Workflow[]>('/api/workflows/local')
-        ]);
-        const allWorkflows = [...dsWorkflows, ...localWorkflows];
-        const isDuplicate = allWorkflows.some(
-          (wf) => wf.name === workflowName && wf.uuid !== workflowUuid
-        );
-
-        if (isDuplicate) {
-          message.error('A workflow with this name already exists.');
-          return;
-        }
-      } catch (error) {
-        message.error('Failed to verify workflow name. Please try again.');
-        return;
-      }
 
       const { cells } = graphRef.current.toJSON();
       const nodes = cells.filter(cell => cell.shape === 'task-node');

@@ -42,7 +42,10 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
         connection = create_db_connection()
         if connection:
             cursor = connection.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM workflows WHERE name = %s AND uuid != %s", (workflow_name, workflow_uuid))
+            if is_create:
+                cursor.execute("SELECT * FROM workflows WHERE name = %s", (workflow_name,))
+            else:
+                cursor.execute("SELECT * FROM workflows WHERE name = %s AND uuid != %s", (workflow_name, workflow_uuid))
             existing_workflow = cursor.fetchone()
             connection.close()
             if existing_workflow:
