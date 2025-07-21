@@ -205,6 +205,44 @@ const WorkflowEditorPage: React.FC = () => {
     setContextMenu({ ...contextMenu, visible: false });
   };
 
+  const handleImportYaml = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const content = e.target?.result as string;
+        setOriginalYaml(content);
+        
+        try {
+          const parsed = yaml.load(content) as any;
+          const name = parsed?.workflow?.name || 'imported-workflow';
+          const schedule = parsed?.workflow?.schedule;
+
+          setWorkflowName(name);
+          if (schedule !== undefined && schedule !== null) {
+            setWorkflowSchedule(String(schedule));
+            setIsScheduleEnabled(true);
+          } else {
+            setIsScheduleEnabled(false);
+          }
+
+          // Reparse and load graph
+          const response = await api.post<{ preview: { tasks: Task[], relations: { from: string, to: string }[] } }>('/api/reparse', { code: content });
+          const { tasks, relations } = response.preview;
+          graph?.clearCells();
+          loadGraphData(tasks, relations);
+
+          message.success('YAML imported successfully!');
+        } catch (err) {
+          message.error('Failed to parse or load the imported YAML file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+    // Reset file input to allow importing the same file again
+    event.target.value = '';
+  };
+
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
       <div style={{ flex: 1, position: 'relative' }} onClick={() => setContextMenu({ ...contextMenu, visible: false })}>
@@ -218,6 +256,7 @@ const WorkflowEditorPage: React.FC = () => {
           onShowYaml={handleShowYaml}
           onSave={handleSave}
           onAutoLayout={autoLayout}
+          onImportYaml={handleImportYaml}
         />
         <div ref={containerRefCallback} style={{ width: '100%', height: '100%' }}></div>
         <EditTaskModal

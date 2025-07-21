@@ -11,6 +11,7 @@ interface WorkflowToolbarProps {
   onShowYaml: () => void;
   onSave: () => void;
   onAutoLayout: () => void;
+  onImportYaml: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
@@ -23,6 +24,7 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
   onShowYaml,
   onSave,
   onAutoLayout,
+  onImportYaml,
 }) => {
   return (
     <>
@@ -43,6 +45,16 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
         </div>
       </div>
       <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, display: 'flex', gap: '8px' }}>
+        <Button onClick={() => document.getElementById('yaml-importer')?.click()}>
+          Import YAML
+        </Button>
+        <input
+          type="file"
+          id="yaml-importer"
+          style={{ display: 'none' }}
+          accept=".yaml,.yml"
+          onChange={onImportYaml}
+        />
         <Button onClick={onAutoLayout}>Auto Layout</Button>
         <Button onClick={onShowYaml}>View YAML</Button>
         <Button type="primary" onClick={onSave}>Save Workflow</Button>
