@@ -17,16 +17,15 @@ interface ActionButtonsProps {
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ record, onDelete, onSubmit }) => {
-  const projectCode = record.isLocal ? 'local' : record.projectCode;
-  const workflowCode = record.isLocal ? record.code : record.code;
+  const workflowUuid = record.uuid;
 
   return (
     <Space size="middle">
       {record.releaseState === 'UNSUBMITTED' && (
         <Button type="primary" onClick={() => onSubmit(record)}>提交</Button>
       )}
-      <Link to={`/workflow/edit/${projectCode}/${workflowCode}`}>编辑</Link>
-      <Link to={`/workflow/${record.code}/history`}>历史</Link>
+      <Link to={`/workflow/edit/${workflowUuid}`}>编辑</Link>
+      <Link to={`/workflow/${workflowUuid}/history`}>历史</Link>
       <Button type="link" danger onClick={() => onDelete(record)}>删除</Button>
     </Space>
   );
@@ -73,9 +72,7 @@ const HomePage: React.FC = () => {
 
   const handleDelete = useCallback(async (record: Workflow) => {
     try {
-      const projectCode = record.isLocal ? 'local' : record.projectCode;
-      const workflowCode = record.isLocal ? record.code : record.code;
-      await api.delete(`/api/project/${projectCode}/workflow/${workflowCode}`);
+      await api.delete(`/api/workflow/${record.uuid}`);
       message.success('Workflow deleted successfully.');
       fetchWorkflows();
     } catch (err) {
@@ -130,6 +127,7 @@ const HomePage: React.FC = () => {
       title: '最后更新时间',
       dataIndex: 'updateTime',
       key: 'updateTime',
+      render: (timestamp: number) => new Date(timestamp * 1000).toLocaleString(),
     },
     {
       title: '操作',

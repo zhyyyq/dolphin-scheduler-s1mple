@@ -1,4 +1,5 @@
 export interface Workflow {
+  uuid: string;
   code: any; // Can be number from DS or string from local file
   name: string;
   projectCode: number;

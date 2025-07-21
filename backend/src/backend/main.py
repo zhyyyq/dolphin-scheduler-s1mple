@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
@@ -370,35 +371,34 @@ async def restore_workflow(restore_data: RestoreWorkflow):
         raise HTTPException(status_code=500, detail=f"Failed to restore workflow: {e}")
 
 
-@app.get("/api/project/{project_code}/workflow/{workflow_code}")
-async def get_workflow_details(project_code: str, workflow_code: str):
+@app.get("/api/workflow/{workflow_uuid}")
+async def get_workflow_details(workflow_uuid: str):
     """
-    Fetches the detailed structure of a specific workflow from DolphinScheduler
-    or from a local file, and transforms it into a format suitable for the frontend DAG graph.
+    Fetches the detailed structure of a specific local workflow using its UUID.
     """
-    # Check if it's a local file request
-    if project_code == "local":
-        try:
-            file_path = os.path.join(WORKFLOW_REPO_DIR, workflow_code)
-            if not os.path.exists(file_path):
-                raise HTTPException(status_code=404, detail="Local workflow file not found.")
-            
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+    try:
+        filename = f"{workflow_uuid}.yaml"
+        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Local workflow file not found.")
+        
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
 
-            yaml_parser = YAML()
-            raw_data = yaml_parser.load(content)
-            parsed_data = parse_workflow(content)
-            
-            return {
-                "name": parsed_data.get('workflow', {}).get('name', workflow_code),
-                "uuid": raw_data.get('workflow', {}).get('uuid'),
-                "tasks": parsed_data.get("tasks"),
-                "relations": parsed_data.get("relations"),
-            }
-        except Exception as e:
-            logger.error(f"Error reading local workflow file {workflow_code}: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Could not read local workflow file: {e}")
+        yaml_parser = YAML()
+        raw_data = yaml_parser.load(content)
+        parsed_data = parse_workflow(content)
+        
+        return {
+            "name": parsed_data.get('workflow', {}).get('name', filename),
+            "uuid": raw_data.get('workflow', {}).get('uuid'),
+            "tasks": parsed_data.get("tasks"),
+            "relations": parsed_data.get("relations"),
+            "filename": filename
+        }
+    except Exception as e:
+        logger.error(f"Error reading local workflow file {workflow_uuid}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Could not read local workflow file: {e}")
 
     # --- Original DolphinScheduler logic ---
     ds_url = "http://localhost:12345/dolphinscheduler"
@@ -507,36 +507,36 @@ async def get_workflow_content(workflow_name: str):
         raise HTTPException(status_code=500, detail=f"Could not read workflow file: {e}")
 
 
-@app.delete("/api/project/{project_code}/workflow/{workflow_code}")
-async def delete_workflow(project_code: str, workflow_code: str):
-    # Handle local file deletion
-    if project_code == "local":
-        try:
-            file_path = os.path.join(WORKFLOW_REPO_DIR, workflow_code)
-            if os.path.exists(file_path):
-                os.remove(file_path)
-                # Manually handle git commit for deletion
-                subprocess.run(["git", "add", "-u", "."], cwd=WORKFLOW_REPO_DIR, check=True)
-                # Check if there's anything to commit
-                status_result = subprocess.run(
-                    ["git", "status", "--porcelain"],
+@app.delete("/api/workflow/{workflow_uuid}")
+async def delete_workflow(workflow_uuid: str):
+    """Deletes a local workflow file using its UUID."""
+    try:
+        filename = f"{workflow_uuid}.yaml"
+        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            # Manually handle git commit for deletion
+            subprocess.run(["git", "add", "-u", "."], cwd=WORKFLOW_REPO_DIR, check=True)
+            # Check if there's anything to commit
+            status_result = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=WORKFLOW_REPO_DIR,
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            if status_result.stdout.strip():
+                subprocess.run(
+                    ["git", "commit", "-m", f"Delete workflow file: {filename}"],
                     cwd=WORKFLOW_REPO_DIR,
-                    check=True,
-                    capture_output=True,
-                    text=True
+                    check=True
                 )
-                if status_result.stdout.strip():
-                    subprocess.run(
-                        ["git", "commit", "-m", f"Delete workflow file: {workflow_code}"],
-                        cwd=WORKFLOW_REPO_DIR,
-                        check=True
-                    )
-                return {"message": "Local workflow file deleted successfully."}
-            else:
-                raise HTTPException(status_code=404, detail="Local workflow file not found.")
-        except Exception as e:
-            logger.error(f"Error deleting local workflow file {workflow_code}: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Could not delete local workflow file: {e}")
+            return {"message": "Local workflow file deleted successfully."}
+        else:
+            raise HTTPException(status_code=404, detail="Local workflow file not found.")
+    except Exception as e:
+        logger.error(f"Error deleting local workflow file {workflow_uuid}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Could not delete local workflow file: {e}")
 
     # --- Original DolphinScheduler logic ---
     ds_url = "http://localhost:12345/dolphinscheduler"
@@ -587,21 +587,21 @@ async def delete_workflow(project_code: str, workflow_code: str):
         logger.error(f"Error deleting workflow: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/workflow/{workflow_name}/history")
-async def get_workflow_history(workflow_name: str):
+@app.get("/api/workflow/{workflow_uuid}/history")
+async def get_workflow_history(workflow_uuid: str):
     """
     Gets the commit history for a specific workflow file, ensuring that the history
     does not include commits from before the file was last deleted.
     """
     try:
-        file_path = os.path.join(WORKFLOW_REPO_DIR, workflow_name)
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="Workflow file not found.")
+        filename = f"{workflow_uuid}.yaml"
+        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
+        # We don't check for existence here because we want history even for deleted files.
 
         # Find the hash of the last commit where this file was deleted.
         # This helps isolate the history of the *current* version of the file.
         deletion_log_result = subprocess.run(
-            ["git", "log", "--diff-filter=D", "--format=%H", "-n", "1", "--", workflow_name],
+            ["git", "log", "--diff-filter=D", "--format=%H", "-n", "1", "--", filename],
             cwd=WORKFLOW_REPO_DIR,
             capture_output=True,
             text=True,
@@ -616,7 +616,7 @@ async def get_workflow_history(workflow_name: str):
         if last_deletion_commit:
             log_cmd.append(f"{last_deletion_commit}..HEAD")
         
-        log_cmd.extend(["--", workflow_name])
+        log_cmd.extend(["--", filename])
 
         # Execute the git log command to get the relevant history.
         history_result = subprocess.run(
@@ -638,7 +638,7 @@ async def get_workflow_history(workflow_name: str):
             # We need to ensure the file actually exists in the commits we're listing.
             # `git log --follow` can sometimes include the commit where the file was renamed from.
             # A simple check is to see if the file exists in that commit's tree.
-            check_file_exists_cmd = ["git", "cat-file", "-e", f"{commit_hash}:{workflow_name}"]
+            check_file_exists_cmd = ["git", "cat-file", "-e", f"{commit_hash}:{filename}"]
             file_exists_proc = subprocess.run(check_file_exists_cmd, cwd=WORKFLOW_REPO_DIR, capture_output=True)
 
             if file_exists_proc.returncode == 0:
@@ -652,23 +652,24 @@ async def get_workflow_history(workflow_name: str):
         return history
     except subprocess.CalledProcessError as e:
         # This can happen if `git log` fails, which is not expected in normal operation.
-        logger.error(f"Git log command failed for {workflow_name}: {e.stderr}")
+        logger.error(f"Git log command failed for {filename}: {e.stderr}")
         return [] # Return an empty list on error.
     except FileNotFoundError:
         # This happens if git is not installed.
         raise HTTPException(status_code=500, detail="Git command not found.")
     except Exception as e:
-        logger.error(f"An unexpected error occurred while fetching history for {workflow_name}: {e}", exc_info=True)
+        logger.error(f"An unexpected error occurred while fetching history for {filename}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="An unexpected error occurred.")
 
-@app.get("/api/workflow/{workflow_name}/commit/{commit_hash}")
-async def get_workflow_commit_diff(workflow_name: str, commit_hash: str):
+@app.get("/api/workflow/{workflow_uuid}/commit/{commit_hash}")
+async def get_workflow_commit_diff(workflow_uuid: str, commit_hash: str):
     """Gets the diff for a specific commit of a workflow file."""
     try:
+        filename = f"{workflow_uuid}.yaml"
         # Using `git diff` is cleaner than `git show` for getting only the diff.
         # The `^!` notation shows changes against all parents, handling merge commits.
         result = subprocess.run(
-            ["git", "diff", f"{commit_hash}^!", "--", workflow_name],
+            ["git", "diff", f"{commit_hash}^!", "--", filename],
             cwd=WORKFLOW_REPO_DIR,
             check=True,
             capture_output=True,
@@ -684,7 +685,7 @@ async def get_workflow_commit_diff(workflow_name: str, commit_hash: str):
                 # For the first commit, `show` will display the creation of the file.
                 # We use --pretty=format: to remove commit metadata.
                 show_result = subprocess.run(
-                    ["git", "show", "--pretty=format:", commit_hash, "--", workflow_name],
+                    ["git", "show", "--pretty=format:", commit_hash, "--", filename],
                     cwd=WORKFLOW_REPO_DIR,
                     check=True,
                     capture_output=True,
@@ -693,10 +694,10 @@ async def get_workflow_commit_diff(workflow_name: str, commit_hash: str):
                 )
                 return {"diff": show_result.stdout.strip()}
              except subprocess.CalledProcessError as show_e:
-                logger.error(f"Git show fallback failed for {workflow_name} at {commit_hash}: {show_e.stderr}")
+                logger.error(f"Git show fallback failed for {filename} at {commit_hash}: {show_e.stderr}")
                 raise HTTPException(status_code=404, detail="Commit or file not found.")
         
-        logger.error(f"Git diff failed for {workflow_name} at {commit_hash}: {e.stderr}")
+        logger.error(f"Git diff failed for {filename} at {commit_hash}: {e.stderr}")
         raise HTTPException(status_code=404, detail="Commit or file not found.")
     except FileNotFoundError:
         raise HTTPException(status_code=500, detail="Git command not found.")
@@ -851,71 +852,49 @@ class WorkflowYaml(BaseModel):
 @app.post("/api/workflow/yaml")
 async def save_workflow_yaml(workflow: WorkflowYaml):
     """
-    Saves or updates a YAML workflow file, assigning a UUID to new workflows
-    and preserving it for existing ones.
+    Saves or updates a YAML workflow file using its UUID as the filename.
     """
     try:
-        clean_name = workflow.name.replace(".yaml", "").replace(".yml", "")
-        new_filename = f"{clean_name}.yaml"
-        
-        if ".." in new_filename or "/" in new_filename or "\\" in new_filename:
-            raise HTTPException(status_code=400, detail="Invalid workflow name.")
-
-        os.makedirs(WORKFLOW_REPO_DIR, exist_ok=True)
-        new_file_path = os.path.join(WORKFLOW_REPO_DIR, new_filename)
-        
         yaml = YAML()
         data = yaml.load(workflow.content)
+        
+        # Ensure the workflow data structure is present
+        if 'workflow' not in data:
+            data['workflow'] = {}
 
-        is_rename = workflow.original_filename and workflow.original_filename != new_filename
-        is_create = not workflow.original_filename
+        # Determine the UUID for the workflow
+        workflow_uuid = data.get('workflow', {}).get('uuid')
+        is_create = not workflow_uuid
 
         if is_create:
-            data['workflow']['uuid'] = str(uuid.uuid4())
-        elif workflow.original_filename:  # This is an update or rename
-            try:
-                original_file_path = os.path.join(WORKFLOW_REPO_DIR, workflow.original_filename)
-                if os.path.exists(original_file_path):
-                    with open(original_file_path, 'r', encoding='utf-8') as f:
-                        original_data = yaml.load(f)
-                    existing_uuid = original_data.get('workflow', {}).get('uuid')
-                    
-                    if existing_uuid:
-                        data['workflow']['uuid'] = existing_uuid
-                    else:  # Migrating an old workflow without a UUID
-                        data['workflow']['uuid'] = str(uuid.uuid4())
-                else:  # Original file not found, treat as creation
-                    data['workflow']['uuid'] = str(uuid.uuid4())
-            except Exception as e:
-                logger.error(f"Could not read original workflow to preserve UUID, assigning a new one. Error: {e}")
-                data['workflow']['uuid'] = str(uuid.uuid4())
+            workflow_uuid = str(uuid.uuid4())
+            data['workflow']['uuid'] = workflow_uuid
+            commit_message = f"Create workflow {data.get('workflow', {}).get('name', workflow_uuid)}"
+        else:
+            commit_message = f"Update workflow {data.get('workflow', {}).get('name', workflow_uuid)}"
 
-        # The check for duplicate names has been removed as per the new requirement.
-        # if (is_create or is_rename) and os.path.exists(new_file_path):
-        #     raise HTTPException(
-        #         status_code=409,
-        #         detail=f"Workflow with name '{workflow.name}' already exists."
-        #     )
+        # The filename is now the UUID
+        filename = f"{workflow_uuid}.yaml"
+        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
 
-        commit_message = ""
-        if is_rename:
+        # If the user provided an original_filename (from the old name-based system),
+        # and it's different from the new UUID-based filename, remove the old file.
+        if workflow.original_filename and workflow.original_filename != filename:
             old_file_path = os.path.join(WORKFLOW_REPO_DIR, workflow.original_filename)
             if os.path.exists(old_file_path):
                 os.remove(old_file_path)
-            commit_message = f"Rename workflow from {workflow.original_filename} to {new_filename}"
-        elif is_create:
-            commit_message = f"Create workflow: {new_filename}"
-        else:
-            commit_message = f"Update workflow: {new_filename}"
+                commit_message = f"Migrate and update workflow {data.get('workflow', {}).get('name')} to UUID-based storage"
 
+        # Write the final content to the UUID-based file
         from io import StringIO
         string_stream = StringIO()
         yaml.dump(data, string_stream)
         final_content = string_stream.getvalue()
 
-        with open(new_file_path, "w", encoding="utf-8") as buffer:
+        with open(file_path, "w", encoding="utf-8") as buffer:
             buffer.write(final_content)
         
+        # Git operations
         subprocess.run(["git", "add", "."], cwd=WORKFLOW_REPO_DIR, check=True)
         
         status_result = subprocess.run(["git", "status", "--porcelain"], cwd=WORKFLOW_REPO_DIR, check=True, capture_output=True, text=True)
@@ -926,8 +905,8 @@ async def save_workflow_yaml(workflow: WorkflowYaml):
 
         return {
             "message": "Workflow saved successfully.",
-            "filename": new_filename,
-            "uuid": data['workflow']['uuid']
+            "filename": filename,
+            "uuid": workflow_uuid
         }
     except subprocess.CalledProcessError as e:
         err_msg = f"Git operation failed: {e.stderr}"

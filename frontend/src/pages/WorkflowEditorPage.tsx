@@ -12,7 +12,7 @@ import api from '../api';
 
 const WorkflowEditorPage: React.FC = () => {
   const navigate = useNavigate();
-  const { projectCode, workflowCode } = useParams<{ projectCode: string; workflowCode: string }>();
+  const { workflow_uuid } = useParams<{ workflow_uuid: string }>();
   const { message } = AntApp.useApp();
   const containerRef = useRef<HTMLDivElement>(null);
   const stencilContainerRef = useRef<HTMLDivElement>(null);
@@ -155,9 +155,9 @@ const WorkflowEditorPage: React.FC = () => {
         setIsModalVisible(true);
       });
 
-      if (projectCode && workflowCode) {
+      if (workflow_uuid) {
         try {
-          const response = await api.get<{ name: string; uuid: string; tasks: Task[]; relations: { from: string; to: string }[] }>(`/api/project/${projectCode}/workflow/${workflowCode}`);
+          const response = await api.get<{ name: string; uuid: string; tasks: Task[]; relations: { from: string; to: string }[], filename: string }>(`/api/workflow/${workflow_uuid}`);
           const { name, uuid, tasks, relations } = response;
           setWorkflowName(name.replace(/\.yaml$/, '').replace(/\.yml$/, ''));
           setWorkflowUuid(uuid);
@@ -203,7 +203,7 @@ const WorkflowEditorPage: React.FC = () => {
     };
 
     initGraph();
-  }, [projectCode, workflowCode, message]);
+  }, [workflow_uuid, message]);
 
   const handleOk = () => {
     if (currentNode) {
@@ -363,7 +363,7 @@ const WorkflowEditorPage: React.FC = () => {
         const response = await api.post<{ filename: string, uuid: string }>('/api/workflow/yaml', {
           name: workflow.workflow.name,
           content: yamlStr,
-          original_filename: projectCode === 'local' ? workflowCode : undefined,
+          original_filename: workflow_uuid ? `${workflow_uuid}.yaml` : undefined,
         });
         setWorkflowUuid(response.uuid); // Update UUID after saving
         message.success('Workflow saved successfully!');

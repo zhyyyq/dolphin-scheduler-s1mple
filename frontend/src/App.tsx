@@ -55,8 +55,8 @@ const App: React.FC = () => {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/" element={<HomePage />} />
             <Route path="/workflow/edit" element={<WorkflowEditorPage />} />
-            <Route path="/workflow/edit/:projectCode/:workflowCode" element={<WorkflowEditorPage />} />
-            <Route path="/workflow/:workflowName/history" element={<WorkflowHistoryPage />} />
+            <Route path="/workflow/edit/:workflow_uuid" element={<WorkflowEditorPage />} />
+            <Route path="/workflow/:workflow_uuid/history" element={<WorkflowHistoryPage />} />
             <Route path="/project/:projectCode/workflow/:workflowCode" element={<WorkflowViewerPage />} />
           </Routes>
         </Content>

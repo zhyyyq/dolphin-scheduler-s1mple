@@ -14,14 +14,14 @@ interface DeletedWorkflow {
   commit_hash: string;
 }
 
-const DiffViewer: React.FC<{ commit: Commit; workflowName: string }> = ({ commit, workflowName }) => {
+const DiffViewer: React.FC<{ commit: Commit; workflowUuid: string }> = ({ commit, workflowUuid }) => {
   const [diff, setDiff] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDiff = async () => {
       try {
-        const response = await api.get<{ diff: string }>(`/api/workflow/${workflowName}/commit/${commit.hash}`);
+        const response = await api.get<{ diff: string }>(`/api/workflow/${workflowUuid}/commit/${commit.hash}`);
         setDiff(response.diff);
       } catch (error) {
         console.error("Failed to fetch diff:", error);
@@ -30,7 +30,7 @@ const DiffViewer: React.FC<{ commit: Commit; workflowName: string }> = ({ commit
       }
     };
     fetchDiff();
-  }, [commit.hash, workflowName]);
+  }, [commit.hash, workflowUuid]);
 
   if (loading) return <Spin />;
   if (!diff) return <Alert message="Could not load diff." type="error" />;
@@ -47,7 +47,7 @@ const DiffViewer: React.FC<{ commit: Commit; workflowName: string }> = ({ commit
 };
 
 const WorkflowHistoryPage: React.FC = () => {
-  const { workflowName } = useParams<{ workflowName: string }>();
+  const { workflow_uuid } = useParams<{ workflow_uuid: string }>();
   const [history, setHistory] = useState<Commit[]>([]);
   const [deletedWorkflows, setDeletedWorkflows] = useState<DeletedWorkflow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -55,11 +55,11 @@ const WorkflowHistoryPage: React.FC = () => {
   const { message } = AntApp.useApp();
 
   const fetchHistory = useCallback(async () => {
-    if (!workflowName) return;
+    if (!workflow_uuid) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await api.get<Commit[]>(`/api/workflow/${workflowName}/history`);
+      const data = await api.get<Commit[]>(`/api/workflow/${workflow_uuid}/history`);
       setHistory(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -67,7 +67,7 @@ const WorkflowHistoryPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [workflowName]);
+  }, [workflow_uuid]);
 
   useEffect(() => {
     fetchHistory();
@@ -148,14 +148,14 @@ const WorkflowHistoryPage: React.FC = () => {
 
   return (
     <div style={{ padding: '24px', background: '#fff', borderRadius: '8px' }}>
-      <Title level={2} style={{ marginBottom: '24px' }}>History for {workflowName}</Title>
+      <Title level={2} style={{ marginBottom: '24px' }}>History for {workflow_uuid}</Title>
       <Table
         columns={columns}
         dataSource={history}
         rowKey="hash"
         bordered
         expandable={{
-          expandedRowRender: (record) => <DiffViewer commit={record} workflowName={workflowName!} />,
+          expandedRowRender: (record) => <DiffViewer commit={record} workflowUuid={workflow_uuid!} />,
           rowExpandable: () => true,
         }}
       />
