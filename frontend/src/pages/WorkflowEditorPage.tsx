@@ -7,7 +7,7 @@ import { Task, WorkflowDetail } from '../types';
 import api from '../api';
 import { useGraph } from '../hooks/useGraph';
 import { WorkflowToolbar } from '../components/WorkflowToolbar';
-import { EditTaskModal } from '../components/EditTaskModal';
+import EditTaskModal from '../components/EditTaskModal';
 import { ViewYamlModal } from '../components/ViewYamlModal';
 import { WorkflowContextMenu } from '../components/WorkflowContextMenu';
 import { taskTypes } from '../config/taskTypes';
@@ -38,9 +38,8 @@ const WorkflowEditorPage: React.FC = () => {
   const [originalYaml, setOriginalYaml] = useState<string>('');
 
   const handleNodeDoubleClick = useCallback((node: any) => {
-    setCurrentNode(node);
-    setNodeName(node.getData().label);
-    setNodeCommand(node.getData().command);
+    const nodeData = node.getData();
+    setCurrentNode({ ...nodeData, id: node.id });
     setIsEditModalVisible(true);
   }, []);
 
@@ -130,16 +129,24 @@ const WorkflowEditorPage: React.FC = () => {
     return doc.toString();
   };
 
-  const handleEditModalOk = () => {
-    if (currentNode && graph) {
-      const allNodes = graph.getNodes();
-      const isDuplicate = allNodes.some(node => node.getData().label === nodeName && node.id !== currentNode.id);
-      if (isDuplicate) {
-        message.error('工作流中已存在同名任务。');
-        return;
+  const handleSaveTask = (updatedTask: Task) => {
+    if (graph && currentNode) {
+      const node = graph.getNodes().find(n => n.id === currentNode.id);
+      if (node) {
+        const existingData = node.getData();
+        const newData = { ...existingData, ...updatedTask };
+        // Sync name and label
+        if (newData.name) {
+          newData.label = newData.name;
+        }
+        node.setData(newData);
       }
-      currentNode.setData({ ...currentNode.getData(), label: nodeName, command: nodeCommand });
     }
+    setIsEditModalVisible(false);
+    setCurrentNode(null);
+  };
+
+  const handleCancelTask = () => {
     setIsEditModalVisible(false);
     setCurrentNode(null);
   };
@@ -262,14 +269,9 @@ const WorkflowEditorPage: React.FC = () => {
         />
         <div ref={containerRefCallback} style={{ width: '100%', height: '100%' }}></div>
         <EditTaskModal
-          isModalVisible={isEditModalVisible}
-          onOk={handleEditModalOk}
-          onCancel={() => setIsEditModalVisible(false)}
-          currentNode={currentNode}
-          nodeName={nodeName}
-          onNodeNameChange={setNodeName}
-          nodeCommand={nodeCommand}
-          onNodeCommandChange={setNodeCommand}
+          task={currentNode}
+          onCancel={handleCancelTask}
+          onSave={handleSaveTask}
         />
         <ViewYamlModal
           isModalVisible={isYamlModalVisible}

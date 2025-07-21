@@ -5,12 +5,13 @@ import SqlTaskEditor from './tasks/SqlTaskEditor';
 // Import other specific editors as needed
 
 interface EditTaskModalProps {
+  open: boolean;
   task: Task | null;
   onCancel: () => void;
   onSave: (updated_task: Task) => void;
 }
 
-const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, onCancel, onSave }) => {
+const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onSave }) => {
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -34,7 +35,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, onCancel, onSave })
   const renderTaskEditor = () => {
     switch (task.task_type) {
       case 'Sql':
-        return <SqlTaskEditor task={task} onChange={(new_task) => form.setFieldsValue(new_task)} />;
+        return <SqlTaskEditor />;
       // Add cases for other task types here
       default:
         return <p>此任务类型没有可用的自定义编辑器。</p>;
@@ -44,7 +45,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, onCancel, onSave })
   return (
     <Modal
       title={`编辑任务: ${task.name}`}
-      visible={!!task}
+      open={open}
       onOk={handleOk}
       onCancel={onCancel}
       destroyOnClose

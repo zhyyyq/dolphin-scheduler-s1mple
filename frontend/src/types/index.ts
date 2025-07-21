@@ -45,6 +45,7 @@ export interface ConditionGroup {
 }
 
 export interface Task {
+  id?: string;
   name: string;
   type?: string;
   task_type?: string;

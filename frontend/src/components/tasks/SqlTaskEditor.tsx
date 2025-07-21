@@ -1,26 +1,12 @@
 import React from 'react';
 import { Input, Form, Select } from 'antd';
-import { Task } from '../../types';
 
 const { TextArea } = Input;
 const { Option } = Select;
 
-interface SqlTaskEditorProps {
-  task: Task;
-  onChange: (new_task: Task) => void;
-}
-
-const SqlTaskEditor: React.FC<SqlTaskEditorProps> = ({ task, onChange }) => {
-  const handleChange = (changedValues: any) => {
-    onChange({ ...task, ...changedValues });
-  };
-
+const SqlTaskEditor: React.FC = () => {
   return (
-    <Form
-      layout="vertical"
-      initialValues={task}
-      onValuesChange={handleChange}
-    >
+    <>
       <Form.Item label="数据源名称" name="datasource_name" rules={[{ required: true }]}>
         <Input />
       </Form.Item>
@@ -42,7 +28,7 @@ const SqlTaskEditor: React.FC<SqlTaskEditorProps> = ({ task, onChange }) => {
       <Form.Item label="显示行数" name="display_rows">
         <Input type="number" />
       </Form.Item>
-    </Form>
+    </>
   );
 };
 
