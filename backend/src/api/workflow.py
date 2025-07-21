@@ -10,6 +10,7 @@ from ..db.setup import create_db_connection, Workflow
 from ..core.logger import logger
 from ..services import git_service, ds_service, file_service
 from .ds import get_workflows as get_ds_workflows
+from cron_descriptor import get_description
 
 WORKFLOW_REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'workflow_repo'))
 
@@ -205,14 +206,22 @@ async def get_combined_workflows(db: Session = Depends(get_db)):
             
             # Standardize schedule display text
             schedule_text = None
+            schedule_human_readable = None
             schedule_obj = combined_wf.get('schedule')
             if schedule_obj:
                 if isinstance(schedule_obj, dict): # From DS
                     schedule_text = schedule_obj.get('crontab')
                 else: # From local file
                     schedule_text = str(schedule_obj)
+                
+                if schedule_text:
+                    try:
+                        schedule_human_readable = get_description(schedule_text)
+                    except Exception:
+                        schedule_human_readable = "无效的 Cron 表达式"
             
             combined_wf['schedule_text'] = schedule_text
+            combined_wf['schedule_human_readable'] = schedule_human_readable
             combined_workflows.append(combined_wf)
         
         return combined_workflows
