@@ -42,7 +42,7 @@ const WorkflowEditorPage: React.FC = () => {
           color: '#F2F7FA',
         },
         connecting: {
-          router: 'manhattan',
+          router: 'metro',
           connector: {
             name: 'rounded',
             args: {
@@ -52,22 +52,9 @@ const WorkflowEditorPage: React.FC = () => {
           anchor: 'center',
           connectionPoint: 'anchor',
           allowBlank: false,
-          allowMulti: true,
+          allowMulti: 'withPort',
           snap: {
             radius: 20,
-          },
-          validateConnection({ sourceView, targetView, sourceMagnet, targetMagnet }) {
-            // Basic validation: ensure magnets are present
-            if (!sourceMagnet || !targetMagnet) {
-              return false;
-            }
-            // Prevent connecting to the same node
-            if (sourceView === targetView) {
-              return false;
-            }
-            // Allow multiple connections from the same source port
-            // Allow multiple connections to the same target port
-            return true;
           },
         },
         highlighting: {
@@ -155,8 +142,8 @@ const WorkflowEditorPage: React.FC = () => {
           },
           ports: {
             items: [
-              { group: 'in' },
-              { group: 'out' },
+              { id: 'in', group: 'left' },
+              { id: 'out', group: 'right' },
             ]
           }
         });
@@ -210,7 +197,12 @@ const WorkflowEditorPage: React.FC = () => {
                 taskType: task.type,
                 command: task.command,
               },
-              ports: { items: [{ group: 'in' }, { group: 'out' }] }
+              ports: {
+                items: [
+                  { id: 'in', group: 'left' },
+                  { id: 'out', group: 'right' },
+                ]
+              }
             });
             graph.addNode(node);
             nodeMap.set(task.name, node);
@@ -338,7 +330,12 @@ const WorkflowEditorPage: React.FC = () => {
             taskType: task.type,
             command: task.command,
           },
-          ports: { items: [{ group: 'in' }, { group: 'out' }] }
+          ports: {
+            items: [
+              { id: 'in', group: 'left' },
+              { id: 'out', group: 'right' },
+            ]
+          }
         });
         graph.addNode(node);
         nodeMap.set(task.name, node);

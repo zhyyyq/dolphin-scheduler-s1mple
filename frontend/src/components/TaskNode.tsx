@@ -26,38 +26,52 @@ register({
   component: TaskNodeComponent,
   ports: {
     groups: {
-      in: {
-        position: 'left',
+      top: {
+        position: 'top',
         attrs: {
           circle: {
-            r: 4,
             magnet: true,
-            stroke: '#31d0c6',
-            strokeWidth: 2,
-            fill: '#fff',
+            stroke: '#8f8f8f',
+            r: 5,
           },
         },
       },
-      out: {
+      bottom: {
+        position: 'bottom',
+        attrs: {
+          circle: {
+            magnet: true,
+            stroke: '#8f8f8f',
+            r: 5,
+          },
+        },
+      },
+      left: {
+        position: 'left',
+        attrs: {
+          circle: {
+            magnet: true,
+            stroke: '#8f8f8f',
+            r: 5,
+          },
+        },
+      },
+      right: {
         position: 'right',
         attrs: {
           circle: {
-            r: 4,
             magnet: true,
-            stroke: '#31d0c6',
-            strokeWidth: 2,
-            fill: '#fff',
+            stroke: '#8f8f8f',
+            r: 5,
           },
         },
       },
     },
-    items: [
-      {
-        group: 'in',
-      },
-      {
-        group: 'out',
-      },
-    ],
   },
+  portMarkup: [
+    {
+      tagName: 'circle',
+      selector: 'portBody',
+    },
+  ],
 });
