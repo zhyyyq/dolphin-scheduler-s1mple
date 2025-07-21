@@ -24,12 +24,19 @@ def parse_workflow(content: str):
             
         relations = []
         for task_data in tasks_data:
+            task_name = task_data.get('name')
             if 'deps' in task_data:
                 for dep in task_data['deps']:
                     relations.append({
                         'from': dep,
-                        'to': task_data['name']
+                        'to': task_name
                     })
+            
+            if task_data.get('task_type') == 'Switch':
+                conditions = task_data.get('condition', [])
+                for branch in conditions:
+                    if 'task' in branch:
+                        relations.append({'from': task_name, 'to': branch['task']})
 
         return {
             "schedule": schedule,
