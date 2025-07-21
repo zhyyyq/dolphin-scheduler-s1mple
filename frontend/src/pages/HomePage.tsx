@@ -62,10 +62,15 @@ const HomePage: React.FC = () => {
 
   const handleDelete = useCallback(async (record: Workflow) => {
     try {
-      await api.delete(`/api/workflow/${record.uuid}`, {
-        project_code: record.projectCode,
-        workflow_code: record.code,
-      });
+      const params: { project_code?: number; workflow_code?: number } = {};
+      // Only add DS-related codes if they exist and are valid.
+      // `record.code` for local files is a string filename, so we must not send it.
+      if (record.projectCode && typeof record.code === 'number') {
+        params.project_code = record.projectCode;
+        params.workflow_code = record.code;
+      }
+
+      await api.delete(`/api/workflow/${record.uuid}`, params);
       message.success('Workflow deleted successfully.');
       fetchWorkflows();
     } catch (err) {

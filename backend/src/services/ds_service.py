@@ -159,8 +159,7 @@ async def submit_workflow_to_ds(filename: str):
 
         # Step 2: Now that DS is updated, update the original file cleanly.
         try:
-            yaml = YAML()
-            yaml.preserve_quotes = True
+            yaml = YAML(typ='rt')
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = yaml.load(f)
             
