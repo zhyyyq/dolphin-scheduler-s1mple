@@ -965,3 +965,35 @@ async def submit_workflow_to_ds(workflow: SubmitWorkflow):
     except Exception as e:
         logger.error(f"Error in /api/workflow/submit: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to submit workflow: {e}")
+
+@app.post("/api/ds/execute/{project_code}/{process_definition_code}")
+async def execute_ds_workflow(project_code: int, process_definition_code: int):
+    """Executes a DolphinScheduler workflow."""
+    ds_url = "http://localhost:12345/dolphinscheduler"
+    token = "8b6c34a254ca718549ac877b10804235"
+    headers = {"token": token}
+    
+    url = f"{ds_url.rstrip('/')}/projects/{project_code}/executors/start-process-instance"
+    payload = {
+        "processDefinitionCode": process_definition_code,
+        "failureStrategy": "CONTINUE",
+        "warningType": "NONE",
+        "warningGroupId": 0,
+        "execType": "START_PROCESS"
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, headers=headers, data=payload)
+            response.raise_for_status()
+            data = response.json()
+            if data.get("code") != 0:
+                raise HTTPException(status_code=500, detail=f"DS API error (execute): {data.get('msg')}")
+            return {"message": "Workflow execution started successfully.", "data": data.get("data")}
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=502, detail=f"Could not connect to DolphinScheduler: {e}")
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        logger.error(f"Error executing workflow: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
