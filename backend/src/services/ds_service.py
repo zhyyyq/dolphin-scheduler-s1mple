@@ -172,16 +172,51 @@ async def submit_workflow_to_ds(filename: str):
         raise HTTPException(status_code=500, detail=f"Failed to submit workflow: {e}")
 
 async def delete_ds_workflow(project_code: int, workflow_code: int):
-    """Deletes a DolphinScheduler workflow."""
-    url = f"{DS_URL.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}"
+    """Deletes a workflow from DolphinScheduler, taking it offline first if needed."""
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.delete(url, headers=HEADERS)
-            response.raise_for_status()
-            return response.json()
+            # 1. Get workflow details to check its state
+            details_url = f"{DS_URL.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}"
+            details_response = await client.get(details_url, headers=HEADERS)
+
+            if details_response.status_code == 404:
+                logger.warning(f"Workflow {workflow_code} not found in DS. Assuming already deleted.")
+                return {"message": "Workflow not found, assumed already deleted."}
+            
+            details_response.raise_for_status()
+            workflow_data = details_response.json().get("data", {})
+            
+            if not workflow_data:
+                raise HTTPException(status_code=404, detail="Workflow not found in DolphinScheduler.")
+
+            # 2. If the workflow is online, take it offline first
+            if workflow_data.get("processDefinition", {}).get("releaseState") == "ONLINE":
+                logger.info(f"Workflow {workflow_code} is ONLINE. Taking it offline before deletion.")
+                release_url = f"{DS_URL.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}/release"
+                release_payload = {'releaseState': 'OFFLINE'}
+                release_response = await client.post(release_url, headers=HEADERS, json=release_payload)
+                release_response.raise_for_status()
+                release_data = release_response.json()
+                if release_data.get("code") != 0:
+                    raise HTTPException(status_code=500, detail=f"DS API error (set offline): {release_data.get('msg')}")
+                logger.info(f"Workflow {workflow_code} successfully taken offline.")
+
+            # 3. Proceed with deletion
+            logger.info(f"Proceeding to delete workflow {workflow_code}.")
+            delete_url = f"{DS_URL.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}"
+            delete_response = await client.delete(delete_url, headers=HEADERS)
+            delete_response.raise_for_status()
+            delete_data = delete_response.json()
+            if delete_data.get("code") != 0:
+                raise HTTPException(status_code=500, detail=f"DS API error (delete): {delete_data.get('msg')}")
+
+            return {"message": "Workflow deleted successfully from DolphinScheduler."}
+            
     except httpx.RequestError as e:
         logger.error(f"Could not connect to DolphinScheduler: {e}", exc_info=True)
         raise HTTPException(status_code=502, detail=f"Could not connect to DolphinScheduler: {e}")
     except Exception as e:
-        logger.error(f"Error deleting workflow: {e}", exc_info=True)
+        if isinstance(e, HTTPException):
+            raise e
+        logger.error(f"Error deleting workflow from DS: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

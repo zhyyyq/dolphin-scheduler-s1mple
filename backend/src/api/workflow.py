@@ -256,29 +256,40 @@ async def delete_workflow(
     db: Session = Depends(get_db)
 ):
     try:
-        # If DS codes are provided, delete from DolphinScheduler first
-        if project_code and workflow_code:
-            logger.info(f"Deleting workflow from DolphinScheduler: project {project_code}, workflow {workflow_code}")
-            await ds_service.delete_ds_workflow(project_code, workflow_code)
-            logger.info(f"Successfully deleted workflow from DolphinScheduler.")
+        # Flag to check if any deletion happened
+        deleted_something = False
 
-        # Delete from local repo and DB
-        filename = f"{workflow_uuid}.yaml"
-        
-        # Delete from DB
+        # 1. Attempt to delete from DolphinScheduler if codes are provided
+        if project_code and workflow_code:
+            await ds_service.delete_ds_workflow(project_code, workflow_code)
+            logger.info(f"Successfully deleted workflow from DolphinScheduler: project {project_code}, workflow {workflow_code}")
+            deleted_something = True
+
+        # 2. Attempt to delete locally if a DB entry exists for the UUID
         db_workflow = db.query(Workflow).filter(Workflow.uuid == workflow_uuid).first()
         if db_workflow:
+            filename = f"{db_workflow.uuid}.yaml"
+            file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
+
+            # Delete from DB
             db.delete(db_workflow)
             db.commit()
             logger.info(f"Deleted workflow {workflow_uuid} from database.")
-        else:
-            logger.warning(f"Workflow {workflow_uuid} not found in database for deletion.")
 
-        # Delete file from repo
-        file_service.delete_workflow_file(filename)
-        logger.info(f"Deleted workflow file {filename} from repository.")
+            # Safely delete file from repo and commit
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                git_service.git_commit(filename, f"Delete workflow: {filename}")
+                logger.info(f"Deleted workflow file {filename} from repository.")
+            else:
+                logger.warning(f"DB entry for {filename} deleted, but file was not found in repo.")
+            
+            deleted_something = True
 
-        return {"message": "Workflow deleted successfully from all locations."}
+        if not deleted_something:
+            raise HTTPException(status_code=404, detail=f"Workflow with UUID {workflow_uuid} not found.")
+
+        return {"message": "Workflow deleted successfully."}
     except Exception as e:
         db.rollback()
         logger.error(f"Error deleting workflow {workflow_uuid}: {e}", exc_info=True)
