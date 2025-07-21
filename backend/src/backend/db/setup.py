@@ -1,21 +1,21 @@
-import mysql.connector
-from mysql.connector import Error
+import psycopg2
+from psycopg2 import OperationalError
 import os
 from ..core.logger import logger
 
 def create_db_connection():
-    """Creates a connection to the MySQL database."""
+    """Creates a connection to the PostgreSQL database."""
     try:
-        connection = mysql.connector.connect(
-            host="localhost",
-            user="testuser",
-            password="testpass",
-            database="testdb"
+        connection = psycopg2.connect(
+            host="dolphinscheduler-postgresql",
+            user="root",
+            password="root",
+            dbname="dolphinscheduler",
+            port=5432
         )
-        if connection.is_connected():
-            return connection
-    except Error as e:
-        logger.error(f"Error while connecting to MySQL: {e}")
+        return connection
+    except OperationalError as e:
+        logger.error(f"Error while connecting to PostgreSQL: {e}")
         return None
 
 def init_db():
@@ -33,9 +33,10 @@ def init_db():
                 name VARCHAR(255) NOT NULL
             )
         """)
+        connection.commit()
         logger.info("Workflow table initialized successfully.")
-    except Error as e:
+    except Exception as e:
         logger.error(f"Error during table initialization: {e}")
     finally:
-        if connection.is_connected():
+        if connection:
             connection.close()

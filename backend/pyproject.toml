@@ -15,6 +15,7 @@ dependencies = [
     "pyyaml",
     "mysql-connector-python>=9.3.0",
     "loguru>=0.7.3",
+    "psycopg2-binary>=2.9.10",
 ]
 
 [tool.setuptools]
