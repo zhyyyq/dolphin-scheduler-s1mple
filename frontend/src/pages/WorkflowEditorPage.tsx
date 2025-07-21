@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Graph } from '@antv/x6';
 import { Stencil } from '@antv/x6-plugin-stencil';
-import { Button, Modal, Input } from 'antd';
-import yaml from 'js-yaml';
+import { Button, Modal, Input, App as AntApp } from 'antd';
+import * as yaml from 'js-yaml';
 import '../components/TaskNode'; // Register custom node
 import { Task } from '../types';
+import api from '../api';
 
 const WorkflowEditorPage: React.FC = () => {
+  const { message } = AntApp.useApp();
   const containerRef = useRef<HTMLDivElement>(null);
   const stencilContainerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<Graph | null>(null);
@@ -50,7 +52,23 @@ const WorkflowEditorPage: React.FC = () => {
                   strokeWidth: 1,
                 },
               },
+              zIndex: -1,
             });
+          },
+          validateConnection({ sourceView, targetView, sourceMagnet, targetMagnet }) {
+            // 确保连接桩不为空
+            if (!sourceMagnet || !targetMagnet) {
+              return false;
+            }
+            // 只能从输出连接桩连接到输入连接桩
+            if (sourceMagnet.getAttribute('port-group') === 'in' || targetMagnet.getAttribute('port-group') === 'out') {
+              return false;
+            }
+            // 不能连接到自身
+            if (sourceView === targetView) {
+              return false;
+            }
+            return true;
           },
         },
         highlighting: {
@@ -64,14 +82,6 @@ const WorkflowEditorPage: React.FC = () => {
               },
             },
           },
-        },
-        onPortRendered(args) {
-          const port = args.port;
-          const contentSelectors = args.contentSelectors;
-          const container = contentSelectors && contentSelectors.content;
-          if (container) {
-            (container as HTMLElement).style.display = 'none';
-          }
         },
       });
 
@@ -101,13 +111,17 @@ const WorkflowEditorPage: React.FC = () => {
 
         const shellNode = graph.createNode({
           shape: 'task-node',
-          width: 180,
-          height: 36,
           data: {
             label: 'Shell Task',
             taskType: 'SHELL',
             command: 'echo "Hello"',
           },
+          ports: {
+            items: [
+              { group: 'in' },
+              { group: 'out' },
+            ]
+          }
         });
 
         stencil.load([shellNode], 'group1');
@@ -139,7 +153,7 @@ const WorkflowEditorPage: React.FC = () => {
     setCurrentNode(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (graphRef.current) {
       const { cells } = graphRef.current.toJSON();
       const nodes = cells.filter(cell => cell.shape === 'task-node');
@@ -172,28 +186,17 @@ const WorkflowEditorPage: React.FC = () => {
 
       const yamlStr = yaml.dump(workflow);
       
-      fetch('http://localhost:8000/api/workflow/yaml', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      try {
+        await api.post('/api/workflow/yaml', {
           name: workflow.workflow.name,
           content: yamlStr,
-        }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.message) {
-          alert('Workflow saved successfully!');
-        } else {
-          alert(`Error: ${data.detail}`);
-        }
-      })
-      .catch(error => {
+        });
+        message.success('Workflow saved successfully!');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        message.error(`Error: ${errorMessage}`);
         console.error('Error saving workflow:', error);
-        alert('Failed to save workflow.');
-      });
+      }
     }
   };
 

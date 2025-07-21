@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recha
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { DashboardStats, WorkflowInstance } from '../types';
+import api from '../api';
 
 const COLORS = {
   success: '#52c41a',
@@ -43,11 +44,7 @@ const DashboardPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/dashboard/stats');
-      if (!response.ok) {
-        throw new Error('Failed to fetch dashboard stats');
-      }
-      const data: DashboardStats = await response.json();
+      const data = await api.get<DashboardStats>('/api/dashboard/stats');
       setStats(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';

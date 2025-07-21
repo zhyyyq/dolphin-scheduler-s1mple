@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
-import { Graph } from '@antv/x6';
+import { Graph, Node } from '@antv/x6';
 import { PreviewData, Task } from '../types';
+import dagre from 'dagre';
 import './TaskNode'; // Ensure the custom node is registered
 
 interface DagGraphProps {
@@ -11,6 +12,40 @@ interface DagGraphProps {
 const DagGraph: React.FC<DagGraphProps> = ({ data, onNodeDoubleClick }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<Graph | null>(null);
+
+  const layout = (graph: Graph) => {
+    const nodes = graph.getNodes();
+    const edges = graph.getEdges();
+    const g = new dagre.graphlib.Graph();
+    g.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 40 });
+    g.setDefaultEdgeLabel(() => ({}));
+
+    const width = 180;
+    const height = 36;
+    nodes.forEach((node) => {
+      g.setNode(node.id, { width, height });
+    });
+
+    edges.forEach((edge) => {
+      const source = edge.getSource() as any;
+      const target = edge.getTarget() as any;
+      if (source && target && source.cell && target.cell) {
+        g.setEdge(source.cell, target.cell);
+      }
+    });
+
+    dagre.layout(g);
+
+    g.nodes().forEach((id) => {
+      const node = graph.getCellById(id) as Node;
+      if (node) {
+        const pos = g.node(id);
+        node.position(pos.x, pos.y);
+      }
+    });
+
+    graph.centerContent();
+  };
 
   const transformData = (graphData: PreviewData) => {
     const nodes = graphData.tasks.map(task => ({
@@ -25,8 +60,8 @@ const DagGraph: React.FC<DagGraphProps> = ({ data, onNodeDoubleClick }) => {
       },
     }));
     const edges = graphData.relations.map(rel => ({
-      source: rel.from,
-      target: rel.to,
+      source: { cell: rel.from },
+      target: { cell: rel.to },
       attrs: {
         line: {
           stroke: '#8f8f8f',
@@ -50,6 +85,9 @@ const DagGraph: React.FC<DagGraphProps> = ({ data, onNodeDoubleClick }) => {
         connecting: {
           snap: true,
         },
+        interacting: {
+          nodeMovable: false,
+        },
       });
       graphRef.current = graph;
 
@@ -72,14 +110,8 @@ const DagGraph: React.FC<DagGraphProps> = ({ data, onNodeDoubleClick }) => {
   useEffect(() => {
     if (graphRef.current && data) {
       const { nodes, edges } = transformData(data);
-      
-      const model = {
-        nodes: nodes.map((n, i) => ({ ...n, x: i * 200, y: i * 50 })),
-        edges,
-      };
-      
-      graphRef.current.fromJSON(model);
-      graphRef.current.centerContent();
+      graphRef.current.fromJSON({ nodes, edges });
+      layout(graphRef.current);
     }
   }, [data]);
 

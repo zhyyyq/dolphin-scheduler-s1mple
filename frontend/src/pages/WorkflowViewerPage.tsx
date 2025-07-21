@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Spin, Alert, Card, Typography } from 'antd';
 import DagGraph from '../components/DagGraph';
 import { PreviewData } from '../types';
+import api from '../api';
 
 const { Title } = Typography;
 
@@ -16,11 +17,7 @@ const WorkflowViewerPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/project/${projectCode}/workflow/${workflowCode}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch workflow details');
-      }
-      const data: PreviewData = await response.json();
+      const data = await api.get<PreviewData>(`/api/project/${projectCode}/workflow/${workflowCode}`);
       setWorkflow(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';

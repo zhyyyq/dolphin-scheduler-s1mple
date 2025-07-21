@@ -6,6 +6,7 @@ import {
 import { Link } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import { Workflow } from '../types';
+import api from '../api';
 
 const { Title } = Typography;
 
@@ -33,11 +34,7 @@ const HomePage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/workflows');
-      if (!response.ok) {
-        throw new Error('Failed to fetch workflows from DolphinScheduler');
-      }
-      const data: Workflow[] = await response.json();
+      const data = await api.get<Workflow[]>('/api/workflows');
       setWorkflows(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -53,12 +50,7 @@ const HomePage: React.FC = () => {
 
   const handleDelete = useCallback(async (record: Workflow) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/project/${record.projectCode}/workflow/${record.code}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete workflow.');
-      }
+      await api.delete(`/api/project/${record.projectCode}/workflow/${record.code}`);
       message.success('Workflow deleted successfully.');
       fetchWorkflows();
     } catch (err) {

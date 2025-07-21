@@ -24,4 +24,40 @@ register({
   width: 180,
   height: 36,
   component: TaskNodeComponent,
+  ports: {
+    groups: {
+      in: {
+        position: 'left',
+        attrs: {
+          circle: {
+            r: 4,
+            magnet: true,
+            stroke: '#31d0c6',
+            strokeWidth: 2,
+            fill: '#fff',
+          },
+        },
+      },
+      out: {
+        position: 'right',
+        attrs: {
+          circle: {
+            r: 4,
+            magnet: true,
+            stroke: '#31d0c6',
+            strokeWidth: 2,
+            fill: '#fff',
+          },
+        },
+      },
+    },
+    items: [
+      {
+        group: 'in',
+      },
+      {
+        group: 'out',
+      },
+    ],
+  },
 });
