@@ -13,7 +13,7 @@ from .services import git_service, process_service, file_service, ds_service
 # Define project root and workflow repo directory consistently
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 WORKFLOW_REPO_DIR = os.path.join(BACKEND_DIR, "workflow_repo")
-
+setup_logger()
 app = FastAPI()
 
 app.include_router(workflow_router)
@@ -24,7 +24,7 @@ async def startup_event():
     """
     Initializes the Git repository and database table on application startup.
     """
-    setup_logger()
+    
     init_db()
     if not os.path.exists(WORKFLOW_REPO_DIR):
         os.makedirs(WORKFLOW_REPO_DIR)
