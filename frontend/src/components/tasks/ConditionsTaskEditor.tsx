@@ -1,41 +1,64 @@
-import React from 'react';
-import { Input, Select } from 'antd';
+import React, { useEffect } from 'react';
+import { Form, Input, FormInstance } from 'antd';
+import yaml from 'js-yaml';
+
+const { TextArea } = Input;
 
 interface ConditionsTaskEditorProps {
-  currentNode: any;
+  form: FormInstance<any>;
+  initialValues: any;
 }
 
-export const ConditionsTaskEditor: React.FC<ConditionsTaskEditorProps> = ({ currentNode }) => {
-  const data = currentNode.getData();
+const ConditionsTaskEditor: React.FC<ConditionsTaskEditorProps> = ({ form, initialValues }) => {
+
+  useEffect(() => {
+    if (initialValues) {
+      const { success_task, failed_task, op, groups } = initialValues;
+      const conditionsYaml = yaml.dump({ op, groups });
+      form.setFieldsValue({
+        success_task,
+        failed_task,
+        conditions_yaml: conditionsYaml,
+      });
+    }
+  }, [initialValues, form]);
 
   return (
     <>
-      <p>成功执行任务:</p>
-      <Input value={data.success_task} onChange={e => currentNode.setData({ ...data, success_task: e.target.value })} />
-      <p>失败执行任务:</p>
-      <Input value={data.failed_task} onChange={e => currentNode.setData({ ...data, failed_task: e.target.value })} />
-      <p>操作符:</p>
-      <Select
-        value={data.op}
-        onChange={value => currentNode.setData({ ...data, op: value })}
-        style={{ width: '100%' }}
+      <Form.Item
+        label="成功分支任务 (Success Task)"
+        name="success_task"
+        rules={[{ required: true, message: '请输入成功分支任务的名称' }]}
       >
-        <Select.Option value="AND">与</Select.Option>
-        <Select.Option value="OR">或</Select.Option>
-      </Select>
-      <p>分组 (JSON):</p>
-      <Input.TextArea
-        rows={6}
-        value={JSON.stringify(data.groups, null, 2)}
-        onChange={e => {
-          try {
-            const groups = JSON.parse(e.target.value);
-            currentNode.setData({ ...data, groups });
-          } catch (err) {
-            // Ignore invalid JSON
-          }
-        }}
-      />
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="失败分支任务 (Failed Task)"
+        name="failed_task"
+        rules={[{ required: true, message: '请输入失败分支任务的名称' }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="条件逻辑 (YAML)"
+        name="conditions_yaml"
+        rules={[
+          { required: true, message: '请输入条件逻辑' },
+          {
+            validator: async (_, value) => {
+              try {
+                yaml.load(value);
+              } catch (e) {
+                throw new Error('YAML 格式无效');
+              }
+            },
+          },
+        ]}
+      >
+        <TextArea rows={10} placeholder="在此输入 op 和 groups 的 YAML 结构" />
+      </Form.Item>
     </>
   );
 };
+
+export default ConditionsTaskEditor;

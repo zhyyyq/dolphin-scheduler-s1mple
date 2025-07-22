@@ -7,6 +7,9 @@ import SwitchTaskEditor from './tasks/SwitchTaskEditor';
 import SubWorkflowTaskEditor from './tasks/SubWorkflowTaskEditor';
 import SparkTaskEditor from './tasks/SparkTaskEditor';
 import PythonTaskEditor from './tasks/PythonTaskEditor';
+import ConditionsTaskEditor from './tasks/ConditionsTaskEditor';
+import DataXTaskEditor from './tasks/DataXTaskEditor';
+import CustomDataXTaskEditor from './tasks/CustomDataXTaskEditor';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
 // Import other specific editors as needed
@@ -35,19 +38,34 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
     form.validateFields().then(values => {
       let updatedTask = { ...task, ...values };
 
-      if (values.yaml_content) {
+      if (values.yaml_content) { // For the Default Editor
         try {
           const yamlData = yaml.load(values.yaml_content) as object;
-          // Merge the yaml data, ensuring name from the main form is preserved
           updatedTask = { ...task, name: values.name, ...yamlData };
         } catch (e) {
           console.error("Error parsing YAML:", e);
-          // Optionally, show an error message to the user
           return;
         }
+        delete updatedTask.yaml_content;
       }
-      
-      delete updatedTask.yaml_content; // Clean up the temporary field
+
+      if (values.conditions_yaml) { // For the Conditions Editor
+        try {
+          const conditionsData = yaml.load(values.conditions_yaml) as { op: string, groups: any[] };
+          updatedTask = {
+            ...task,
+            name: values.name,
+            success_task: values.success_task,
+            failed_task: values.failed_task,
+            op: conditionsData.op,
+            groups: conditionsData.groups,
+          };
+        } catch (e) {
+          console.error("Error parsing YAML for Conditions:", e);
+          return;
+        }
+        delete updatedTask.conditions_yaml;
+      }
       onSave(updatedTask);
 
     }).catch(info => {
@@ -69,6 +87,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         return <SparkTaskEditor />;
       case 'Python':
         return <PythonTaskEditor />;
+      case 'Condition':
+        return <ConditionsTaskEditor form={form} initialValues={task} />;
+      case 'DataX':
+        return <DataXTaskEditor />;
+      case 'CustomDataX':
+        return <CustomDataXTaskEditor />;
       // Add cases for other task types here
       default:
         return <DefaultTaskEditor initialValues={task} form={form} />;
