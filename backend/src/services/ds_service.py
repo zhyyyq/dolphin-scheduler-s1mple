@@ -293,3 +293,58 @@ async def delete_ds_workflow(project_code: int, workflow_code: int):
             raise e
         logger.error(f"Error deleting workflow from DS: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+async def execute_workflow(project_code: int, workflow_code: int, payload: dict):
+    """
+    Executes a workflow, either as a simple run or a backfill.
+    """
+    try:
+        url = f"{DS_URL.rstrip('/')}/projects/{project_code}/executors/start-process-instance"
+        
+        api_payload = {
+            "processDefinitionCode": workflow_code,
+            "failureStrategy": "CONTINUE",
+            "warningType": "NONE",
+            "warningGroupId": None,
+            "execType": None,
+            "startNodeList": "",
+            "taskDependType": "TASK_POST",
+            "runMode": "RUN_MODE_SERIAL",
+            "processInstancePriority": "MEDIUM",
+            "workerGroup": "default",
+            "environmentCode": -1,
+            "timeout": 0,
+            "expectedParallelismNumber": None,
+            "dryRun": 0,
+            "testFlag": 0
+        }
+
+        if payload.get('isBackfill'):
+            api_payload['execType'] = 'COMPLEMENT_DATA'
+            api_payload['scheduleTime'] = f"{payload['startDate']},{payload['endDate']}"
+            if payload.get('runMode') == 'parallel':
+                api_payload['runMode'] = 'RUN_MODE_PARALLEL'
+        else:
+            api_payload['execType'] = 'NONE'
+
+        # DolphinScheduler's start-process-instance endpoint expects form data, not JSON.
+        # We need to filter out None values as they are not accepted by the form-urlencoded format.
+        api_payload_filtered = {k: v for k, v in api_payload.items() if v is not None}
+
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, headers=HEADERS, data=api_payload_filtered)
+            response.raise_for_status()
+            data = response.json()
+            if data.get("code") != 0:
+                raise HTTPException(status_code=500, detail=f"DS API error (start-process-instance): {data.get('msg')}")
+            
+            return {"message": "Workflow execution started successfully.", "data": data.get("data")}
+
+    except httpx.RequestError as e:
+        logger.error(f"Could not connect to DolphinScheduler: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail=f"Could not connect to DolphinScheduler: {e}")
+    except Exception as e:
+        if isinstance(e, HTTPException):
+            raise e
+        logger.error(f"Error executing workflow: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))

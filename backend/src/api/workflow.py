@@ -12,6 +12,8 @@ from ..services import git_service, ds_service, file_service
 from .ds import get_workflows as get_ds_workflows
 from cron_descriptor import get_description
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
+from typing import Optional
 
 load_dotenv()
 
@@ -32,6 +34,13 @@ class RestoreWorkflowPayload(BaseModel):
 class RevertWorkflowPayload(BaseModel):
     workflow_uuid: str
     commit_hash: str
+
+class ExecuteWorkflowPayload(BaseModel):
+    isBackfill: bool
+    startDate: Optional[str] = None
+    endDate: Optional[str] = None
+    runMode: Optional[str] = Field(default='serial', pattern='^(serial|parallel)$')
+    runOrder: Optional[str] = Field(default='desc', pattern='^(asc|desc)$')
 
 def get_db():
     db = create_db_connection()
@@ -368,19 +377,27 @@ async def restore_workflow_endpoint(payload: RestoreWorkflowPayload, db: Session
         if not workflow_name:
             raise HTTPException(status_code=500, detail="Restored file is missing a 'name'.")
 
-        # If the restored file has no UUID, assign a new one.
+        # If the restored file has no UUID, assign a new one and rename the file.
         if not workflow_uuid:
-            logger.info(f"Restored file '{payload.filename}' has no UUID. Assigning a new one.")
+            logger.info(f"Restored file '{payload.filename}' has no UUID. Assigning new UUID and renaming.")
+            
+            # a. Generate new UUID and define new filename
             workflow_uuid = str(uuid.uuid4())
             data['workflow']['uuid'] = workflow_uuid
-            
-            # Write the content with the new UUID back to the file
-            with open(file_path, 'w', encoding='utf-8') as f:
-                yaml.dump(data, f)
-            
-            # Commit this change immediately
-            git_service.git_commit(payload.filename, f"Assign UUID to restored workflow: {workflow_name}")
+            new_filename = f"{workflow_uuid}.yaml"
+            new_file_path = os.path.join(WORKFLOW_REPO_DIR, new_filename)
 
+            # b. Write the updated data to the new file
+            with open(new_file_path, 'w', encoding='utf-8') as f:
+                yaml.dump(data, f)
+
+            # c. Delete the old file
+            os.remove(file_path)
+
+            # d. Commit the deletion of the old file and the creation of the new one
+            git_service.git_commit(payload.filename, f"Delete old named workflow: {payload.filename}")
+            git_service.git_commit(new_filename, f"Create UUID-based file for restored workflow: {workflow_name}")
+        
         # Check if a workflow with this UUID or name already exists to avoid conflicts.
         existing_by_uuid = db.query(Workflow).filter(Workflow.uuid == workflow_uuid).first()
         existing_by_name = db.query(Workflow).filter(Workflow.name == workflow_name).first()
@@ -414,6 +431,31 @@ async def revert_workflow_endpoint(payload: RevertWorkflowPayload):
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Could not revert workflow: {e}")
+
+@router.post("/api/workflow/{workflow_uuid}/execute")
+async def execute_workflow_endpoint(workflow_uuid: str, payload: ExecuteWorkflowPayload, db: Session = Depends(get_db)):
+    try:
+        db_workflow = db.query(Workflow).filter(Workflow.uuid == workflow_uuid).first()
+        if not db_workflow:
+            raise HTTPException(status_code=404, detail="Workflow not found in database.")
+
+        # We need to find the corresponding projectCode and workflowCode from DS
+        # This assumes the local name and DS name are in sync.
+        ds_workflows = await get_ds_workflows()
+        ds_workflow = next((wf for wf in ds_workflows if wf.get('name') == db_workflow.name), None)
+
+        if not ds_workflow or not ds_workflow.get('projectCode') or not ds_workflow.get('code'):
+            raise HTTPException(status_code=404, detail="Could not find a corresponding online workflow in DolphinScheduler.")
+
+        project_code = ds_workflow['projectCode']
+        workflow_code = ds_workflow['code']
+
+        return await ds_service.execute_workflow(project_code, workflow_code, payload.dict())
+    except Exception as e:
+        logger.error(f"Error executing workflow {workflow_uuid}: {e}", exc_info=True)
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Could not execute workflow: {e}")
 
 @router.get("/api/workflow/content/{commit_hash}/{filename}")
 async def get_workflow_content_endpoint(commit_hash: str, filename: str):

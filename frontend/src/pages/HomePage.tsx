@@ -8,6 +8,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { Workflow } from '../types';
 import api from '../api';
 import RestoreWorkflowModal from '../components/RestoreWorkflowModal';
+import BackfillModal from '../components/BackfillModal';
 
 const { Title } = Typography;
 
@@ -52,6 +53,8 @@ const HomePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+  const [isBackfillModalOpen, setIsBackfillModalOpen] = useState(false);
+  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
 
   const fetchWorkflows = useCallback(async () => {
     setLoading(true);
@@ -101,17 +104,10 @@ const HomePage: React.FC = () => {
     }
   }, [fetchWorkflows, message]);
 
-  const handleExecute = useCallback(async (record: Workflow) => {
-    try {
-      await api.post(`/api/ds/execute/${record.projectCode}/${record.code}`, {
-        scheduleTime: ''
-      });
-      message.success('工作流执行成功启动。');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      message.error(errorMessage);
-    }
-  }, [message]);
+  const handleExecute = useCallback((record: Workflow) => {
+    setSelectedWorkflow(record);
+    setIsBackfillModalOpen(true);
+  }, []);
 
   const handleOnline = useCallback(async (record: Workflow) => {
     try {
@@ -213,6 +209,15 @@ const HomePage: React.FC = () => {
         onCancel={() => setIsRestoreModalOpen(false)}
         onRestored={() => {
           setIsRestoreModalOpen(false);
+          fetchWorkflows();
+        }}
+      />
+      <BackfillModal
+        open={isBackfillModalOpen}
+        workflow={selectedWorkflow}
+        onCancel={() => setIsBackfillModalOpen(false)}
+        onSuccess={() => {
+          setIsBackfillModalOpen(false);
           fetchWorkflows();
         }}
       />
