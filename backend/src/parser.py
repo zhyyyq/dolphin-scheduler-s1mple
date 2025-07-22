@@ -1,4 +1,5 @@
 import yaml
+import json
 from .core.logger import logger
 
 def parse_workflow(content: str):
@@ -22,12 +23,12 @@ def parse_workflow(content: str):
 
             # Per user's simplified design:
             # If a task is Http and has a list of http_params,
-            # convert that list into a compact YAML string.
+            # convert that list into a compact JSON string.
             # This string will be passed to the frontend and back, preserving the format.
             if parsed_task.get('task_type') == 'Http' and isinstance(parsed_task.get('http_params'), list):
                 http_params_list = parsed_task.get('http_params', [])
-                # Dump the list to a compact, inline YAML string
-                parsed_task['http_params'] = yaml.dump(http_params_list, default_flow_style=True).strip()
+                # Dump the list to a compact, inline JSON string
+                parsed_task['http_params'] = json.dumps(http_params_list)
 
             if 'deps' not in parsed_task:
                 parsed_task['deps'] = []
