@@ -1,27 +1,18 @@
 import React from 'react';
-import { Input } from 'antd';
+import { Form, Input } from 'antd';
 
-interface ShellTaskEditorProps {
-  currentNode: any;
-  nodeCommand: string;
-  onNodeCommandChange: (command: string) => void;
-}
+const { TextArea } = Input;
 
-export const ShellTaskEditor: React.FC<ShellTaskEditorProps> = ({
-  currentNode,
-  nodeCommand,
-  onNodeCommandChange,
-}) => {
-  const data = currentNode.getData();
-
+const ShellTaskEditor: React.FC = () => {
   return (
-    <>
-      <p>{data.type === 'PYTHON' ? '定义:' : '命令:'}</p>
-      <Input.TextArea value={nodeCommand} onChange={e => onNodeCommandChange(e.target.value)} rows={4} />
-      <p>CPU 配额:</p>
-      <Input type="number" value={data.cpu_quota} onChange={e => currentNode.setData({ ...data, cpu_quota: Number(e.target.value) })} />
-      <p>最大内存 (MB):</p>
-      <Input type="number" value={data.memory_max} onChange={e => currentNode.setData({ ...data, memory_max: Number(e.target.value) })} />
-    </>
+    <Form.Item
+      label="命令"
+      name="command"
+      rules={[{ required: true, message: '请输入 Shell 命令' }]}
+    >
+      <TextArea rows={10} placeholder="请输入 Shell 命令" />
+    </Form.Item>
   );
 };
+
+export default ShellTaskEditor;

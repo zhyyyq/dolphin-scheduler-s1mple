@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Modal, Input, Form } from 'antd';
 import { Task } from '../types';
 import SqlTaskEditor from './tasks/SqlTaskEditor';
+import ShellTaskEditor from './tasks/ShellTaskEditor';
 // Import other specific editors as needed
 
 interface EditTaskModalProps {
@@ -36,6 +37,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
     switch (task.task_type) {
       case 'Sql':
         return <SqlTaskEditor />;
+      case 'Shell':
+        return <ShellTaskEditor />;
       // Add cases for other task types here
       default:
         return <p>此任务类型没有可用的自定义编辑器。</p>;
