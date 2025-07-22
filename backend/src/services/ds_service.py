@@ -7,7 +7,7 @@ import tempfile
 from ruamel.yaml import YAML
 from dotenv import load_dotenv
 from ..core.logger import logger
-from .git_service import git_commit, find_workflow_file_by_name
+from . import git_service
 from ..core.path_utils import find_resource_file
 
 load_dotenv()
@@ -186,23 +186,49 @@ async def submit_workflow_to_ds(filename: str):
             if tmp_path and os.path.exists(tmp_path):
                 os.remove(tmp_path)
 
-        # Step 2: Now that DS is updated, update the original file cleanly.
+        # Step 2: Now that DS is updated, update the original file with the online version marker.
         try:
-            yaml = YAML(typ='rt')
+            # First, get the commit hash of the version we just pushed
+            online_commit_hash = git_service.get_latest_commit_for_file(filename)
+
+            if not online_commit_hash:
+                raise Exception("Could not retrieve the latest commit hash for the online version.")
+
+            # Read the file content
             with open(file_path, 'r', encoding='utf-8') as f:
-                data = yaml.load(f)
+                content = f.read()
             
-            if 'workflow' in data:
-                data['workflow']['status'] = 'online'
+            # Remove any old version marker
+            content = re.sub(r'# online-version: .*\n', '', content)
             
+            # Prepend the new version marker
+            version_comment = f"# online-version: {online_commit_hash}\n"
+            new_content = version_comment + content
+
+            # Also update the local_status in the YAML structure itself
+            yaml = YAML(typ='rt')
+            data = yaml.load(new_content)
+            data['workflow']['local_status'] = 'synced'
+            
+            from io import StringIO
+            string_stream = StringIO()
+            yaml.dump(data, string_stream)
+            final_content = string_stream.getvalue()
+
+            # Write the final content back to the file
             with open(file_path, 'w', encoding='utf-8') as f:
-                yaml.dump(data, f)
+                f.write(final_content)
             
-            logger.info(f"Updated status to 'online' for workflow {filename}")
-            git_commit(file_path, f"Online workflow: {filename}")
+            # Commit this change
+            commit_message = f"Update online-version marker for {filename} to {online_commit_hash[:7]}"
+            git_service.git_commit(file_path, commit_message)
+            logger.info(f"Successfully updated online-version marker for {filename}")
+
         except Exception as e:
-            logger.error(f"Failed to update and commit 'online' status for {filename}: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Failed to update YAML status: {e}")
+            logger.error(f"Failed to update and commit 'online-version' marker for {filename}: {e}", exc_info=True)
+            # This is a non-critical error in the context of the submission itself,
+            # but we should probably let the user know something went wrong with the tracking.
+            raise HTTPException(status_code=500, detail=f"Failed to update version marker: {e}")
 
         return {"message": f"Workflow '{filename}' submitted successfully."}
     except subprocess.CalledProcessError as e:

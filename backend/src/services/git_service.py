@@ -5,6 +5,22 @@ from ..core.logger import logger
 
 WORKFLOW_REPO_DIR = os.getenv("WORKFLOW_REPO_DIR")
 
+def get_latest_commit_for_file(filename: str):
+    """Gets the latest commit hash for a specific file."""
+    try:
+        result = subprocess.run(
+            ["git", "log", "-1", "--pretty=format:%H", "--", filename],
+            cwd=WORKFLOW_REPO_DIR,
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding='utf-8'
+        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to get latest commit for {filename}: {e.stderr}")
+        return None
+
 def git_commit(file_path, message):
     """Commits a file to the git repository."""
     try:

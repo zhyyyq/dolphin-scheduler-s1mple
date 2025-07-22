@@ -21,11 +21,16 @@ interface ActionButtonsProps {
 const ActionButtons: React.FC<ActionButtonsProps> = ({ record, onDelete, onSubmit, onExecute, onOnline }) => {
   const workflowUuid = record.uuid;
 
+  const isModified = record.releaseState === 'ONLINE' && record.local_status === 'modified';
+
   return (
     <Space size="middle">
-      {record.releaseState === 'ONLINE' && (
+      {isModified ? (
+        <Button type="primary" onClick={() => onOnline(record)}>同步</Button>
+      ) : record.releaseState === 'ONLINE' ? (
         <Button type="primary" onClick={() => onExecute(record)}>立即执行</Button>
-      )}
+      ) : null}
+      
       {record.releaseState === 'UNSUBMITTED' && (
         <Button type="primary" onClick={() => onSubmit(record)}>提交</Button>
       )}
@@ -137,7 +142,11 @@ const HomePage: React.FC = () => {
       title: '状态',
       dataIndex: 'releaseState',
       key: 'releaseState',
-      render: (state: Workflow['releaseState']) => {
+      render: (state: Workflow['releaseState'], record: Workflow) => {
+        if (state === 'ONLINE' && record.local_status === 'modified') {
+          return <Tag color="processing">待更新</Tag>;
+        }
+
         let color = 'default';
         let text = state;
         if (state === 'ONLINE') {

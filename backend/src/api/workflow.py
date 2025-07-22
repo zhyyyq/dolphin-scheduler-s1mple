@@ -85,18 +85,26 @@ async def save_workflow_yaml(workflow: WorkflowYaml, db: Session = Depends(get_d
         with open(file_path, "w", encoding="utf-8") as buffer:
             buffer.write(final_content)
         
-        git_service.git_commit(filename, commit_message)
-
-        # If this is an update to an existing workflow, try to re-submit it to DS
+        # The logic for auto-submission has been removed based on user feedback.
+        # The new flow requires the user to explicitly sync changes for online workflows.
+        # We will add a status field to the YAML to track this.
         if not is_create:
-            try:
-                logger.info(f"Workflow {workflow_name} is being updated, attempting to re-submit to DolphinScheduler.")
-                await ds_service.submit_workflow_to_ds(filename)
-                logger.info(f"Successfully re-submitted workflow {filename} to DolphinScheduler.")
-            except Exception as e:
-                # This is not a critical error, as the workflow might not have been online.
-                # We just log a warning. The user can manually put it online if needed.
-                logger.warning(f"Failed to automatically re-submit workflow {filename} to DolphinScheduler after update. Error: {e}")
+            # When updating, we mark the local status as 'modified'
+            # The frontend will use this to show a 'Sync' button.
+            data['workflow']['local_status'] = 'modified'
+        else:
+            # For new workflows, the status is 'new'
+            data['workflow']['local_status'] = 'new'
+        
+        from io import StringIO
+        string_stream = StringIO()
+        yaml.dump(data, string_stream)
+        final_content = string_stream.getvalue()
+
+        with open(file_path, "w", encoding="utf-8") as buffer:
+            buffer.write(final_content)
+
+        git_service.git_commit(filename, commit_message)
 
         return {
             "message": "Workflow saved successfully.",
@@ -123,12 +131,16 @@ async def get_local_workflows(db: Session = Depends(get_db)):
             file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
             mod_time = None
             schedule = None
+            local_status = None
 
             if os.path.exists(file_path):
                 mod_time = os.path.getmtime(file_path)
                 with open(file_path, 'r', encoding='utf-8') as f:
                     data = yaml.load(f)
-                    schedule = data.get('workflow', {}).get('schedule')
+                    workflow_meta = data.get('workflow', {})
+                    schedule = workflow_meta.get('schedule')
+                    local_status = workflow_meta.get('local_status', 'synced')
+
 
             local_files.append({
                 "name": wf.name,
@@ -139,6 +151,7 @@ async def get_local_workflows(db: Session = Depends(get_db)):
                 "code": filename,
                 "isLocal": True,
                 "schedule": schedule,
+                "local_status": local_status,
             })
         return local_files
     except Exception as e:
