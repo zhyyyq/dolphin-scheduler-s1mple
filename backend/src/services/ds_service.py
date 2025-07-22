@@ -19,17 +19,24 @@ HEADERS = {"token": TOKEN}
 
 async def get_environments():
     """Gets the list of environments from DolphinScheduler."""
-    url = f"{DS_URL.rstrip('/')}/environment/query-environment-list-paging"
+    url = f"{DS_URL.rstrip('/')}/environment/list-paging"
     try:
         async with httpx.AsyncClient() as client:
-            # Assuming we want all environments, so using a large page size.
-            # DS might have a max limit, but 1000 should be sufficient for most cases.
             params = {"pageNo": 1, "pageSize": 1000, "searchVal": ""}
             response = await client.get(url, headers=HEADERS, params=params)
             response.raise_for_status()
-            data = response.json()
+            
+            # Add detailed logging for the raw response
+            logger.debug(f"Raw response from get_environments at URL {url}: {response.text}")
+
+            try:
+                data = response.json()
+            except Exception as json_error:
+                logger.error(f"Failed to parse JSON from get_environments. Response text: {response.text}", exc_info=True)
+                raise HTTPException(status_code=500, detail=f"Failed to parse JSON from DS API. Response: {response.text}")
+
             if data.get("code") != 0:
-                raise HTTPException(status_code=500, detail=f"DS API error (query-environment-list-paging): {data.get('msg')}")
+                raise HTTPException(status_code=500, detail=f"DS API error (list-paging): {data.get('msg')}")
             return data.get("data", {}).get("totalList", [])
     except httpx.RequestError as e:
         logger.error(f"Could not connect to DolphinScheduler to get environments: {e}", exc_info=True)
