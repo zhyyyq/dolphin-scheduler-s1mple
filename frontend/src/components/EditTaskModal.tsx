@@ -5,6 +5,8 @@ import SqlTaskEditor from './tasks/SqlTaskEditor';
 import ShellTaskEditor from './tasks/ShellTaskEditor';
 import SwitchTaskEditor from './tasks/SwitchTaskEditor';
 import SubWorkflowTaskEditor from './tasks/SubWorkflowTaskEditor';
+import DefaultTaskEditor from './tasks/DefaultTaskEditor';
+import yaml from 'js-yaml';
 // Import other specific editors as needed
 
 interface EditTaskModalProps {
@@ -29,7 +31,23 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
 
   const handleOk = () => {
     form.validateFields().then(values => {
-      onSave({ ...task, ...values });
+      let updatedTask = { ...task, ...values };
+
+      if (values.yaml_content) {
+        try {
+          const yamlData = yaml.load(values.yaml_content) as object;
+          // Merge the yaml data, ensuring name from the main form is preserved
+          updatedTask = { ...task, name: values.name, ...yamlData };
+        } catch (e) {
+          console.error("Error parsing YAML:", e);
+          // Optionally, show an error message to the user
+          return;
+        }
+      }
+      
+      delete updatedTask.yaml_content; // Clean up the temporary field
+      onSave(updatedTask);
+
     }).catch(info => {
       console.log('Validate Failed:', info);
     });
@@ -47,7 +65,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         return <SubWorkflowTaskEditor />;
       // Add cases for other task types here
       default:
-        return <p>此任务类型没有可用的自定义编辑器。</p>;
+        return <DefaultTaskEditor initialValues={task} />;
     }
   };
 
