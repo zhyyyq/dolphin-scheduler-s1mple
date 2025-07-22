@@ -5,6 +5,7 @@ import SqlTaskEditor from './tasks/SqlTaskEditor';
 import ShellTaskEditor from './tasks/ShellTaskEditor';
 import SwitchTaskEditor from './tasks/SwitchTaskEditor';
 import SubWorkflowTaskEditor from './tasks/SubWorkflowTaskEditor';
+import SparkTaskEditor from './tasks/SparkTaskEditor';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
 // Import other specific editors as needed
@@ -63,6 +64,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         return <SwitchTaskEditor />;
       case 'SubWorkflow':
         return <SubWorkflowTaskEditor />;
+      case 'Spark':
+        return <SparkTaskEditor />;
       // Add cases for other task types here
       default:
         return <DefaultTaskEditor initialValues={task} form={form} />;
