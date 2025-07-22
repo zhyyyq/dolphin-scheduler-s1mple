@@ -20,33 +20,6 @@ workflow:
 
 # Define the tasks within the workflow
 tasks:
-  - name: dependent
-    task_type: Dependent
-    denpendence:
-    op: and
-    groups:
-      - op: or
-        groups:
-          - project_name: pydolphin
-            workflow_name: task_dependent_external
-            dependent_task_name: task_1
-
-          - project_name: pydolphin
-            workflow_name: task_dependent_external
-            dependent_task_name: task_2
-
-      - op: and
-        groups:
-          - project_name: pydolphin
-            workflow_name: task_dependent_external
-            dependent_task_name: task_1
-            dependent_date: LAST_WEDNESDAY 
-
-          - project_name: pydolphin
-            workflow_name: task_dependent_external
-            dependent_task_name: task_2
-            dependent_date: last24Hours 
-
   - name: dependent_var
     task_type: Dependent
     denpendence:
@@ -73,4 +46,4 @@ tasks:
           - project_name: ${CONFIG.WORKFLOW_PROJECT} 
             workflow_name: $WORKFLOW{"task_dependent_external"} 
             dependent_task_name: task_2
-            dependent_date: last24Hours
+            dependent_date: last24Hours 

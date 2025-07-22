@@ -178,6 +178,16 @@ async def submit_workflow_to_ds(filename: str):
                 for task in data['tasks']:
                     await resolve_workflow_placeholders_recursive(task)
 
+            # "Flatten" Dependent tasks for pydolphinscheduler
+            if 'tasks' in data and isinstance(data['tasks'], list):
+                for task in data['tasks']:
+                    if task.get('task_type') == 'Dependent' and 'denpendence' in task:
+                        logger.info(f"Flattening Dependent task: {task.get('name')}")
+                        denpendence_data = task.pop('denpendence')
+                        if isinstance(denpendence_data, dict):
+                            task['op'] = denpendence_data.get('op')
+                            task['groups'] = denpendence_data.get('groups')
+
             if 'workflow' in data and 'schedule' not in data['workflow']:
                 data['workflow']['schedule'] = None
 
