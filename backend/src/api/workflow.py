@@ -62,9 +62,12 @@ async def save_workflow_yaml(workflow: WorkflowYaml, db: Session = Depends(get_d
             for task in data['tasks']:
                 if isinstance(task, dict) and task.get('task_type') == 'Http':
                     if 'http_params' in task and isinstance(task['http_params'], list):
-                        # Convert the list to a CommentedSeq and set flow style
+                        # Convert the list to a CommentedSeq
                         cs = CommentedSeq(task['http_params'])
-                        cs.fa.set_flow_style()
+                        # Set flow style for each item in the sequence, but not the sequence itself
+                        for item in cs:
+                            if isinstance(item, CommentedMap):
+                                item.fa.set_flow_style()
                         task['http_params'] = cs
         
         if 'workflow' not in data:

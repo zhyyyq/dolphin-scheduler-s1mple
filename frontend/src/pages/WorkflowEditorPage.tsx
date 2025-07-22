@@ -131,7 +131,8 @@ const WorkflowEditorPage: React.FC = () => {
         if (taskNode instanceof yaml.YAMLMap) {
           const httpParamsNode = taskNode.get('http_params', true);
           if (httpParamsNode instanceof yaml.YAMLSeq && httpParamsNode.items) {
-            httpParamsNode.flow = true; // Set flow style on the http_params sequence itself
+            // Do not set flow on the sequence itself.
+            // httpParamsNode.flow = true; 
             httpParamsNode.items.forEach(item => {
               if (item instanceof yaml.YAMLMap) {
                 item.flow = true; // Set flow style on each object within the sequence

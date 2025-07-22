@@ -5,10 +5,19 @@ import re
 import subprocess
 import tempfile
 from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap, CommentedSeq
 from dotenv import load_dotenv
 from ..core.logger import logger
 from . import git_service, file_service
 from ..core.path_utils import find_resource_file
+
+def convert_to_standard_types(item):
+    """Recursively converts ruamel.yaml specific types to standard Python types."""
+    if isinstance(item, CommentedMap):
+        return {k: convert_to_standard_types(v) for k, v in item.items()}
+    if isinstance(item, CommentedSeq):
+        return [convert_to_standard_types(i) for i in item]
+    return item
 
 load_dotenv()
 
@@ -169,6 +178,9 @@ async def submit_workflow_to_ds(filename: str):
             yaml.preserve_quotes = True
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = yaml.load(f)
+            
+            # Convert ruamel.yaml types to standard Python types before processing
+            data = convert_to_standard_types(data)
 
             # Iterate through tasks and resolve file references in specific fields
             if 'tasks' in data and isinstance(data['tasks'], list):
