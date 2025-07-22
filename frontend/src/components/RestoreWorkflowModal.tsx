@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Modal, Table, Button, Spin, Alert, App as AntApp, Space } from 'antd';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Modal, Table, Button, Spin, Alert, App as AntApp, Space, Input } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-yaml';
@@ -27,6 +27,7 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
   const [viewingContent, setViewingContent] = useState('');
   const [viewingTitle, setViewingTitle] = useState('');
   const [viewLoading, setViewLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchDeletedWorkflows = useCallback(async () => {
     if (!open) return;
@@ -46,6 +47,16 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
   useEffect(() => {
     fetchDeletedWorkflows();
   }, [fetchDeletedWorkflows]);
+
+  const filteredWorkflows = useMemo(() => {
+    if (!searchTerm) {
+      return deletedWorkflows;
+    }
+    return deletedWorkflows.filter(wf =>
+      wf.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      wf.filename.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [deletedWorkflows, searchTerm]);
 
   const handleRestore = async (record: DeletedWorkflow) => {
     try {
@@ -116,6 +127,11 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
       footer={null}
       width={800}
     >
+      <Input.Search
+        placeholder="按名称或文件名搜索"
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{ marginBottom: 16 }}
+      />
       {loading ? (
         <Spin />
       ) : error ? (
@@ -123,9 +139,9 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
       ) : (
         <Table
           columns={columns}
-          dataSource={deletedWorkflows}
+          dataSource={filteredWorkflows}
           rowKey="filename"
-          pagination={false}
+          pagination={{ pageSize: 5 }}
         />
       )}
       <Modal

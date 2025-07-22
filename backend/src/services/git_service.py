@@ -244,11 +244,25 @@ def find_workflow_file_by_name(name_to_find: str):
     return None
 
 def get_workflow_content_at_commit(filename: str, commit_hash: str):
-    """Gets the content of a workflow file at a specific commit."""
+    """Gets the content of a workflow file at a specific commit, typically the one before it was deleted."""
     try:
-        # We need the content from the commit *before* it was deleted
+        # The commit_hash provided is the one *where the deletion happened*.
+        # So, we need to look at the parent of that commit to find the file's content.
         commit_ref = f"{commit_hash}^"
         
+        # Verify the file exists at that parent commit
+        verify_proc = subprocess.run(
+            ["git", "cat-file", "-e", f"{commit_ref}:{filename}"],
+            cwd=WORKFLOW_REPO_DIR,
+            capture_output=True
+        )
+        
+        if verify_proc.returncode != 0:
+            # This can happen in rare cases, e.g., the file was created and deleted in the same commit (an empty commit).
+            # Or if the commit has no parent (initial commit).
+            logger.warning(f"Could not find file '{filename}' in parent of commit '{commit_hash}'. Trying the commit itself.")
+            commit_ref = commit_hash
+
         content_result = subprocess.run(
             ["git", "show", f"{commit_ref}:{filename}"],
             cwd=WORKFLOW_REPO_DIR,
@@ -259,8 +273,8 @@ def get_workflow_content_at_commit(filename: str, commit_hash: str):
         )
         return {"content": content_result.stdout}
     except subprocess.CalledProcessError as e:
-        logger.error(f"Git show command failed for {filename} at {commit_ref}: {e.stderr}")
-        raise
+        logger.error(f"Git show command failed for {filename} at commit {commit_hash}: {e.stderr}")
+        raise FileNotFoundError(f"Could not retrieve content for '{filename}' at the specified commit.")
     except Exception as e:
         logger.error(f"An unexpected error occurred while fetching content for {filename}: {e}", exc_info=True)
         raise
