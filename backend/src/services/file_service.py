@@ -48,9 +48,7 @@ def save_uploaded_file(file: UploadFile):
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # Return the path relative to the repo, as this is how it should be referenced.
-        relative_path = os.path.relpath(file_path, PROJECT_ROOT).replace('\\', '/')
-        return {"filename": filename, "path": relative_path}
+        return {"filename": filename, "path": file_path}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Could not save file: {e}")
