@@ -164,7 +164,8 @@ async def submit_workflow_to_ds(filename: str):
 
         tmp_path = None
         try:
-            yaml = YAML(typ='rt')
+            yaml = YAML()
+            yaml.indent(mapping=2, sequence=4, offset=2)
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = yaml.load(f)
 
@@ -177,7 +178,6 @@ async def submit_workflow_to_ds(filename: str):
             if 'tasks' in data and isinstance(data['tasks'], list):
                 for task in data['tasks']:
                     await resolve_workflow_placeholders_recursive(task)
-
 
             if 'workflow' in data and 'schedule' not in data['workflow']:
                 data['workflow']['schedule'] = None

@@ -53,6 +53,7 @@ def get_db():
 async def save_workflow_yaml(workflow: WorkflowYaml, db: Session = Depends(get_db)):
     try:
         yaml = YAML()
+        yaml.indent(mapping=2, sequence=4, offset=2)
         data = yaml.load(workflow.content)
         
         if 'workflow' not in data:
