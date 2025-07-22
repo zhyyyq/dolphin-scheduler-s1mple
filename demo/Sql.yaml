@@ -36,7 +36,7 @@ tasks:
   - name: task_file
     task_type: Sql
     datasource_name: "db"
-    sql: $FILE{"demo/example_sql.sql"}
+    sql: $FILE{"example_sql.sql"}
 
   # Or you can define task "task_union" it with one line
   - { "task_type": "Sql", "name": "task_base_one_line", "datasource_name": "db", "sql": "select id from version where id=1;"}
