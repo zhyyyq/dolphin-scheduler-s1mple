@@ -22,6 +22,8 @@ import MLFlowProjectsCustomTaskEditor from './tasks/MLFlowProjectsCustomTaskEdit
 import MLFlowProjectsAutoMLTaskEditor from './tasks/MLFlowProjectsAutoMLTaskEditor';
 import MLflowModelsTaskEditor from './tasks/MLflowModelsTaskEditor';
 import MLFlowProjectsBasicAlgorithmTaskEditor from './tasks/MLFlowProjectsBasicAlgorithmTaskEditor';
+import OpenMLDBTaskEditor from './tasks/OpenMLDBTaskEditor';
+import ProcedureTaskEditor from './tasks/ProcedureTaskEditor';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
 // Import other specific editors as needed
@@ -164,6 +166,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         return <MLflowModelsTaskEditor />;
       case 'MLFlowProjectsBasicAlgorithm':
         return <MLFlowProjectsBasicAlgorithmTaskEditor />;
+      case 'OpenMLDB':
+        return <OpenMLDBTaskEditor />;
+      case 'Procedure':
+        return <ProcedureTaskEditor />;
       // Add cases for other task types here
       default:
         return <DefaultTaskEditor initialValues={task} form={form} />;
