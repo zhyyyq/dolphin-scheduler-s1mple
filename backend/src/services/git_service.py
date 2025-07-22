@@ -3,7 +3,7 @@ import os
 import yaml
 from ..core.logger import logger
 
-WORKFLOW_REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'workflow_repo')).replace('\\', '/')
+WORKFLOW_REPO_DIR = os.getenv("WORKFLOW_REPO_DIR")
 
 def git_commit(file_path, message):
     """Commits a file to the git repository."""

@@ -10,10 +10,13 @@ from .api.ds import router as ds_router
 from .api.file import router as file_router
 from .core.logger import setup_logger, logger
 from .services import git_service, process_service, file_service, ds_service
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Define project root and workflow repo directory consistently
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-WORKFLOW_REPO_DIR = os.path.join(BACKEND_DIR, "workflow_repo")
+WORKFLOW_REPO_DIR = os.getenv("WORKFLOW_REPO_DIR")
 setup_logger()
 app = FastAPI()
 

@@ -11,8 +11,12 @@ from ..core.logger import logger
 from ..services import git_service, ds_service, file_service
 from .ds import get_workflows as get_ds_workflows
 from cron_descriptor import get_description
+from dotenv import load_dotenv
 
-WORKFLOW_REPO_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'workflow_repo'))
+load_dotenv()
+
+WORKFLOW_REPO_DIR = os.getenv("WORKFLOW_REPO_DIR")
+
 
 router = APIRouter()
 

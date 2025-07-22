@@ -4,8 +4,7 @@ from fastapi import UploadFile, HTTPException
 
 # Use a dedicated directory for user-uploaded reference files.
 # This keeps them separate from the demo files.
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-UPLOAD_DIR = os.path.join(PROJECT_ROOT, 'workflow_repo', 'resources')
+UPLOAD_DIR = os.path.join(os.getenv("WORKFLOW_REPO_DIR"), 'resources')
 
 def list_uploaded_files():
     """Lists all files in the designated resource directory."""
