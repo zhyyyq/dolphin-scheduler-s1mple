@@ -25,6 +25,10 @@ class WorkflowYaml(BaseModel):
     content: str
     original_filename: str = None
 
+class RestoreWorkflowPayload(BaseModel):
+    filename: str
+    commit_hash: str
+
 def get_db():
     db = create_db_connection()
     try:
@@ -332,3 +336,52 @@ async def delete_workflow(
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Could not delete workflow: {e}")
+
+@router.get("/api/workflows/deleted")
+async def get_deleted_workflows_endpoint():
+    try:
+        return git_service.get_deleted_workflows()
+    except Exception as e:
+        logger.error(f"Error fetching deleted workflows: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch deleted workflows.")
+
+@router.post("/api/workflow/restore")
+async def restore_workflow_endpoint(payload: RestoreWorkflowPayload, db: Session = Depends(get_db)):
+    try:
+        result = git_service.restore_workflow(payload.filename, payload.commit_hash)
+        
+        # After restoring the file, we need to create a corresponding entry in our database.
+        # We parse the restored file to get its name and uuid.
+        file_path = os.path.join(WORKFLOW_REPO_DIR, payload.filename)
+        with open(file_path, 'r', encoding='utf-8') as f:
+            yaml = YAML()
+            data = yaml.load(f)
+            workflow_meta = data.get('workflow', {})
+            workflow_name = workflow_meta.get('name')
+            workflow_uuid = workflow_meta.get('uuid')
+
+            if not workflow_name or not workflow_uuid:
+                raise HTTPException(status_code=500, detail="Restored file is missing 'name' or 'uuid'.")
+
+            # Check if a workflow with this UUID or name already exists to avoid conflicts.
+            existing_by_uuid = db.query(Workflow).filter(Workflow.uuid == workflow_uuid).first()
+            existing_by_name = db.query(Workflow).filter(Workflow.name == workflow_name).first()
+            if existing_by_uuid or existing_by_name:
+                # If it already exists, we don't need to add it again.
+                # This can happen if only the file was deleted but not the DB entry.
+                logger.warning(f"Workflow '{workflow_name}' (uuid: {workflow_uuid}) already exists in DB. Skipping DB entry creation.")
+            else:
+                new_workflow = Workflow(uuid=workflow_uuid, name=workflow_name)
+                db.add(new_workflow)
+                db.commit()
+                logger.info(f"Created DB entry for restored workflow '{workflow_name}'.")
+
+        return result
+    except FileExistsError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error restoring workflow: {e}", exc_info=True)
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Could not restore workflow: {e}")
