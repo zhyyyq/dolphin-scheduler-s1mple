@@ -29,6 +29,10 @@ class RestoreWorkflowPayload(BaseModel):
     filename: str
     commit_hash: str
 
+class RevertWorkflowPayload(BaseModel):
+    workflow_uuid: str
+    commit_hash: str
+
 def get_db():
     db = create_db_connection()
     try:
@@ -385,3 +389,14 @@ async def restore_workflow_endpoint(payload: RestoreWorkflowPayload, db: Session
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Could not restore workflow: {e}")
+
+@router.post("/api/workflow/revert")
+async def revert_workflow_endpoint(payload: RevertWorkflowPayload):
+    try:
+        filename = f"{payload.workflow_uuid}.yaml"
+        return git_service.revert_to_commit(filename, payload.commit_hash)
+    except Exception as e:
+        logger.error(f"Error reverting workflow {payload.workflow_uuid} to {payload.commit_hash}: {e}", exc_info=True)
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=f"Could not revert workflow: {e}")

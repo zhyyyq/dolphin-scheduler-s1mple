@@ -49,7 +49,6 @@ const DiffViewer: React.FC<{ commit: Commit; workflowUuid: string }> = ({ commit
 const WorkflowHistoryPage: React.FC = () => {
   const { workflow_uuid } = useParams<{ workflow_uuid: string }>();
   const [history, setHistory] = useState<Commit[]>([]);
-  const [deletedWorkflows, setDeletedWorkflows] = useState<DeletedWorkflow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { message } = AntApp.useApp();
@@ -71,28 +70,19 @@ const WorkflowHistoryPage: React.FC = () => {
 
   useEffect(() => {
     fetchHistory();
-    fetchDeletedWorkflows();
   }, [fetchHistory]);
 
-  const fetchDeletedWorkflows = async () => {
+  const handleRevert = async (commit: Commit) => {
+    if (!workflow_uuid) return;
     try {
-      const data = await api.get<DeletedWorkflow[]>('/api/workflows/deleted');
-      setDeletedWorkflows(data);
-    } catch (err) {
-      message.error('Failed to fetch deleted workflows.');
-    }
-  };
-
-  const handleRestore = async (record: DeletedWorkflow) => {
-    try {
-      await api.post('/api/workflow/restore', {
-        filename: record.filename,
-        commit_hash: record.commit_hash,
+      await api.post('/api/workflow/revert', {
+        workflow_uuid: workflow_uuid,
+        commit_hash: commit.hash,
       });
-      message.success(`Workflow '${record.filename}' restored successfully.`);
-      fetchDeletedWorkflows(); // Refresh the list
+      message.success(`成功回退到版本 ${commit.hash.substring(0, 7)}`);
+      fetchHistory(); // Refresh the history
     } catch (error: any) {
-      message.error(`Failed to restore workflow: ${error.message}`);
+      message.error(`回退失败: ${error.message}`);
     }
   };
 
@@ -119,6 +109,15 @@ const WorkflowHistoryPage: React.FC = () => {
       key: 'timestamp',
       render: (timestamp) => new Date(timestamp * 1000).toLocaleString(),
     },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_, record) => (
+        <Button type="primary" onClick={() => handleRevert(record)}>
+          回退到此版本
+        </Button>
+      ),
+    },
   ];
 
   if (loading) {
@@ -128,23 +127,6 @@ const WorkflowHistoryPage: React.FC = () => {
   if (error) {
     return <Alert message="Error" description={error} type="error" showIcon />;
   }
-
-  const deletedColumns: ColumnsType<DeletedWorkflow> = [
-    {
-      title: 'Deleted Workflow',
-      dataIndex: 'filename',
-      key: 'filename',
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      render: (_, record) => (
-        <Button type="primary" onClick={() => handleRestore(record)}>
-          Restore
-        </Button>
-      ),
-    },
-  ];
 
   return (
     <div style={{ padding: '24px', background: '#fff', borderRadius: '8px' }}>
@@ -159,18 +141,6 @@ const WorkflowHistoryPage: React.FC = () => {
           rowExpandable: () => true,
         }}
       />
-      
-      {deletedWorkflows.length > 0 && (
-        <div style={{ marginTop: '48px' }}>
-          <Title level={3} style={{ marginBottom: '24px' }}>Deleted Workflows</Title>
-          <Table
-            columns={deletedColumns}
-            dataSource={deletedWorkflows}
-            rowKey="filename"
-            bordered
-          />
-        </div>
-      )}
     </div>
   );
 };

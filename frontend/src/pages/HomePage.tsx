@@ -7,6 +7,7 @@ import { Link, useLocation } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import { Workflow } from '../types';
 import api from '../api';
+import RestoreWorkflowModal from '../components/RestoreWorkflowModal';
 
 const { Title } = Typography;
 
@@ -50,6 +51,7 @@ const HomePage: React.FC = () => {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
 
   const fetchWorkflows = useCallback(async () => {
     setLoading(true);
@@ -193,15 +195,26 @@ const HomePage: React.FC = () => {
     <div style={{ padding: '24px', background: '#fff', borderRadius: '8px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <Title level={2} style={{ margin: 0 }}>所有工作流</Title>
-        <Link to="/workflow/edit">
-          <Button type="primary">新建工作流</Button>
-        </Link>
+        <Space>
+          <Button onClick={() => setIsRestoreModalOpen(true)}>恢复工作流</Button>
+          <Link to="/workflow/edit">
+            <Button type="primary">新建工作流</Button>
+          </Link>
+        </Space>
       </div>
       <Table 
         columns={columns} 
         dataSource={workflows} 
         rowKey="uuid" 
         bordered
+      />
+      <RestoreWorkflowModal
+        open={isRestoreModalOpen}
+        onCancel={() => setIsRestoreModalOpen(false)}
+        onRestored={() => {
+          setIsRestoreModalOpen(false);
+          fetchWorkflows();
+        }}
       />
     </div>
   );

@@ -5,6 +5,37 @@ from ..core.logger import logger
 
 WORKFLOW_REPO_DIR = os.getenv("WORKFLOW_REPO_DIR")
 
+def revert_to_commit(filename: str, commit_hash: str):
+    """Reverts a file to a specific commit and creates a new commit for the revert."""
+    try:
+        # Get the content of the file at the specified commit
+        result = subprocess.run(
+            ["git", "show", f"{commit_hash}:{filename}"],
+            cwd=WORKFLOW_REPO_DIR,
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding='utf-8'
+        )
+        content = result.stdout
+
+        # Write that content back to the current file
+        file_path = os.path.join(WORKFLOW_REPO_DIR, filename)
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        # Commit the change
+        commit_message = f"Revert {filename} to version {commit_hash[:7]}"
+        git_commit(file_path, commit_message)
+        
+        return {"message": f"Successfully reverted {filename} to {commit_hash[:7]}"}
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Git revert operation failed for {filename} to {commit_hash}: {e.stderr}")
+        raise
+    except Exception as e:
+        logger.error(f"Error reverting workflow: {e}", exc_info=True)
+        raise
+
 def get_latest_commit_for_file(filename: str):
     """Gets the latest commit hash for a specific file."""
     try:
