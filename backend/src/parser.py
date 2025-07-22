@@ -20,13 +20,16 @@ def parse_workflow(content: str):
             # The frontend will handle unifying the type key.
             parsed_task = task_data.copy()
 
-            # if parsed_task.get('task_type') == 'Http' and isinstance(parsed_task.get('http_params'), list):
-            #     http_params_list = parsed_task.get('http_params', [])
-            #     parsed_task['http_params'] = {
-            #         param.get("prop"): param.get("value")
-            #         for param in http_params_list
-            #         if "prop" in param and "value" in param
-            #     }
+            if parsed_task.get('task_type') == 'Http' and isinstance(parsed_task.get('http_params'), list):
+                http_params_list = parsed_task.get('http_params', [])
+                # The original implementation was incorrect, it converted the list to a dict, losing type info.
+                # By removing the conversion, we keep the original list of objects.
+                # This was the initial fix. The following commented-out block is the incorrect code.
+                # parsed_task['http_params'] = {
+                #     param.get("prop"): param.get("value")
+                #     for param in http_params_list
+                #     if "prop" in param and "value" in param
+                # }
 
             if 'deps' not in parsed_task:
                 parsed_task['deps'] = []
