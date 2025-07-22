@@ -16,6 +16,12 @@ import DVCUploadTaskEditor from './tasks/DVCUploadTaskEditor';
 import DVCDownloadTaskEditor from './tasks/DVCDownloadTaskEditor';
 import FlinkTaskEditor from './tasks/FlinkTaskEditor';
 import HttpTaskEditor from './tasks/HttpTaskEditor';
+import K8STaskEditor from './tasks/K8STaskEditor';
+import MapReduceTaskEditor from './tasks/MapReduceTaskEditor';
+import MLFlowProjectsCustomTaskEditor from './tasks/MLFlowProjectsCustomTaskEditor';
+import MLFlowProjectsAutoMLTaskEditor from './tasks/MLFlowProjectsAutoMLTaskEditor';
+import MLflowModelsTaskEditor from './tasks/MLflowModelsTaskEditor';
+import MLFlowProjectsBasicAlgorithmTaskEditor from './tasks/MLFlowProjectsBasicAlgorithmTaskEditor';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
 // Import other specific editors as needed
@@ -146,6 +152,18 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         return <FlinkTaskEditor />;
       case 'Http':
         return <HttpTaskEditor form={form} initialValues={task} />;
+      case 'K8S':
+        return <K8STaskEditor />;
+      case 'MR':
+        return <MapReduceTaskEditor />;
+      case 'MLFlowProjectsCustom':
+        return <MLFlowProjectsCustomTaskEditor />;
+      case 'MLFlowProjectsAutoML':
+        return <MLFlowProjectsAutoMLTaskEditor />;
+      case 'MLflowModels':
+        return <MLflowModelsTaskEditor />;
+      case 'MLFlowProjectsBasicAlgorithm':
+        return <MLFlowProjectsBasicAlgorithmTaskEditor />;
       // Add cases for other task types here
       default:
         return <DefaultTaskEditor initialValues={task} form={form} />;
