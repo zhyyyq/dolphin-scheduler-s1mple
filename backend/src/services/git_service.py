@@ -243,6 +243,28 @@ def find_workflow_file_by_name(name_to_find: str):
                     logger.warning(f"Could not parse {file_path}: {e}")
     return None
 
+def get_workflow_content_at_commit(filename: str, commit_hash: str):
+    """Gets the content of a workflow file at a specific commit."""
+    try:
+        # We need the content from the commit *before* it was deleted
+        commit_ref = f"{commit_hash}^"
+        
+        content_result = subprocess.run(
+            ["git", "show", f"{commit_ref}:{filename}"],
+            cwd=WORKFLOW_REPO_DIR,
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding='utf-8'
+        )
+        return {"content": content_result.stdout}
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Git show command failed for {filename} at {commit_ref}: {e.stderr}")
+        raise
+    except Exception as e:
+        logger.error(f"An unexpected error occurred while fetching content for {filename}: {e}", exc_info=True)
+        raise
+
 def get_workflow_commit_diff(workflow_uuid: str, commit_hash: str):
     """Gets the diff for a specific commit of a workflow file."""
     try:

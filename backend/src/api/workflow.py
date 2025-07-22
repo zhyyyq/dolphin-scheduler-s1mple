@@ -400,3 +400,14 @@ async def revert_workflow_endpoint(payload: RevertWorkflowPayload):
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=f"Could not revert workflow: {e}")
+
+@router.get("/api/workflow/content/{commit_hash}/{filename}")
+async def get_workflow_content_endpoint(commit_hash: str, filename: str):
+    try:
+        # Basic validation to prevent path traversal
+        if ".." in filename or "/" in filename or "\\" in filename:
+            raise HTTPException(status_code=400, detail="Invalid filename.")
+        return git_service.get_workflow_content_at_commit(filename, commit_hash)
+    except Exception as e:
+        logger.error(f"Error fetching content for {filename} at {commit_hash}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch workflow content.")

@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Modal, Table, Button, Spin, Alert, App as AntApp } from 'antd';
+import { Modal, Table, Button, Spin, Alert, App as AntApp, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import Prism from 'prismjs';
+import 'prismjs/components/prism-yaml';
+import 'prismjs/themes/prism.css';
 import api from '../api';
 
 interface DeletedWorkflow {
   filename: string;
   commit_hash: string;
+  name: string;
 }
 
 interface RestoreWorkflowModalProps {
@@ -19,6 +23,10 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
   const [deletedWorkflows, setDeletedWorkflows] = useState<DeletedWorkflow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewingContent, setViewingContent] = useState('');
+  const [viewingTitle, setViewingTitle] = useState('');
+  const [viewLoading, setViewLoading] = useState(false);
 
   const fetchDeletedWorkflows = useCallback(async () => {
     if (!open) return;
@@ -45,7 +53,7 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
         filename: record.filename,
         commit_hash: record.commit_hash,
       });
-      message.success(`工作流 ${record.filename} 已成功恢复。`);
+      message.success(`工作流 ${record.name} 已成功恢复。`);
       onRestored();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -53,7 +61,28 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
     }
   };
 
+  const handleView = async (record: DeletedWorkflow) => {
+    setViewingTitle(`查看: ${record.name} (${record.filename})`);
+    setIsViewModalOpen(true);
+    setViewLoading(true);
+    try {
+      const response = await api.get<{ content: string }>(`/api/workflow/content/${record.commit_hash}/${record.filename}`);
+      const highlightedContent = Prism.highlight(response.content, Prism.languages.yaml, 'yaml');
+      setViewingContent(highlightedContent);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setViewingContent(`<pre><code>Error loading content: ${errorMessage}</code></pre>`);
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
   const columns: ColumnsType<DeletedWorkflow> = [
+    {
+      title: '工作流名称',
+      dataIndex: 'name',
+      key: 'name',
+    },
     {
       title: '文件名',
       dataIndex: 'filename',
@@ -69,9 +98,12 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
       title: '操作',
       key: 'action',
       render: (_, record) => (
-        <Button type="primary" onClick={() => handleRestore(record)}>
-          恢复
-        </Button>
+        <Space>
+          <Button onClick={() => handleView(record)}>查看</Button>
+          <Button type="primary" onClick={() => handleRestore(record)}>
+            恢复
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -96,6 +128,19 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
           pagination={false}
         />
       )}
+      <Modal
+        title={viewingTitle}
+        open={isViewModalOpen}
+        onCancel={() => setIsViewModalOpen(false)}
+        footer={null}
+        width="80vw"
+      >
+        {viewLoading ? <Spin /> : (
+          <pre style={{ background: '#f5f5f5', padding: '16px', maxHeight: '70vh', overflow: 'auto' }}>
+            <code dangerouslySetInnerHTML={{ __html: viewingContent }} />
+          </pre>
+        )}
+      </Modal>
     </Modal>
   );
 };
