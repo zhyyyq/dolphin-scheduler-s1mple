@@ -1,6 +1,6 @@
 import subprocess
 import os
-import yaml
+from ruamel.yaml import YAML
 from ..core.logger import logger
 
 WORKFLOW_REPO_DIR = os.getenv("WORKFLOW_REPO_DIR")
@@ -104,7 +104,7 @@ def get_deleted_workflows():
                         deleted_files_info[filename] = commit_hash
 
         workflows = []
-        yaml_parser = yaml.YAML()
+        yaml_parser = YAML()
         for filename, commit_hash in deleted_files_info.items():
             try:
                 # Get the content of the file from the commit *before* it was deleted
