@@ -166,6 +166,7 @@ async def submit_workflow_to_ds(filename: str):
         try:
             yaml = YAML()
             yaml.indent(mapping=2, sequence=4, offset=2)
+            yaml.preserve_quotes = True
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = yaml.load(f)
 
