@@ -101,25 +101,15 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         delete updatedTask.denpendence_yaml;
       }
 
-      if (values.http_params_yaml) { // For the Http Editor
-        try {
-          const httpParamsData = yaml.load(values.http_params_yaml) as any[];
-          // Reconstruct the task object from the form values
-          updatedTask = {
-            ...task,
-            name: values.name,
-            url: values.url,
-            http_method: values.http_method,
-            http_check_condition: values.http_check_condition,
-            condition: values.condition,
-            http_params: httpParamsData,
-          };
-        } catch (e) {
-          console.error("Error parsing YAML for Http:", e);
-          return;
-        }
-        delete updatedTask.http_params_yaml;
+      // This logic is now simplified. The parser will handle the string conversion.
+      // The form values will be directly merged.
+      if (values.http_params_yaml) {
+        // The yaml content is now the direct value for http_params
+        values.http_params = values.http_params_yaml;
+        delete values.http_params_yaml;
       }
+      
+      updatedTask = { ...task, ...values };
       onSave(updatedTask);
 
     }).catch(info => {

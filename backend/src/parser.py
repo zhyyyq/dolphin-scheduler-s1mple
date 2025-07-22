@@ -20,16 +20,14 @@ def parse_workflow(content: str):
             # The frontend will handle unifying the type key.
             parsed_task = task_data.copy()
 
+            # Per user's simplified design:
+            # If a task is Http and has a list of http_params,
+            # convert that list into a compact YAML string.
+            # This string will be passed to the frontend and back, preserving the format.
             if parsed_task.get('task_type') == 'Http' and isinstance(parsed_task.get('http_params'), list):
                 http_params_list = parsed_task.get('http_params', [])
-                # The original implementation was incorrect, it converted the list to a dict, losing type info.
-                # By removing the conversion, we keep the original list of objects.
-                # This was the initial fix. The following commented-out block is the incorrect code.
-                # parsed_task['http_params'] = {
-                #     param.get("prop"): param.get("value")
-                #     for param in http_params_list
-                #     if "prop" in param and "value" in param
-                # }
+                # Dump the list to a compact, inline YAML string
+                parsed_task['http_params'] = yaml.dump(http_params_list, default_flow_style=True).strip()
 
             if 'deps' not in parsed_task:
                 parsed_task['deps'] = []

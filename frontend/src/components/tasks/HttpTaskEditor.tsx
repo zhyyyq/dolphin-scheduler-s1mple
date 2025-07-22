@@ -1,7 +1,8 @@
-import React from 'react';
-import { Form, Input, Select, Button, Space, FormInstance } from 'antd';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import React, { useEffect } from 'react';
+import { Form, Input, Select, FormInstance } from 'antd';
+import yaml from 'js-yaml';
 
+const { TextArea } = Input;
 const { Option } = Select;
 
 interface HttpTaskEditorProps {
@@ -10,9 +11,26 @@ interface HttpTaskEditorProps {
 }
 
 const HttpTaskEditor: React.FC<HttpTaskEditorProps> = ({ form, initialValues }) => {
-  // Set initial values directly in the form definition if possible,
-  // or use form.setFieldsValue in a useEffect hook for dynamic data.
-  // For http_params, Form.List will handle the array structure automatically.
+
+  useEffect(() => {
+    if (initialValues) {
+      const { url, http_method, http_check_condition, condition, http_params } = initialValues;
+      
+      // In the new simplified logic, http_params is expected to be a YAML string.
+      // If it's an object (from an old state or initial creation), dump it.
+      const paramsYaml = typeof http_params === 'string' 
+        ? http_params 
+        : yaml.dump(http_params || []);
+
+      form.setFieldsValue({
+        url,
+        http_method,
+        http_check_condition,
+        condition,
+        http_params_yaml: paramsYaml,
+      });
+    }
+  }, [initialValues, form]);
 
   return (
     <>
@@ -47,48 +65,23 @@ const HttpTaskEditor: React.FC<HttpTaskEditorProps> = ({ form, initialValues }) 
       >
         <Input />
       </Form.Item>
-      
-      <Form.Item label="HTTP 参数">
-        <Form.List name="http_params">
-          {(fields, { add, remove }) => (
-            <>
-              {fields.map(({ key, name, ...restField }) => (
-                <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                  <Form.Item
-                    {...restField}
-                    name={[name, 'prop']}
-                    rules={[{ required: true, message: '请输入属性' }]}
-                  >
-                    <Input placeholder="属性" />
-                  </Form.Item>
-                  <Form.Item
-                    {...restField}
-                    name={[name, 'httpParametersType']}
-                    rules={[{ required: true, message: '请选择类型' }]}
-                  >
-                    <Select placeholder="类型" style={{ width: 120 }}>
-                      <Option value="PARAMETER">PARAMETER</Option>
-                      <Option value="HEADER">HEADER</Option>
-                    </Select>
-                  </Form.Item>
-                  <Form.Item
-                    {...restField}
-                    name={[name, 'value']}
-                    rules={[{ required: true, message: '请输入值' }]}
-                  >
-                    <Input placeholder="值" />
-                  </Form.Item>
-                  <MinusCircleOutlined onClick={() => remove(name)} />
-                </Space>
-              ))}
-              <Form.Item>
-                <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                  添加参数
-                </Button>
-              </Form.Item>
-            </>
-          )}
-        </Form.List>
+      <Form.Item
+        label="HTTP 参数 (YAML)"
+        name="http_params_yaml"
+        rules={[
+          {
+            validator: async (_, value) => {
+              if (!value) return;
+              try {
+                yaml.load(value);
+              } catch (e) {
+                throw new Error('YAML 格式无效');
+              }
+            },
+          },
+        ]}
+      >
+        <TextArea rows={8} placeholder="在此输入 http_params 的 YAML 结构" />
       </Form.Item>
     </>
   );
