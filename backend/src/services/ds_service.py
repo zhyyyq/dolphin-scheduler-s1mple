@@ -184,6 +184,7 @@ async def submit_workflow_to_ds(filename: str):
                     if task.get('task_type') == 'Dependent' and 'dependence' in task:
                         logger.info(f"Flattening Dependent task for submission: {task.get('name')}")
                         dependence_data = task.pop('dependence')
+                        task['dependence'] = ''
                         if isinstance(dependence_data, dict):
                             task['op'] = dependence_data.get('op')
                             task['groups'] = dependence_data.get('groups')

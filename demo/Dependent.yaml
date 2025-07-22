@@ -22,7 +22,7 @@ workflow:
 tasks:
   - name: dependent_var
     task_type: Dependent
-    denpendence:
+    dependence:
     op: and
     groups:
       - op: or
