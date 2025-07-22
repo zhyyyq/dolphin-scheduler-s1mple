@@ -22,6 +22,6 @@ workflow:
 tasks:
   - name: example_workflow
     task_type: SubWorkflow
-    workflow_name: $WORKFLOW{"demo/example_sub_workflow.yaml"}
+    workflow_name: $WORKFLOW{"example_workflow_for_sub_workflow"}
 
   - { "task_type": "Shell", "deps": [example_workflow], "name": "task_3", "command": "echo task 3" }
