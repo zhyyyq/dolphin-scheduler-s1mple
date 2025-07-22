@@ -21,6 +21,8 @@ const DefaultTaskEditor: React.FC<DefaultTaskEditorProps> = ({ initialValues, fo
     delete rest.id;
     delete rest.x;
     delete rest.y;
+    delete rest.label;
+    delete rest._display_type;
 
     const yamlString = yaml.dump(rest);
     
