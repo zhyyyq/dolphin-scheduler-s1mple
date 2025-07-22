@@ -19,28 +19,7 @@ def parse_workflow(content: str):
             # Pass all task data through, and keep original keys.
             # The frontend will handle unifying the type key.
             parsed_task = task_data.copy()
-
-            # Special handling for Dependent tasks with flat structure
-            if parsed_task.get('task_type') == 'Dependent' and 'op' in parsed_task and 'groups' in parsed_task:
-                logger.info(f"Re-structuring Dependent task for frontend: {parsed_task.get('name')}")
-                
-                # Create a new dict to avoid issues with ruamel.yaml object modification
-                new_task = {
-                    'name': parsed_task.get('name'),
-                    'task_type': parsed_task.get('task_type'),
-                    'denpendence': {
-                        'op': parsed_task.get('op'),
-                        'groups': parsed_task.get('groups')
-                    }
-                }
-                # Copy any other keys that might exist (e.g., deps, id)
-                for key, value in parsed_task.items():
-                    if key not in ['name', 'task_type', 'op', 'groups', 'denpendence']:
-                        new_task[key] = value
-                
-                tasks.append(new_task)
-            else:
-                tasks.append(parsed_task)
+            tasks.append(parsed_task)
             
         relations = []
         for task_data in tasks_data:

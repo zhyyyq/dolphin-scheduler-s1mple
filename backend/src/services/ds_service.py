@@ -178,16 +178,6 @@ async def submit_workflow_to_ds(filename: str):
                 for task in data['tasks']:
                     await resolve_workflow_placeholders_recursive(task)
 
-            # "Flatten" Dependent tasks for pydolphinscheduler
-            if 'tasks' in data and isinstance(data['tasks'], list):
-                for task in data['tasks']:
-                    if task.get('task_type') == 'Dependent' and 'denpendence' in task:
-                        logger.info(f"Flattening Dependent task for submission: {task.get('name')}")
-                        denpendence_data = task.pop('denpendence')
-                        if isinstance(denpendence_data, dict):
-                            task['op'] = denpendence_data.get('op')
-                            task['groups'] = denpendence_data.get('groups')
-
             if 'workflow' in data and 'schedule' not in data['workflow']:
                 data['workflow']['schedule'] = None
 
@@ -195,6 +185,20 @@ async def submit_workflow_to_ds(filename: str):
                 yaml.dump(data, tmp)
                 tmp_path = tmp.name
             
+            # Hardcode text replacement as per user's final request
+            with open(tmp_path, 'r', encoding='utf-8') as f_tmp_read:
+                tmp_content = f_tmp_read.read()
+            
+            # Find the indentation of the first 'op:'
+            match = re.search(r'^(\s*)op:', tmp_content, re.MULTILINE)
+            if match:
+                indentation = match.group(1)
+                # Replace the first occurrence of 'op:' with 'denpendence:\n  <indent>op:'
+                tmp_content = tmp_content.replace(f"{indentation}op:", f"{indentation}denpendence:\n{indentation}  op:", 1)
+
+            with open(tmp_path, 'w', encoding='utf-8') as f_tmp_write:
+                f_tmp_write.write(tmp_content)
+
             with open(tmp_path, 'r', encoding='utf-8') as f_tmp_read:
                 tmp_content = f_tmp_read.read()
                 logger.debug(f"Content of temporary YAML file being submitted:\n---\n{tmp_content}\n---")
