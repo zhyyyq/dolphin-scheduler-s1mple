@@ -314,32 +314,40 @@ async def execute_workflow(project_code: int, workflow_code: int, payload: dict)
             "workerGroup": "default",
             "environmentCode": -1,
             "timeout": None, # Set to None by default
+            "scheduleTime": "", # Default for non-backfill
             "expectedParallelismNumber": None,
             "dryRun": 0,
             "testFlag": 0
         }
 
-        if payload.get('isBackfill'):
-            import json
-            api_payload['execType'] = 'COMPLEMENT_DATA'
-            
-            schedule_time_obj = {
-                "complementStartDate": payload['startDate'],
-                "complementEndDate": payload['endDate']
-            }
-            api_payload['scheduleTime'] = json.dumps(schedule_time_obj)
+        import json
+        from datetime import datetime
 
+        if payload.get('isBackfill'):
+            api_payload['execType'] = 'COMPLEMENT_DATA'
+            start_date = payload['startDate']
+            end_date = payload['endDate']
+            
             if payload.get('runMode') == 'parallel':
                 api_payload['runMode'] = 'RUN_MODE_PARALLEL'
             
-            # Add missing parameters based on official UI
             api_payload['complementDependentMode'] = 'OFF_MODE'
             if payload.get('runOrder', 'desc').upper() == 'ASC':
                 api_payload['executionOrder'] = 'ASC_ORDER'
             else:
                 api_payload['executionOrder'] = 'DESC_ORDER'
         else:
-            api_payload['execType'] = 'NONE'
+            api_payload['execType'] = 'START_PROCESS'
+            # For simple runs, DS still expects a scheduleTime object with the current date.
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            start_date = now_str
+            end_date = now_str
+
+        schedule_time_obj = {
+            "complementStartDate": start_date,
+            "complementEndDate": end_date
+        }
+        api_payload['scheduleTime'] = json.dumps(schedule_time_obj)
 
         # DolphinScheduler's start-process-instance endpoint expects form data, not JSON.
         # We need to filter out None values as they are not accepted by the form-urlencoded format.
