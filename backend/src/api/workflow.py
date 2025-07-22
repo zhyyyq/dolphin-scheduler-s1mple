@@ -4,6 +4,7 @@ import os
 import subprocess
 import uuid
 from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedSeq
 from sqlalchemy.orm import Session
 from ..parser import parse_workflow
 from ..db.setup import create_db_connection, Workflow
@@ -55,6 +56,16 @@ async def save_workflow_yaml(workflow: WorkflowYaml, db: Session = Depends(get_d
         yaml = YAML()
         yaml.indent(mapping=2, sequence=4, offset=2)
         data = yaml.load(workflow.content)
+
+        # Ensure http_params are written in flow style to preserve original format
+        if 'tasks' in data and isinstance(data['tasks'], list):
+            for task in data['tasks']:
+                if isinstance(task, dict) and task.get('task_type') == 'Http':
+                    if 'http_params' in task and isinstance(task['http_params'], list):
+                        # Convert the list to a CommentedSeq and set flow style
+                        cs = CommentedSeq(task['http_params'])
+                        cs.fa.set_flow_style()
+                        task['http_params'] = cs
         
         if 'workflow' not in data:
             data['workflow'] = {}

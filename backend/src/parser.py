@@ -21,14 +21,11 @@ def parse_workflow(content: str):
             # The frontend will handle unifying the type key.
             parsed_task = task_data.copy()
 
-            # Per user's simplified design:
-            # If a task is Http and has a list of http_params,
-            # convert that list into a compact JSON string.
-            # This string will be passed to the frontend and back, preserving the format.
+            # The original implementation was incorrect, it converted the list to a dict, losing type info.
+            # By removing the conversion, we keep the original list of objects.
+            # This is the correct approach: do nothing, just pass the list through.
             if parsed_task.get('task_type') == 'Http' and isinstance(parsed_task.get('http_params'), list):
-                http_params_list = parsed_task.get('http_params', [])
-                # Dump the list to a compact, inline JSON string
-                parsed_task['http_params'] = json.dumps(http_params_list)
+                pass # The list is already in the correct format.
 
             if 'deps' not in parsed_task:
                 parsed_task['deps'] = []

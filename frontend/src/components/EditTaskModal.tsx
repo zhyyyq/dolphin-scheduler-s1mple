@@ -101,14 +101,6 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         delete updatedTask.denpendence_yaml;
       }
 
-      // This logic is now simplified. The parser will handle the string conversion.
-      // The form values will be directly merged.
-      if (values.http_params_yaml) {
-        // The yaml content is now the direct value for http_params
-        values.http_params = values.http_params_yaml;
-        delete values.http_params_yaml;
-      }
-      
       updatedTask = { ...task, ...values };
       onSave(updatedTask);
 

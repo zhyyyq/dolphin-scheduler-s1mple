@@ -124,6 +124,24 @@ const WorkflowEditorPage: React.FC = () => {
 
     doc.set('tasks', tasks);
 
+    // Traverse the document to set flow style for http_params
+    const tasksNode = doc.get('tasks', true);
+    if (tasksNode instanceof yaml.YAMLSeq && tasksNode.items) {
+      tasksNode.items.forEach(taskNode => {
+        if (taskNode instanceof yaml.YAMLMap) {
+          const httpParamsNode = taskNode.get('http_params', true);
+          if (httpParamsNode instanceof yaml.YAMLSeq && httpParamsNode.items) {
+            httpParamsNode.flow = true; // Set flow style on the http_params sequence itself
+            httpParamsNode.items.forEach(item => {
+              if (item instanceof yaml.YAMLMap) {
+                item.flow = true; // Set flow style on each object within the sequence
+              }
+            });
+          }
+        }
+      });
+    }
+
     return doc.toString();
   };
 
