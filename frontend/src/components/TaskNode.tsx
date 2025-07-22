@@ -21,11 +21,11 @@ const TaskNodeComponent: React.FC<{ node: Node }> = ({ node }) => {
 
 register({
   shape: 'task-node',
-  width: 'auto', // Let CSS control the width
+  width: 200, // Revert to a fixed width
   height: 36,
   component: TaskNodeComponent,
   propHooks(metadata: Node.Metadata) {
-    // Always apply the default port configuration
+    // Always apply the default port configuration, which works with fixed width
     return {
       ...metadata,
       ports: {
