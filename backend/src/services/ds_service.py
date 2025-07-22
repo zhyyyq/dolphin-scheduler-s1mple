@@ -313,17 +313,31 @@ async def execute_workflow(project_code: int, workflow_code: int, payload: dict)
             "processInstancePriority": "MEDIUM",
             "workerGroup": "default",
             "environmentCode": -1,
-            "timeout": 0,
+            "timeout": None, # Set to None by default
             "expectedParallelismNumber": None,
             "dryRun": 0,
             "testFlag": 0
         }
 
         if payload.get('isBackfill'):
+            import json
             api_payload['execType'] = 'COMPLEMENT_DATA'
-            api_payload['scheduleTime'] = f"{payload['startDate']},{payload['endDate']}"
+            
+            schedule_time_obj = {
+                "complementStartDate": payload['startDate'],
+                "complementEndDate": payload['endDate']
+            }
+            api_payload['scheduleTime'] = json.dumps(schedule_time_obj)
+
             if payload.get('runMode') == 'parallel':
                 api_payload['runMode'] = 'RUN_MODE_PARALLEL'
+            
+            # Add missing parameters based on official UI
+            api_payload['complementDependentMode'] = 'OFF_MODE'
+            if payload.get('runOrder', 'desc').upper() == 'ASC':
+                api_payload['executionOrder'] = 'ASC_ORDER'
+            else:
+                api_payload['executionOrder'] = 'DESC_ORDER'
         else:
             api_payload['execType'] = 'NONE'
 
@@ -334,8 +348,11 @@ async def execute_workflow(project_code: int, workflow_code: int, payload: dict)
         async with httpx.AsyncClient() as client:
             response = await client.post(url, headers=HEADERS, data=api_payload_filtered)
             response.raise_for_status()
+            
+            # It seems DS can return 200 OK but with an error in the JSON body.
             data = response.json()
             if data.get("code") != 0:
+                logger.error(f"DolphinScheduler API returned an error: {data}")
                 raise HTTPException(status_code=500, detail=f"DS API error (start-process-instance): {data.get('msg')}")
             
             return {"message": "Workflow execution started successfully.", "data": data.get("data")}
