@@ -65,7 +65,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         return <SubWorkflowTaskEditor />;
       // Add cases for other task types here
       default:
-        return <DefaultTaskEditor initialValues={task} />;
+        return <DefaultTaskEditor initialValues={task} form={form} />;
     }
   };
 
