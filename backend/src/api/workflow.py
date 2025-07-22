@@ -355,30 +355,44 @@ async def restore_workflow_endpoint(payload: RestoreWorkflowPayload, db: Session
         result = git_service.restore_workflow(payload.filename, payload.commit_hash)
         
         # After restoring the file, we need to create a corresponding entry in our database.
-        # We parse the restored file to get its name and uuid.
         file_path = os.path.join(WORKFLOW_REPO_DIR, payload.filename)
+        
+        yaml = YAML()
         with open(file_path, 'r', encoding='utf-8') as f:
-            yaml = YAML()
             data = yaml.load(f)
-            workflow_meta = data.get('workflow', {})
-            workflow_name = workflow_meta.get('name')
-            workflow_uuid = workflow_meta.get('uuid')
 
-            if not workflow_name or not workflow_uuid:
-                raise HTTPException(status_code=500, detail="Restored file is missing 'name' or 'uuid'.")
+        workflow_meta = data.get('workflow', {})
+        workflow_name = workflow_meta.get('name')
+        workflow_uuid = workflow_meta.get('uuid')
 
-            # Check if a workflow with this UUID or name already exists to avoid conflicts.
-            existing_by_uuid = db.query(Workflow).filter(Workflow.uuid == workflow_uuid).first()
-            existing_by_name = db.query(Workflow).filter(Workflow.name == workflow_name).first()
-            if existing_by_uuid or existing_by_name:
-                # If it already exists, we don't need to add it again.
-                # This can happen if only the file was deleted but not the DB entry.
-                logger.warning(f"Workflow '{workflow_name}' (uuid: {workflow_uuid}) already exists in DB. Skipping DB entry creation.")
-            else:
-                new_workflow = Workflow(uuid=workflow_uuid, name=workflow_name)
-                db.add(new_workflow)
-                db.commit()
-                logger.info(f"Created DB entry for restored workflow '{workflow_name}'.")
+        if not workflow_name:
+            raise HTTPException(status_code=500, detail="Restored file is missing a 'name'.")
+
+        # If the restored file has no UUID, assign a new one.
+        if not workflow_uuid:
+            logger.info(f"Restored file '{payload.filename}' has no UUID. Assigning a new one.")
+            workflow_uuid = str(uuid.uuid4())
+            data['workflow']['uuid'] = workflow_uuid
+            
+            # Write the content with the new UUID back to the file
+            with open(file_path, 'w', encoding='utf-8') as f:
+                yaml.dump(data, f)
+            
+            # Commit this change immediately
+            git_service.git_commit(payload.filename, f"Assign UUID to restored workflow: {workflow_name}")
+
+        # Check if a workflow with this UUID or name already exists to avoid conflicts.
+        existing_by_uuid = db.query(Workflow).filter(Workflow.uuid == workflow_uuid).first()
+        existing_by_name = db.query(Workflow).filter(Workflow.name == workflow_name).first()
+        
+        if existing_by_uuid or existing_by_name:
+            # If it already exists, we don't need to add it again.
+            logger.warning(f"Workflow '{workflow_name}' (uuid: {workflow_uuid}) already exists in DB. Skipping DB entry creation.")
+        else:
+            new_workflow = Workflow(uuid=workflow_uuid, name=workflow_name)
+            db.add(new_workflow)
+            db.commit()
+            logger.info(f"Created DB entry for restored workflow '{workflow_name}'.")
 
         return result
     except FileExistsError as e:
