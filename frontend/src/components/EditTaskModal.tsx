@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Modal, Input, Form } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Modal, Input, Form, Switch, Space, Button } from 'antd';
 import { Task } from '../types';
 import SqlTaskEditor from './tasks/SqlTaskEditor';
 import ShellTaskEditor from './tasks/ShellTaskEditor';
@@ -39,8 +39,11 @@ interface EditTaskModalProps {
 
 const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onSave }) => {
   const [form] = Form.useForm();
+  const [useDefaultEditor, setUseDefaultEditor] = useState(false);
 
   useEffect(() => {
+    // Reset the switch when a new task is opened
+    setUseDefaultEditor(false);
     if (open && task) {
       form.setFieldsValue(task);
     }
@@ -125,6 +128,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
   };
 
   const renderTaskEditor = () => {
+    if (useDefaultEditor) {
+      return <DefaultTaskEditor initialValues={task} form={form} />;
+    }
+
     switch (task.task_type) {
       case 'Sql':
         return <SqlTaskEditor />;
@@ -189,6 +196,18 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
       onOk={handleOk}
       onCancel={onCancel}
       forceRender
+      footer={
+        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+          <Space>
+            <Switch checked={useDefaultEditor} onChange={setUseDefaultEditor} />
+            <span>使用 YAML 编辑器</span>
+          </Space>
+          <div>
+            <Button onClick={onCancel}>取消</Button>
+            <Button type="primary" onClick={handleOk}>确定</Button>
+          </div>
+        </div>
+      }
     >
       <Form form={form} layout="vertical">
         <Form.Item

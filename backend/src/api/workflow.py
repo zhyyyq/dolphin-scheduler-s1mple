@@ -450,7 +450,22 @@ async def execute_workflow_endpoint(workflow_uuid: str, payload: ExecuteWorkflow
         project_code = ds_workflow['projectCode']
         workflow_code = ds_workflow['code']
 
-        return await ds_service.execute_workflow(project_code, workflow_code, payload.dict())
+        # Fetch environments and find the default one
+        environments = await ds_service.get_environments()
+        default_env = next((env for env in environments if env.get('name') == 'default'), None)
+        
+        if not default_env:
+            # If no 'default' environment, we can't proceed.
+            # Alternatively, we could fall back to -1, but failing explicitly is safer.
+            raise HTTPException(status_code=500, detail="A 'default' environment was not found in DolphinScheduler. Please create one.")
+
+        environment_code = default_env.get('code')
+
+        # Add the environment code to the payload
+        execution_payload = payload.dict()
+        execution_payload['environmentCode'] = environment_code
+
+        return await ds_service.execute_workflow(project_code, workflow_code, execution_payload)
     except Exception as e:
         logger.error(f"Error executing workflow {workflow_uuid}: {e}", exc_info=True)
         if isinstance(e, HTTPException):

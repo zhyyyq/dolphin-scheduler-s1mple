@@ -17,6 +17,27 @@ DS_URL = os.getenv("DS_URL")
 TOKEN = os.getenv("TOKEN")
 HEADERS = {"token": TOKEN}
 
+async def get_environments():
+    """Gets the list of environments from DolphinScheduler."""
+    url = f"{DS_URL.rstrip('/')}/environment/query-environment-list-paging"
+    try:
+        async with httpx.AsyncClient() as client:
+            # Assuming we want all environments, so using a large page size.
+            # DS might have a max limit, but 1000 should be sufficient for most cases.
+            params = {"pageNo": 1, "pageSize": 1000, "searchVal": ""}
+            response = await client.get(url, headers=HEADERS, params=params)
+            response.raise_for_status()
+            data = response.json()
+            if data.get("code") != 0:
+                raise HTTPException(status_code=500, detail=f"DS API error (query-environment-list-paging): {data.get('msg')}")
+            return data.get("data", {}).get("totalList", [])
+    except httpx.RequestError as e:
+        logger.error(f"Could not connect to DolphinScheduler to get environments: {e}", exc_info=True)
+        raise HTTPException(status_code=502, detail=f"Could not connect to DolphinScheduler: {e}")
+    except Exception as e:
+        logger.error(f"Error fetching environments: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
 async def get_ds_workflow_details(project_code: int, workflow_code: int):
     """Gets the details of a DolphinScheduler workflow."""
     url = f"{DS_URL.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}"
@@ -333,7 +354,7 @@ async def execute_workflow(project_code: int, workflow_code: int, payload: dict)
             "runMode": "RUN_MODE_SERIAL",
             "processInstancePriority": "MEDIUM",
             "workerGroup": "default",
-            "environmentCode": -1,
+            "environmentCode": payload.get("environmentCode", -1),
             "timeout": None, # Set to None by default
             "scheduleTime": "", # Default for non-backfill
             "expectedParallelismNumber": None,
