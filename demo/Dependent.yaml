@@ -57,20 +57,20 @@ tasks:
         # we can use $WORKFLOW{"Dependent_External.yaml"} to create or update a workflow from dependent_external.yaml and set the value to that workflow name
         groups:
           - project_name: ${CONFIG.WORKFLOW_PROJECT} 
-            workflow_name: $WORKFLOW{"Dependent_External.yaml"} 
+            workflow_name: $WORKFLOW{"task_dependent_external"} 
             dependent_task_name: task_1
 
           - project_name: ${CONFIG.WORKFLOW_PROJECT} 
-            workflow_name: $WORKFLOW{"Dependent_External.yaml"} 
+            workflow_name: $WORKFLOW{"task_dependent_external"} 
             dependent_task_name: task_2
       - op: and
         groups:
           - project_name: ${CONFIG.WORKFLOW_PROJECT} 
-            workflow_name: $WORKFLOW{"Dependent_External.yaml"} 
+            workflow_name: $WORKFLOW{"task_dependent_external"} 
             dependent_task_name: task_1
             dependent_date: LAST_WEDNESDAY 
 
           - project_name: ${CONFIG.WORKFLOW_PROJECT} 
-            workflow_name: $WORKFLOW{"Dependent_External.yaml"} 
+            workflow_name: $WORKFLOW{"task_dependent_external"} 
             dependent_task_name: task_2
-            dependent_date: last24Hours 
+            dependent_date: last24Hours

@@ -26,7 +26,6 @@ async def get_environments():
             response = await client.get(url, headers=HEADERS, params=params)
             response.raise_for_status()
             
-            # Add detailed logging for the raw response
             logger.debug(f"Raw response from get_environments at URL {url}: {response.text}")
 
             try:
@@ -172,42 +171,12 @@ async def submit_workflow_to_ds(filename: str):
             # Iterate through tasks and resolve file references in specific fields
             if 'tasks' in data and isinstance(data['tasks'], list):
                 for task in data['tasks']:
-                    # This is a simple implementation. A more robust solution
-                    # would be to have a mapping of task types to their
-                    # file-reference-able fields.
-                    fields_to_check = ['sql', 'rawScript'] # Add other fields as needed
-                    for field in fields_to_check:
-                        if field in task and isinstance(task[field], str):
-                            match = re.match(r'^\$FILE\{"([^"}]+)"\}$', task[field])
-                            if match:
-                                file_ref = match.group(1)
-                                found_path = find_resource_file(file_ref)
-                                if found_path:
-                                    with open(found_path, 'r', encoding='utf-8') as f_content:
-                                        task[field] = f_content.read()
-                                else:
-                                    raise FileNotFoundError(f"File reference '{file_ref}' in task '{task.get('name')}' could not be resolved.")
+                    await resolve_file_placeholders_recursive(task)
             
-            # Manually resolve $WORKFLOW{} references using the database
+            # Manually resolve $WORKFLOW{} references using a recursive helper
             if 'tasks' in data and isinstance(data['tasks'], list):
                 for task in data['tasks']:
-                    if task.get('task_type') == 'SubWorkflow' and 'workflow_name' in task:
-                        match = re.match(r'^\$WORKFLOW\{"([^"}]+)"\}$', task['workflow_name'])
-                        if match:
-                            sub_workflow_name = match.group(1)
-                            logger.info(f"Found sub-workflow reference. Internal Name: '{sub_workflow_name}'")
-                            
-                            # Query the database for the filename (uuid.yaml) using the internal name.
-                            sub_workflow_filename = file_service.get_workflow_path_by_name(sub_workflow_name)
-                            logger.info(f"DB query for '{sub_workflow_name}' returned filename: '{sub_workflow_filename}'")
-
-                            if sub_workflow_filename:
-                                # Reconstruct the placeholder with the filename.
-                                new_placeholder = f'$WORKFLOW{{"{sub_workflow_filename}"}}'
-                                task['workflow_name'] = new_placeholder
-                                logger.info(f"Replaced original placeholder with: '{new_placeholder}'")
-                            else:
-                                raise FileNotFoundError(f"Sub-workflow with internal name '{sub_workflow_name}' not found in the database.")
+                    await resolve_workflow_placeholders_recursive(task)
 
             if 'workflow' in data and 'schedule' not in data['workflow']:
                 data['workflow']['schedule'] = None
@@ -216,7 +185,6 @@ async def submit_workflow_to_ds(filename: str):
                 yaml.dump(data, tmp)
                 tmp_path = tmp.name
             
-            # Log the content of the temporary file for debugging
             with open(tmp_path, 'r', encoding='utf-8') as f_tmp_read:
                 tmp_content = f_tmp_read.read()
                 logger.debug(f"Content of temporary YAML file being submitted:\n---\n{tmp_content}\n---")
@@ -235,26 +203,18 @@ async def submit_workflow_to_ds(filename: str):
             if tmp_path and os.path.exists(tmp_path):
                 os.remove(tmp_path)
 
-        # Step 2: Now that DS is updated, update the original file with the online version marker.
         try:
-            # First, get the commit hash of the version we just pushed
             online_commit_hash = git_service.get_latest_commit_for_file(filename)
-
             if not online_commit_hash:
                 raise Exception("Could not retrieve the latest commit hash for the online version.")
 
-            # Read the file content
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # Remove any old version marker
             content = re.sub(r'# online-version: .*\n', '', content)
-            
-            # Prepend the new version marker
             version_comment = f"# online-version: {online_commit_hash}\n"
             new_content = version_comment + content
 
-            # Also update the local_status in the YAML structure itself
             yaml = YAML(typ='rt')
             data = yaml.load(new_content)
             data['workflow']['local_status'] = 'synced'
@@ -264,19 +224,15 @@ async def submit_workflow_to_ds(filename: str):
             yaml.dump(data, string_stream)
             final_content = string_stream.getvalue()
 
-            # Write the final content back to the file
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(final_content)
             
-            # Commit this change
             commit_message = f"Update online-version marker for {filename} to {online_commit_hash[:7]}"
             git_service.git_commit(file_path, commit_message)
             logger.info(f"Successfully updated online-version marker for {filename}")
 
         except Exception as e:
             logger.error(f"Failed to update and commit 'online-version' marker for {filename}: {e}", exc_info=True)
-            # This is a non-critical error in the context of the submission itself,
-            # but we should probably let the user know something went wrong with the tracking.
             raise HTTPException(status_code=500, detail=f"Failed to update version marker: {e}")
 
         return {"message": f"Workflow '{filename}' submitted successfully."}
@@ -293,11 +249,53 @@ async def submit_workflow_to_ds(filename: str):
             raise e
         raise HTTPException(status_code=500, detail=f"Failed to submit workflow: {e}")
 
+async def resolve_file_placeholders_recursive(item):
+    if isinstance(item, dict):
+        for key, value in item.items():
+            item[key] = await resolve_file_placeholders_recursive(value)
+    elif isinstance(item, list):
+        for i, value in enumerate(item):
+            item[i] = await resolve_file_placeholders_recursive(value)
+    elif isinstance(item, str):
+        match = re.match(r'^\$FILE\{"([^"}]+)"\}$', item)
+        if match:
+            file_ref = match.group(1)
+            found_path = find_resource_file(file_ref)
+            if found_path:
+                with open(found_path, 'r', encoding='utf-8') as f_content:
+                    return f_content.read()
+            else:
+                raise FileNotFoundError(f"File reference '{file_ref}' could not be resolved.")
+    return item
+
+async def resolve_workflow_placeholders_recursive(item):
+    if isinstance(item, dict):
+        for key, value in item.items():
+            item[key] = await resolve_workflow_placeholders_recursive(value)
+    elif isinstance(item, list):
+        for i, value in enumerate(item):
+            item[i] = await resolve_workflow_placeholders_recursive(value)
+    elif isinstance(item, str):
+        match = re.match(r'^\$WORKFLOW\{"([^"}]+)"\}$', item)
+        if match:
+            sub_workflow_name = match.group(1)
+            logger.info(f"Found sub-workflow reference. Internal Name: '{sub_workflow_name}'")
+            
+            sub_workflow_filename = file_service.get_workflow_path_by_name(sub_workflow_name)
+            logger.info(f"DB query for '{sub_workflow_name}' returned filename: '{sub_workflow_filename}'")
+
+            if sub_workflow_filename:
+                new_placeholder = f'$WORKFLOW{{"{sub_workflow_filename}"}}'
+                logger.info(f"Replaced original placeholder with: '{new_placeholder}'")
+                return new_placeholder
+            else:
+                raise FileNotFoundError(f"Sub-workflow with internal name '{sub_workflow_name}' not found in the database.")
+    return item
+
 async def delete_ds_workflow(project_code: int, workflow_code: int):
     """Deletes a workflow from DolphinScheduler, taking it offline first if needed."""
     try:
         async with httpx.AsyncClient() as client:
-            # 1. Get workflow details to check its state
             details_url = f"{DS_URL.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}"
             details_response = await client.get(details_url, headers=HEADERS)
 
@@ -311,7 +309,6 @@ async def delete_ds_workflow(project_code: int, workflow_code: int):
             if not workflow_data:
                 raise HTTPException(status_code=404, detail="Workflow not found in DolphinScheduler.")
 
-            # 2. If the workflow is online, take it offline first
             if workflow_data.get("processDefinition", {}).get("releaseState") == "ONLINE":
                 logger.info(f"Workflow {workflow_code} is ONLINE. Taking it offline before deletion.")
                 release_url = f"{DS_URL.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}/release"
@@ -323,7 +320,6 @@ async def delete_ds_workflow(project_code: int, workflow_code: int):
                     raise HTTPException(status_code=500, detail=f"DS API error (set offline): {release_data.get('msg')}")
                 logger.info(f"Workflow {workflow_code} successfully taken offline.")
 
-            # 3. Proceed with deletion
             logger.info(f"Proceeding to delete workflow {workflow_code}.")
             delete_url = f"{DS_URL.rstrip('/')}/projects/{project_code}/process-definition/{workflow_code}"
             delete_response = await client.delete(delete_url, headers=HEADERS)
@@ -362,8 +358,8 @@ async def execute_workflow(project_code: int, workflow_code: int, payload: dict)
             "processInstancePriority": "MEDIUM",
             "workerGroup": "default",
             "environmentCode": payload.get("environmentCode", -1),
-            "timeout": None, # Set to None by default
-            "scheduleTime": "", # Default for non-backfill
+            "timeout": None,
+            "scheduleTime": "",
             "expectedParallelismNumber": None,
             "dryRun": 0,
             "testFlag": 0
@@ -387,7 +383,6 @@ async def execute_workflow(project_code: int, workflow_code: int, payload: dict)
                 api_payload['executionOrder'] = 'DESC_ORDER'
         else:
             api_payload['execType'] = 'START_PROCESS'
-            # For simple runs, DS still expects a scheduleTime object with the current date.
             now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             start_date = now_str
             end_date = now_str
@@ -398,15 +393,12 @@ async def execute_workflow(project_code: int, workflow_code: int, payload: dict)
         }
         api_payload['scheduleTime'] = json.dumps(schedule_time_obj)
 
-        # DolphinScheduler's start-process-instance endpoint expects form data, not JSON.
-        # We need to filter out None values as they are not accepted by the form-urlencoded format.
         api_payload_filtered = {k: v for k, v in api_payload.items() if v is not None}
 
         async with httpx.AsyncClient() as client:
             response = await client.post(url, headers=HEADERS, data=api_payload_filtered)
             response.raise_for_status()
             
-            # It seems DS can return 200 OK but with an error in the JSON body.
             data = response.json()
             if data.get("code") != 0:
                 logger.error(f"DolphinScheduler API returned an error: {data}")
