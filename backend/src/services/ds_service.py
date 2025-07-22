@@ -175,26 +175,23 @@ async def submit_workflow_to_ds(filename: str):
         try:
             yaml = YAML()
             yaml.indent(mapping=2, sequence=4, offset=2)
-            yaml.preserve_quotes = True
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = yaml.load(f)
-            
-            # Convert ruamel.yaml types to standard Python types before processing
+
+            # Convert ruamel.yaml types to standard Python types for processing
             data = convert_to_standard_types(data)
 
-            # Iterate through tasks and resolve file references in specific fields
+            # In-memory transformation for submission
             if 'tasks' in data and isinstance(data['tasks'], list):
                 for task in data['tasks']:
+                    # Resolve placeholders after potential transformations
                     await resolve_file_placeholders_recursive(task)
-            
-            # Manually resolve $WORKFLOW{} references using a recursive helper
-            if 'tasks' in data and isinstance(data['tasks'], list):
-                for task in data['tasks']:
                     await resolve_workflow_placeholders_recursive(task)
 
             if 'workflow' in data and 'schedule' not in data['workflow']:
                 data['workflow']['schedule'] = None
 
+            # Write the transformed data to a temporary file for submission
             with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix=".yaml", encoding='utf-8') as tmp:
                 yaml.dump(data, tmp)
                 tmp_path = tmp.name
