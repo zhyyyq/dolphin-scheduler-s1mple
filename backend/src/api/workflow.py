@@ -87,6 +87,17 @@ async def save_workflow_yaml(workflow: WorkflowYaml, db: Session = Depends(get_d
         
         git_service.git_commit(filename, commit_message)
 
+        # If this is an update to an existing workflow, try to re-submit it to DS
+        if not is_create:
+            try:
+                logger.info(f"Workflow {workflow_name} is being updated, attempting to re-submit to DolphinScheduler.")
+                await ds_service.submit_workflow_to_ds(filename)
+                logger.info(f"Successfully re-submitted workflow {filename} to DolphinScheduler.")
+            except Exception as e:
+                # This is not a critical error, as the workflow might not have been online.
+                # We just log a warning. The user can manually put it online if needed.
+                logger.warning(f"Failed to automatically re-submit workflow {filename} to DolphinScheduler after update. Error: {e}")
+
         return {
             "message": "Workflow saved successfully.",
             "filename": filename,

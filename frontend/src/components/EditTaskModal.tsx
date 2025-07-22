@@ -14,6 +14,11 @@ interface EditTaskModalProps {
 const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onSave }) => {
   const [form] = Form.useForm();
 
+  useEffect(() => {
+    if (open && task) {
+      form.setFieldsValue(task);
+    }
+  }, [open, task, form]);
 
   if (!task) {
     return null;
@@ -43,9 +48,9 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
       open={open}
       onOk={handleOk}
       onCancel={onCancel}
-      destroyOnHidden
+      forceRender
     >
-      <Form form={form} layout="vertical" initialValues={task}>
+      <Form form={form} layout="vertical">
         <Form.Item
           label="任务名称"
           name="name"
