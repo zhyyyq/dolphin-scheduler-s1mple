@@ -1,27 +1,84 @@
-import React from 'react';
-import { Input } from 'antd';
+import React, { useEffect } from 'react';
+import { Form, Input, Select, FormInstance } from 'antd';
+import yaml from 'js-yaml';
+
+const { TextArea } = Input;
+const { Option } = Select;
 
 interface HttpTaskEditorProps {
-  currentNode: any;
+  form: FormInstance<any>;
+  initialValues: any;
 }
 
-export const HttpTaskEditor: React.FC<HttpTaskEditorProps> = ({ currentNode }) => {
-  const data = currentNode.getData();
+const HttpTaskEditor: React.FC<HttpTaskEditorProps> = ({ form, initialValues }) => {
+
+  useEffect(() => {
+    if (initialValues) {
+      const { url, http_method, http_check_condition, condition, http_params } = initialValues;
+      const paramsYaml = yaml.dump(http_params || []);
+      form.setFieldsValue({
+        url,
+        http_method,
+        http_check_condition,
+        condition,
+        http_params_yaml: paramsYaml,
+      });
+    }
+  }, [initialValues, form]);
 
   return (
     <>
-      <p>URL:</p>
-      <Input value={data.url} onChange={e => currentNode.setData({ ...data, url: e.target.value })} />
-      <p>HTTP 方法:</p>
-      <Input value={data.http_method} onChange={e => currentNode.setData({ ...data, http_method: e.target.value })} />
-      <p>HTTP 检查条件:</p>
-      <Input value={data.http_check_condition} onChange={e => currentNode.setData({ ...data, http_check_condition: e.target.value })} />
-      <p>条件:</p>
-      <Input value={data.condition} onChange={e => currentNode.setData({ ...data, condition: e.target.value })} />
-      <p>连接超时 (ms):</p>
-      <Input type="number" value={data.connect_timeout} onChange={e => currentNode.setData({ ...data, connect_timeout: Number(e.target.value) })} />
-      <p>套接字超时 (ms):</p>
-      <Input type="number" value={data.socket_timeout} onChange={e => currentNode.setData({ ...data, socket_timeout: Number(e.target.value) })} />
+      <Form.Item
+        label="URL"
+        name="url"
+        rules={[{ required: true, message: '请输入 URL' }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="HTTP 方法"
+        name="http_method"
+        rules={[{ required: true, message: '请选择 HTTP 方法' }]}
+      >
+        <Select>
+          <Option value="GET">GET</Option>
+          <Option value="POST">POST</Option>
+          <Option value="PUT">PUT</Option>
+          <Option value="DELETE">DELETE</Option>
+        </Select>
+      </Form.Item>
+      <Form.Item
+        label="HTTP 检查条件"
+        name="http_check_condition"
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="条件"
+        name="condition"
+      >
+        <Input />
+      </Form.Item>
+      <Form.Item
+        label="HTTP 参数 (YAML)"
+        name="http_params_yaml"
+        rules={[
+          {
+            validator: async (_, value) => {
+              if (!value) return;
+              try {
+                yaml.load(value);
+              } catch (e) {
+                throw new Error('YAML 格式无效');
+              }
+            },
+          },
+        ]}
+      >
+        <TextArea rows={8} placeholder="在此输入 http_params 的 YAML 结构" />
+      </Form.Item>
     </>
   );
 };
+
+export default HttpTaskEditor;

@@ -14,6 +14,8 @@ import DependentTaskEditor from './tasks/DependentTaskEditor';
 import DVCInitTaskEditor from './tasks/DVCInitTaskEditor';
 import DVCUploadTaskEditor from './tasks/DVCUploadTaskEditor';
 import DVCDownloadTaskEditor from './tasks/DVCDownloadTaskEditor';
+import FlinkTaskEditor from './tasks/FlinkTaskEditor';
+import HttpTaskEditor from './tasks/HttpTaskEditor';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
 // Import other specific editors as needed
@@ -85,6 +87,26 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         }
         delete updatedTask.denpendence_yaml;
       }
+
+      if (values.http_params_yaml) { // For the Http Editor
+        try {
+          const httpParamsData = yaml.load(values.http_params_yaml) as any[];
+          // Reconstruct the task object from the form values
+          updatedTask = {
+            ...task,
+            name: values.name,
+            url: values.url,
+            http_method: values.http_method,
+            http_check_condition: values.http_check_condition,
+            condition: values.condition,
+            http_params: httpParamsData,
+          };
+        } catch (e) {
+          console.error("Error parsing YAML for Http:", e);
+          return;
+        }
+        delete updatedTask.http_params_yaml;
+      }
       onSave(updatedTask);
 
     }).catch(info => {
@@ -120,6 +142,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         return <DVCUploadTaskEditor />;
       case 'DVCDownload':
         return <DVCDownloadTaskEditor />;
+      case 'Flink':
+        return <FlinkTaskEditor />;
+      case 'Http':
+        return <HttpTaskEditor form={form} initialValues={task} />;
       // Add cases for other task types here
       default:
         return <DefaultTaskEditor initialValues={task} form={form} />;
