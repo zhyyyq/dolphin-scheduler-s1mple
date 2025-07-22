@@ -174,7 +174,7 @@ async def submit_workflow_to_ds(filename: str):
             
             result = subprocess.run(
                 ["uv", "run", "pydolphinscheduler", "yaml", "-f", tmp_path],
-                cwd=BACKEND_DIR,
+                cwd=WORKFLOW_REPO_DIR,
                 check=True,
                 capture_output=True,
                 text=True,
