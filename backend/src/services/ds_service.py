@@ -178,7 +178,6 @@ async def submit_workflow_to_ds(filename: str):
                 for task in data['tasks']:
                     await resolve_workflow_placeholders_recursive(task)
 
-
             if 'workflow' in data and 'schedule' not in data['workflow']:
                 data['workflow']['schedule'] = None
 

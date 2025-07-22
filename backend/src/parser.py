@@ -19,15 +19,6 @@ def parse_workflow(content: str):
             # Pass all task data through, and keep original keys.
             # The frontend will handle unifying the type key.
             parsed_task = task_data.copy()
-
-            # Special handling for Dependent tasks with flat structure
-            if parsed_task.get('task_type') == 'Dependent' and 'op' in parsed_task and 'groups' in parsed_task:
-                logger.info(f"Re-structuring Dependent task: {parsed_task.get('name')}")
-                parsed_task['denpendence'] = {
-                    'op': parsed_task.pop('op'),
-                    'groups': parsed_task.pop('groups')
-                }
-
             tasks.append(parsed_task)
             
         relations = []
