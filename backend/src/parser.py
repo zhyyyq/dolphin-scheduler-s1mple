@@ -24,10 +24,6 @@ def parse_workflow(content: str):
             # The original implementation was incorrect, it converted the list to a dict, losing type info.
             # By removing the conversion, we keep the original list of objects.
             # This is the correct approach: do nothing, just pass the list through.
-            if parsed_task.get('task_type') == 'Http' and isinstance(parsed_task.get('http_params'), list):
-                http_params = parsed_task.get('http_params')
-                logger.debug(f"http_params = {http_params}")
-                pass # The list is already in the correct format.
 
             if 'deps' not in parsed_task:
                 parsed_task['deps'] = []
