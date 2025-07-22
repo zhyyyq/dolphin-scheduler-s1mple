@@ -7,7 +7,7 @@ import tempfile
 from ruamel.yaml import YAML
 from dotenv import load_dotenv
 from ..core.logger import logger
-from . import git_service
+from . import git_service, file_service
 from ..core.path_utils import find_resource_file
 
 load_dotenv()
@@ -160,10 +160,26 @@ async def submit_workflow_to_ds(filename: str):
                                 else:
                                     raise FileNotFoundError(f"File reference '{file_ref}' in task '{task.get('name')}' could not be resolved.")
             
-            # Handle sub-workflow paths
-            # This part remains complex due to the need to find workflows by name.
-            # For now, we will assume a simple replacement.
-            # A better implementation would parse the sub-workflow to get its code.
+            # Manually resolve $WORKFLOW{} references using the database
+            if 'tasks' in data and isinstance(data['tasks'], list):
+                for task in data['tasks']:
+                    if task.get('task_type') == 'SubWorkflow' and 'workflow_name' in task:
+                        match = re.match(r'^\$WORKFLOW\{"([^"}]+)"\}$', task['workflow_name'])
+                        if match:
+                            sub_workflow_name = match.group(1)
+                            # Query the database for the path
+                            sub_workflow_filename = file_service.get_workflow_path_by_name(sub_workflow_name)
+                            if sub_workflow_filename:
+                                # The pydolphinscheduler CLI needs a path relative to the CWD,
+                                # which is WORKFLOW_REPO_DIR.
+                                # We need to find the file's actual relative path.
+                                # This assumes a flat structure for now. A better implementation
+                                # would search for the file.
+                                # For now, let's assume the file is in the root of the repo.
+                                # A better approach is needed if files are in subdirectories.
+                                task['workflow_name'] = sub_workflow_filename
+                            else:
+                                raise FileNotFoundError(f"Sub-workflow with name '{sub_workflow_name}' not found in the database.")
 
             if 'workflow' in data and 'schedule' not in data['workflow']:
                 data['workflow']['schedule'] = None

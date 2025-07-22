@@ -1,10 +1,30 @@
 import os
 import shutil
 from fastapi import UploadFile, HTTPException
+from ..db.setup import SessionLocal, Workflow as WorkflowDB
+from ..core.logger import logger
 
 # Use a dedicated directory for user-uploaded reference files.
 # This keeps them separate from the demo files.
 UPLOAD_DIR = os.path.join(os.getenv("WORKFLOW_REPO_DIR"), 'resources')
+
+def get_workflow_path_by_name(name: str) -> str:
+    """
+    Finds a workflow's file UUID by its internal name from the database.
+    """
+    db = SessionLocal()
+    try:
+        workflow = db.query(WorkflowDB).filter(WorkflowDB.name == name).first()
+        if not workflow:
+            return None
+        # The UUID is the filename without the extension
+        return f"{workflow.uuid}.yaml"
+    except Exception as e:
+        logger.error(f"Database error while fetching workflow by name '{name}': {e}")
+        return None
+    finally:
+        db.close()
+
 
 def list_uploaded_files():
     """Lists all files in the designated resource directory."""
