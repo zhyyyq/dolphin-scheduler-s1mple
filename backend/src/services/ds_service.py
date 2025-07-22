@@ -8,6 +8,7 @@ from ruamel.yaml import YAML
 from dotenv import load_dotenv
 from ..core.logger import logger
 from .git_service import git_commit, find_workflow_file_by_name
+from ..core.path_utils import find_resource_file
 
 load_dotenv()
 
@@ -158,16 +159,7 @@ async def submit_workflow_to_ds(filename: str):
 
             def replace_file_path(match):
                 file_ref = match.group(1)
-                
-                # Define search paths
-                path1 = os.path.abspath(os.path.join(WORKFLOW_REPO_DIR, file_ref))
-                path2 = os.path.abspath(os.path.join(WORKFLOW_REPO_DIR, 'resources', file_ref))
-
-                found_path = None
-                if os.path.exists(path1) and path1.startswith(WORKFLOW_REPO_DIR):
-                    found_path = path1
-                elif os.path.exists(path2) and path2.startswith(WORKFLOW_REPO_DIR):
-                    found_path = path2
+                found_path = find_resource_file(file_ref)
                 
                 if not found_path:
                     raise FileNotFoundError(f"File reference '{file_ref}' could not be resolved. Not found in primary or resources directory.")

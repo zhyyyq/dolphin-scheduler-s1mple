@@ -2,8 +2,7 @@ import yaml
 from .core.logger import logger
 import os
 import re
-
-WORKFLOW_REPO_DIR = os.path.abspath(os.getenv("WORKFLOW_REPO_DIR", os.path.join(os.path.dirname(__file__), '..', 'workflow_repo')))
+from .core.path_utils import find_resource_file
 
 def resolve_file_references(task_data):
     """
@@ -16,16 +15,7 @@ def resolve_file_references(task_data):
                 match = re.match(r'^\$FILE\{(.+?)\}$', value)
                 if match:
                     file_ref = match.group(1)
-                    
-                    # Define search paths
-                    path1 = os.path.abspath(os.path.join(WORKFLOW_REPO_DIR, file_ref))
-                    path2 = os.path.abspath(os.path.join(WORKFLOW_REPO_DIR, 'resources', file_ref))
-
-                    found_path = None
-                    if os.path.exists(path1) and path1.startswith(WORKFLOW_REPO_DIR):
-                        found_path = path1
-                    elif os.path.exists(path2) and path2.startswith(WORKFLOW_REPO_DIR):
-                        found_path = path2
+                    found_path = find_resource_file(file_ref)
 
                     if found_path:
                         try:
