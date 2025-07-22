@@ -19,6 +19,15 @@ def parse_workflow(content: str):
             # Pass all task data through, and keep original keys.
             # The frontend will handle unifying the type key.
             parsed_task = task_data.copy()
+
+            # if parsed_task.get('task_type') == 'Http' and isinstance(parsed_task.get('http_params'), list):
+            #     http_params_list = parsed_task.get('http_params', [])
+            #     parsed_task['http_params'] = {
+            #         param.get("prop"): param.get("value")
+            #         for param in http_params_list
+            #         if "prop" in param and "value" in param
+            #     }
+
             if 'deps' not in parsed_task:
                 parsed_task['deps'] = []
             tasks.append(parsed_task)
