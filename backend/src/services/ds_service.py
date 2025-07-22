@@ -167,19 +167,19 @@ async def submit_workflow_to_ds(filename: str):
                         match = re.match(r'^\$WORKFLOW\{"([^"}]+)"\}$', task['workflow_name'])
                         if match:
                             sub_workflow_name = match.group(1)
-                            # Query the database for the path
+                            logger.info(f"Found sub-workflow reference. Internal Name: '{sub_workflow_name}'")
+                            
+                            # Query the database for the filename (uuid.yaml) using the internal name.
                             sub_workflow_filename = file_service.get_workflow_path_by_name(sub_workflow_name)
+                            logger.info(f"DB query for '{sub_workflow_name}' returned filename: '{sub_workflow_filename}'")
+
                             if sub_workflow_filename:
-                                # The pydolphinscheduler CLI needs a path relative to the CWD,
-                                # which is WORKFLOW_REPO_DIR.
-                                # We need to find the file's actual relative path.
-                                # This assumes a flat structure for now. A better implementation
-                                # would search for the file.
-                                # For now, let's assume the file is in the root of the repo.
-                                # A better approach is needed if files are in subdirectories.
-                                task['workflow_name'] = sub_workflow_filename
+                                # Reconstruct the placeholder with the filename.
+                                new_placeholder = f'$WORKFLOW{{"{sub_workflow_filename}"}}'
+                                task['workflow_name'] = new_placeholder
+                                logger.info(f"Replaced original placeholder with: '{new_placeholder}'")
                             else:
-                                raise FileNotFoundError(f"Sub-workflow with name '{sub_workflow_name}' not found in the database.")
+                                raise FileNotFoundError(f"Sub-workflow with internal name '{sub_workflow_name}' not found in the database.")
 
             if 'workflow' in data and 'schedule' not in data['workflow']:
                 data['workflow']['schedule'] = None
@@ -188,6 +188,11 @@ async def submit_workflow_to_ds(filename: str):
                 yaml.dump(data, tmp)
                 tmp_path = tmp.name
             
+            # Log the content of the temporary file for debugging
+            with open(tmp_path, 'r', encoding='utf-8') as f_tmp_read:
+                tmp_content = f_tmp_read.read()
+                logger.debug(f"Content of temporary YAML file being submitted:\n---\n{tmp_content}\n---")
+
             result = subprocess.run(
                 ["uv", "run", "pydolphinscheduler", "yaml", "-f", tmp_path],
                 cwd=WORKFLOW_REPO_DIR,
