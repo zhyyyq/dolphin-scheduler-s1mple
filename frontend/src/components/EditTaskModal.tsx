@@ -10,6 +10,10 @@ import PythonTaskEditor from './tasks/PythonTaskEditor';
 import ConditionsTaskEditor from './tasks/ConditionsTaskEditor';
 import DataXTaskEditor from './tasks/DataXTaskEditor';
 import CustomDataXTaskEditor from './tasks/CustomDataXTaskEditor';
+import DependentTaskEditor from './tasks/DependentTaskEditor';
+import DVCInitTaskEditor from './tasks/DVCInitTaskEditor';
+import DVCUploadTaskEditor from './tasks/DVCUploadTaskEditor';
+import DVCDownloadTaskEditor from './tasks/DVCDownloadTaskEditor';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
 // Import other specific editors as needed
@@ -66,6 +70,21 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         }
         delete updatedTask.conditions_yaml;
       }
+
+      if (values.denpendence_yaml) { // For the Dependent Editor
+        try {
+          const denpendenceData = yaml.load(values.denpendence_yaml) as object;
+          updatedTask = {
+            ...task,
+            name: values.name,
+            denpendence: denpendenceData,
+          };
+        } catch (e) {
+          console.error("Error parsing YAML for Dependent:", e);
+          return;
+        }
+        delete updatedTask.denpendence_yaml;
+      }
       onSave(updatedTask);
 
     }).catch(info => {
@@ -93,6 +112,14 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         return <DataXTaskEditor />;
       case 'CustomDataX':
         return <CustomDataXTaskEditor />;
+      case 'Dependent':
+        return <DependentTaskEditor form={form} initialValues={task} />;
+      case 'DVCInit':
+        return <DVCInitTaskEditor />;
+      case 'DVCUpload':
+        return <DVCUploadTaskEditor />;
+      case 'DVCDownload':
+        return <DVCDownloadTaskEditor />;
       // Add cases for other task types here
       default:
         return <DefaultTaskEditor initialValues={task} form={form} />;
