@@ -1,53 +1,39 @@
 import React from 'react';
-import { Input, Button } from 'antd';
+import { Form, Input, Button, Space } from 'antd';
+import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 
-interface SwitchTaskEditorProps {
-  currentNode: any;
-}
-
-export const SwitchTaskEditor: React.FC<SwitchTaskEditorProps> = ({ currentNode }) => {
-  const data = currentNode.getData();
-
-  const handleSwitchChange = (index: number, field: 'condition' | 'task', value: string) => {
-    const newConditions = [...(data.condition || [])];
-    newConditions[index] = { ...newConditions[index], [field]: value };
-    currentNode.setData({ ...data, condition: newConditions });
-  };
-
-  const addSwitchBranch = () => {
-    const newConditions = [...(data.condition || []), { task: '', condition: '' }];
-    currentNode.setData({ ...data, condition: newConditions });
-  };
-
-  const removeSwitchBranch = (index: number) => {
-    const newConditions = [...(data.condition || [])];
-    newConditions.splice(index, 1);
-    currentNode.setData({ ...data, condition: newConditions });
-  };
-
+const SwitchTaskEditor: React.FC = () => {
   return (
-    <>
-      <p>分支条件:</p>
-      {data.condition?.map((branch: any, index: number) => (
-        <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
-          <Input
-            placeholder="条件 (例如 ${var} > 1)"
-            value={branch.condition}
-            onChange={e => handleSwitchChange(index, 'condition', e.target.value)}
-            style={{ flex: 1 }}
-          />
-          <Input
-            placeholder="任务名称"
-            value={branch.task}
-            onChange={e => handleSwitchChange(index, 'task', e.target.value)}
-            style={{ flex: 1 }}
-          />
-          <Button onClick={() => removeSwitchBranch(index)} danger type="text">X</Button>
-        </div>
-      ))}
-      <Button onClick={addSwitchBranch} type="dashed" style={{ width: '100%' }}>
-        + 添加分支
-      </Button>
-    </>
+    <Form.List name="condition">
+      {(fields, { add, remove }) => (
+        <>
+          {fields.map(({ key, name, ...restField }) => (
+            <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+              <Form.Item
+                {...restField}
+                name={[name, 'task']}
+                rules={[{ required: true, message: '请输入目标任务' }]}
+              >
+                <Input placeholder="目标任务" />
+              </Form.Item>
+              <Form.Item
+                {...restField}
+                name={[name, 'condition']}
+              >
+                <Input placeholder="跳转条件 (可选)" />
+              </Form.Item>
+              <MinusCircleOutlined onClick={() => remove(name)} />
+            </Space>
+          ))}
+          <Form.Item>
+            <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+              添加分支
+            </Button>
+          </Form.Item>
+        </>
+      )}
+    </Form.List>
   );
 };
+
+export default SwitchTaskEditor;
