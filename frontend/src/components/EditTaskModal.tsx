@@ -24,6 +24,8 @@ import MLflowModelsTaskEditor from './tasks/MLflowModelsTaskEditor';
 import MLFlowProjectsBasicAlgorithmTaskEditor from './tasks/MLFlowProjectsBasicAlgorithmTaskEditor';
 import OpenMLDBTaskEditor from './tasks/OpenMLDBTaskEditor';
 import ProcedureTaskEditor from './tasks/ProcedureTaskEditor';
+import PytorchTaskEditor from './tasks/PytorchTaskEditor';
+import SagemakerTaskEditor from './tasks/SagemakerTaskEditor';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
 // Import other specific editors as needed
@@ -170,6 +172,10 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         return <OpenMLDBTaskEditor />;
       case 'Procedure':
         return <ProcedureTaskEditor />;
+      case 'pytorch':
+        return <PytorchTaskEditor />;
+      case 'Sagemaker':
+        return <SagemakerTaskEditor />;
       // Add cases for other task types here
       default:
         return <DefaultTaskEditor initialValues={task} form={form} />;
