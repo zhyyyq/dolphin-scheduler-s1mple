@@ -21,7 +21,7 @@ const TaskNodeComponent: React.FC<{ node: Node }> = ({ node }) => {
 
 register({
   shape: 'task-node',
-  width: 180,
+  width: 'auto', // Let CSS control the width
   height: 36,
   component: TaskNodeComponent,
   propHooks(metadata: Node.Metadata) {
