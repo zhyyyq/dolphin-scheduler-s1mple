@@ -19,6 +19,8 @@ def parse_workflow(content: str):
             # Pass all task data through, and keep original keys.
             # The frontend will handle unifying the type key.
             parsed_task = task_data.copy()
+            if 'deps' not in parsed_task:
+                parsed_task['deps'] = []
             tasks.append(parsed_task)
             
         relations = []
