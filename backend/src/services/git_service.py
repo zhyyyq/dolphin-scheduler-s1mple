@@ -78,10 +78,11 @@ def git_commit(file_path, message):
         logger.error("Git command not found. Please ensure Git is installed and in the system's PATH.")
 
 def get_deleted_workflows():
-    """Lists workflow files that have been deleted from the repository."""
+    """Lists workflow files that have been deleted, including their names."""
     try:
+        # Get the list of deleted yaml files and the commit they were deleted in
         result = subprocess.run(
-            ["git", "log", "--diff-filter=D", "--summary"],
+            ["git", "log", "--diff-filter=D", "--summary", "--", "*.yaml"],
             cwd=WORKFLOW_REPO_DIR,
             check=True,
             capture_output=True,
@@ -89,21 +90,51 @@ def get_deleted_workflows():
             encoding='utf-8'
         )
         
-        deleted_files = {}
+        deleted_files_info = {}
         commit_hash = None
         for line in result.stdout.strip().split('\n'):
             if line.startswith('commit '):
                 commit_hash = line.split(' ')[1]
-            elif 'delete mode' in line:
+            elif 'delete mode' in line and line.endswith('.yaml'):
                 filename = line.split(' ')[-1]
-                if filename not in deleted_files:
+                # We only care about the first time a file was deleted, in case it was restored and deleted again.
+                if filename not in deleted_files_info:
+                     # Check if the file *still* doesn't exist. If it does, it was restored.
                     if not os.path.exists(os.path.join(WORKFLOW_REPO_DIR, filename)):
-                        deleted_files[filename] = {
-                            "filename": filename,
-                            "commit_hash": commit_hash
-                        }
+                        deleted_files_info[filename] = commit_hash
 
-        return list(deleted_files.values())
+        workflows = []
+        yaml_parser = yaml.YAML()
+        for filename, commit_hash in deleted_files_info.items():
+            try:
+                # Get the content of the file from the commit *before* it was deleted
+                content_result = subprocess.run(
+                    ["git", "show", f"{commit_hash}^:{filename}"],
+                    cwd=WORKFLOW_REPO_DIR,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    encoding='utf-8'
+                )
+                content = content_result.stdout
+                data = yaml_parser.load(content)
+                workflow_name = data.get('workflow', {}).get('name', 'Unknown Name')
+                
+                workflows.append({
+                    "filename": filename,
+                    "commit_hash": commit_hash,
+                    "name": workflow_name
+                })
+            except (subprocess.CalledProcessError, yaml.YAMLError) as e:
+                # If we can't get the old content or parse it, just add it with an unknown name
+                logger.warning(f"Could not retrieve or parse content for deleted file {filename} at {commit_hash}^: {e}")
+                workflows.append({
+                    "filename": filename,
+                    "commit_hash": commit_hash,
+                    "name": "Unknown (Parse Error)"
+                })
+
+        return workflows
     except subprocess.CalledProcessError as e:
         logger.error(f"Git log for deleted files failed: {e.stderr}")
         return []
