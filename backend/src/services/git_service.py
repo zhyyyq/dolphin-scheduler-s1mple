@@ -1,7 +1,7 @@
 import subprocess
 import os
 from ruamel.yaml import YAML
-from ..core.logger import logger
+from core.logger import logger
 
 WORKFLOW_REPO_DIR = os.getenv("WORKFLOW_REPO_DIR")
 

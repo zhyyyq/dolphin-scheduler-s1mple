@@ -1,6 +1,6 @@
 import asyncio
 import os
-from ..core.logger import logger
+from core.logger import logger
 
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 

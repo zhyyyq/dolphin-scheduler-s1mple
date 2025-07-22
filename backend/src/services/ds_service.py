@@ -7,9 +7,9 @@ import tempfile
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap, CommentedSeq
 from dotenv import load_dotenv
-from ..core.logger import logger
+from core.logger import logger
 from . import git_service, file_service
-from ..core.path_utils import find_resource_file
+from core.path_utils import find_resource_file
 
 def convert_to_standard_types(item):
     """Recursively converts ruamel.yaml specific types to standard Python types."""

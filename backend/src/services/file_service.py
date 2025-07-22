@@ -1,8 +1,8 @@
 import os
 import shutil
 from fastapi import UploadFile, HTTPException
-from ..db.setup import SessionLocal, Workflow as WorkflowDB
-from ..core.logger import logger
+from db.setup import SessionLocal, Workflow as WorkflowDB
+from core.logger import logger
 
 # Use a dedicated directory for user-uploaded reference files.
 # This keeps them separate from the demo files.

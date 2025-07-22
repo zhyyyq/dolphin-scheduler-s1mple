@@ -7,10 +7,10 @@ from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedSeq, CommentedMap
 from ruamel.yaml.scalarstring import DoubleQuotedScalarString as DQS
 from sqlalchemy.orm import Session
-from ..parser import parse_workflow
-from ..db.setup import create_db_connection, Workflow
-from ..core.logger import logger
-from ..services import git_service, ds_service, file_service
+from parser import parse_workflow
+from db.setup import create_db_connection, Workflow
+from core.logger import logger
+from services import git_service, ds_service, file_service
 from .ds import get_workflows as get_ds_workflows
 from cron_descriptor import get_description
 from dotenv import load_dotenv

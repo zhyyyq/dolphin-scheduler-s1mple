@@ -1,6 +1,6 @@
 import yaml
 import json
-from .core.logger import logger
+from core.logger import logger
 
 def parse_workflow(content: str):
     """

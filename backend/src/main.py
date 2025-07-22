@@ -3,13 +3,13 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import subprocess
-from .parser import parse_workflow
-from .db.setup import init_db
-from .api.workflow import router as workflow_router
-from .api.ds import router as ds_router
-from .api.file import router as file_router
-from .core.logger import setup_logger, logger
-from .services import git_service, process_service, file_service, ds_service
+from parser import parse_workflow
+from db.setup import init_db
+from api.workflow import router as workflow_router
+from api.ds import router as ds_router
+from api.file import router as file_router
+from core.logger import setup_logger, logger
+from services import git_service, process_service, file_service, ds_service
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -275,3 +275,11 @@ async def submit_workflow_to_ds_endpoint(workflow: SubmitWorkflow):
     Submits a local YAML workflow file to DolphinScheduler using the CLI.
     """
     return await ds_service.submit_workflow_to_ds(workflow.filename)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    # To run this script directly for testing, you might need to adjust the Python path
+    # to include the 'src' directory, e.g., by running with `python -m src.main`.
+    # For production, use a proper ASGI server like uvicorn pointing to the app instance.
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="debug", reload=True)
