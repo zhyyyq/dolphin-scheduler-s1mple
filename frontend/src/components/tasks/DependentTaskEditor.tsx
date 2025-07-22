@@ -14,7 +14,8 @@ const DependentTaskEditor: React.FC<DependentTaskEditorProps> = ({ form, initial
   useEffect(() => {
     if (initialValues) {
       const { denpendence } = initialValues;
-      const yamlText = yaml.dump(denpendence);
+      // If denpendence is null or undefined, dump an empty object to avoid 'null' string
+      const yamlText = yaml.dump(denpendence || {});
       form.setFieldsValue({ denpendence_yaml: yamlText });
     }
   }, [initialValues, form]);
