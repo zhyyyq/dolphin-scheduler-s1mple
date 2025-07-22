@@ -4,6 +4,7 @@ import { Task } from '../types';
 import SqlTaskEditor from './tasks/SqlTaskEditor';
 import ShellTaskEditor from './tasks/ShellTaskEditor';
 import SwitchTaskEditor from './tasks/SwitchTaskEditor';
+import SubWorkflowTaskEditor from './tasks/SubWorkflowTaskEditor';
 // Import other specific editors as needed
 
 interface EditTaskModalProps {
@@ -42,6 +43,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         return <ShellTaskEditor />;
       case 'Switch':
         return <SwitchTaskEditor />;
+      case 'SubWorkflow':
+        return <SubWorkflowTaskEditor />;
       // Add cases for other task types here
       default:
         return <p>此任务类型没有可用的自定义编辑器。</p>;
