@@ -142,25 +142,33 @@ public class WorkflowService {
     }
 
     public void deleteWorkflow(String workflowUuid, Long projectCode, Long workflowCode) throws Exception, GitAPIException {
-        boolean deletedFromDs = false;
+        boolean deletedSomething = false;
+
+        // 1. Attempt to delete from DolphinScheduler if codes are provided
         if (projectCode != null && workflowCode != null) {
             dsService.deleteDsWorkflow(projectCode, workflowCode);
-            deletedFromDs = true;
+            deletedSomething = true;
         }
 
-        boolean deletedFromDb = false;
+        // 2. Attempt to delete locally if a DB entry exists for the UUID
         if (workflowRepository.existsById(workflowUuid)) {
-            workflowRepository.deleteById(workflowUuid);
-            deletedFromDb = true;
-        }
-
-        if (deletedFromDs || deletedFromDb) {
-            String filename = workflowUuid + ".yaml";
+            Workflow workflow = workflowRepository.findById(workflowUuid).get();
+            String filename = workflow.getUuid() + ".yaml";
             Path filePath = Paths.get(workflowRepoDir, filename);
+
+            // Delete from DB
+            workflowRepository.delete(workflow);
+
+            // Safely delete file from repo and commit
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
-                gitService.gitCommit(filename, "Delete workflow " + workflowUuid);
+                gitService.gitCommit(filename, "Delete workflow: " + filename);
             }
+            deletedSomething = true;
+        }
+
+        if (!deletedSomething) {
+            throw new RuntimeException("Workflow with UUID " + workflowUuid + " not found.");
         }
     }
 }
