@@ -13,8 +13,8 @@ export interface Workflow {
 }
 
 export interface WorkflowDetail extends Workflow {
-  tasks: Task[];
-  relations: Relation[];
+  tasks?: Task[];
+  relations?: Relation[];
   filename: string;
   yaml_content: string;
   schedule?: any;

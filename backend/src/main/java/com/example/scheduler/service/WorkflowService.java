@@ -137,29 +137,9 @@ public class WorkflowService {
         }
         String content = new String(Files.readAllBytes(filePath));
         
-        Yaml yaml = new Yaml();
-        Map<String, Object> rawData = yaml.load(content);
-        Map<String, Object> workflowMeta = (Map<String, Object>) rawData.get("workflow");
-        List<Map<String, Object>> tasks = (List<Map<String, Object>>) rawData.get("tasks");
-        List<Map<String, Object>> relations = new java.util.ArrayList<>();
-        for (Map<String, Object> task : tasks) {
-            if (task.containsKey("deps")) {
-                List<String> deps = (List<String>) task.get("deps");
-                for (String dep : deps) {
-                    Map<String, Object> relation = new java.util.HashMap<>();
-                    relation.put("from", dep);
-                    relation.put("to", task.get("name"));
-                    relations.add(relation);
-                }
-            }
-        }
-
         Map<String, Object> map = new java.util.HashMap<>();
         map.put("name", workflow.getName());
         map.put("uuid", workflow.getUuid());
-        map.put("schedule", workflowMeta.get("schedule"));
-        map.put("tasks", tasks);
-        map.put("relations", relations);
         map.put("filename", filename);
         map.put("yaml_content", content);
         return map;

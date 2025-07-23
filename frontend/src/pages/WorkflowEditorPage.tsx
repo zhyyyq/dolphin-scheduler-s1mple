@@ -69,18 +69,19 @@ const WorkflowEditorPage: React.FC = () => {
 
   useEffect(() => {
     if (graph && workflowData) {
-      const { name, uuid, schedule, yaml_content } = workflowData;
+      const { name, uuid, yaml_content } = workflowData;
       setWorkflowName(name);
       setWorkflowUuid(uuid);
-      if (schedule !== undefined && schedule !== null) {
-        setWorkflowSchedule(String(schedule));
-        setIsScheduleEnabled(true);
-      } else {
-        setIsScheduleEnabled(false);
-      }
 
       try {
         const doc = yaml.parseDocument(yaml_content);
+        const schedule = doc.getIn(['workflow', 'schedule']);
+        if (schedule !== undefined && schedule !== null) {
+          setWorkflowSchedule(String(schedule));
+          setIsScheduleEnabled(true);
+        } else {
+          setIsScheduleEnabled(false);
+        }
         const tasks = (doc.get('tasks') as any).toJSON();
         const relations: { from: string, to: string }[] = [];
         for (const task of tasks) {
