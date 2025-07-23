@@ -222,6 +222,7 @@ const WorkflowEditorPage: React.FC = () => {
         name: workflowName,
         content: yamlStr,
         original_filename: workflow_uuid ? `${workflow_uuid}.yaml` : undefined,
+        uuid: workflowUuid,
       });
       setWorkflowUuid(response.uuid);
       message.success('工作流保存成功！');
