@@ -119,6 +119,7 @@ const WorkflowEditorPage: React.FC = () => {
       
       delete taskPayload.label;
       delete taskPayload._display_type; // Remove internal display type
+      delete taskPayload.id; // Remove internal id
       return taskPayload;
     });
 
