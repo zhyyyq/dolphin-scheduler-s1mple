@@ -123,10 +123,8 @@ public class DsService {
 
         // 2. If the workflow is online, take it offline first
         if (workflowData.getAsJsonObject("processDefinition").get("releaseState").getAsString().equals("ONLINE")) {
-            HttpPost releaseRequest = new HttpPost(dsUrl + "/projects/" + projectCode + "/process-definition/release");
+            HttpPost releaseRequest = new HttpPost(dsUrl + "/projects/" + projectCode + "/process-definition/" + workflowCode + "/release?releaseState=OFFLINE");
             releaseRequest.addHeader("token", token);
-            releaseRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
-            releaseRequest.setEntity(new StringEntity("processDefinitionCode=" + workflowCode + "&releaseState=OFFLINE"));
             CloseableHttpResponse releaseResponse = httpClient.execute(releaseRequest);
             String releaseResponseString = EntityUtils.toString(releaseResponse.getEntity());
             JsonObject releaseData = gson.fromJson(releaseResponseString, JsonObject.class);
