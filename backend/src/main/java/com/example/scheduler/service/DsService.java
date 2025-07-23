@@ -163,7 +163,7 @@ public class DsService {
             Map<String, Object> data = yaml.load(new String(Files.readAllBytes(filePath)));
 
             // In-memory transformation for submission
-            // ... (resolve_file_placeholders_recursive and resolve_workflow_placeholders_recursive logic would go here)
+            resolveFilePlaceholdersRecursive(data);
 
             if (data.containsKey("workflow") && !((Map)data.get("workflow")).containsKey("schedule")) {
                 ((Map)data.get("workflow")).put("schedule", null);
@@ -312,5 +312,40 @@ public class DsService {
         }
 
         return stats;
+    }
+
+    private void resolveFilePlaceholdersRecursive(Object object) {
+        if (object instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>) object;
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                if (entry.getValue() instanceof String) {
+                    String str = (String) entry.getValue();
+                    if (str.matches("\\$FILE\\{\"([^}]+)\"\\}")) {
+                        String filename = str.substring(7, str.length() - 2);
+                        if (!filename.startsWith("./uploads/")) {
+                            entry.setValue("$FILE{\"./uploads/" + filename + "\"}");
+                        }
+                    }
+                } else {
+                    resolveFilePlaceholdersRecursive(entry.getValue());
+                }
+            }
+        } else if (object instanceof List) {
+            List<Object> list = (List<Object>) object;
+            for (int i = 0; i < list.size(); i++) {
+                Object element = list.get(i);
+                if (element instanceof String) {
+                    String str = (String) element;
+                    if (str.matches("\\$FILE\\{\"([^}]+)\"\\}")) {
+                        String filename = str.substring(7, str.length() - 2);
+                        if (!filename.startsWith("./uploads/")) {
+                            list.set(i, "$FILE{\"./uploads/" + filename + "\"}");
+                        }
+                    }
+                } else {
+                    resolveFilePlaceholdersRecursive(element);
+                }
+            }
+        }
     }
 }
