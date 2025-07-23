@@ -145,14 +145,16 @@ const WorkflowEditorPage: React.FC = () => {
       }
 
       if (taskPayload.task_type === 'Switch' || taskPayload.type === 'Switch') {
+        const originalConditions = Array.isArray(nodeData.condition) ? nodeData.condition : [];
         const conditions = edges
           .filter(edge => edge.source.cell === node.id)
           .map(edge => {
             const targetNode = nodes.find(n => n.id === edge.target.cell);
             if (targetNode) {
+              const originalCondition = originalConditions.find(c => c.task === targetNode.data.label);
               return {
                 task: targetNode.data.label,
-                condition: targetNode.data.condition,
+                condition: originalCondition ? originalCondition.condition : undefined,
               };
             }
             return null;
