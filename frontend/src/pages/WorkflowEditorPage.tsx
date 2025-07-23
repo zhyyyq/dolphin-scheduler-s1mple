@@ -151,7 +151,7 @@ const WorkflowEditorPage: React.FC = () => {
           .map(edge => {
             const targetNode = nodes.find(n => n.id === edge.target.cell);
             if (targetNode) {
-              const originalCondition = originalConditions.find(c => c.task === targetNode.data.label);
+              const originalCondition = originalConditions.find((c: any) => c.task === targetNode.data.label);
               return {
                 task: targetNode.data.label,
                 condition: originalCondition ? originalCondition.condition : undefined,
