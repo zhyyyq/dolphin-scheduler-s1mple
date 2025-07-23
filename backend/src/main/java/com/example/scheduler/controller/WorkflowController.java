@@ -166,7 +166,7 @@ public class WorkflowController {
     @GetMapping("/content/{commitHash}/{filename}")
     public ResponseEntity<?> getWorkflowContentAtCommit(@PathVariable String commitHash, @PathVariable String filename) {
         try {
-            return ResponseEntity.ok(workflowService.getWorkflowAtCommit(filename, commitHash));
+            return ResponseEntity.ok(workflowService.getFileAtCommit(filename, commitHash));
         } catch (Exception e) {
             logger.error("Error getting workflow content at commit {} for {}", commitHash, filename, e);
             return ResponseEntity.status(500).body(e.getMessage());

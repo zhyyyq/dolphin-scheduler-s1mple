@@ -84,7 +84,11 @@ public class GitService {
         Map<String, Object> fileData = new java.util.HashMap<>();
         try (RevWalk revWalk = new RevWalk(git.getRepository())) {
             RevCommit commit = revWalk.parseCommit(git.getRepository().resolve(commitHash));
-            RevTree tree = commit.getTree();
+            if (commit.getParentCount() == 0) {
+                throw new IllegalStateException("Cannot get file content from the initial commit.");
+            }
+            RevCommit parent = revWalk.parseCommit(commit.getParent(0).getId());
+            RevTree tree = parent.getTree();
             try (TreeWalk treeWalk = new TreeWalk(git.getRepository())) {
                 treeWalk.addTree(tree);
                 treeWalk.setRecursive(true);
@@ -174,7 +178,7 @@ public class GitService {
         if (git == null) {
             init();
         }
-        git.checkout().setStartPoint(commitHash).addPath(path).call();
+        git.checkout().setStartPoint(commitHash + "^").addPath(path).call();
         git.commit().setMessage("Restore file " + path + " from commit " + commitHash).call();
     }
 }

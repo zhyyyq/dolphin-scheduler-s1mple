@@ -285,6 +285,10 @@ public class WorkflowService {
         return gitService.getCommitDiff(filename, commitHash);
     }
 
+    public Map<String, Object> getFileAtCommit(String filename, String commitHash) throws GitAPIException, IOException {
+        return gitService.getFileAtCommit(filename, commitHash);
+    }
+
     public List<Map<String, Object>> getDeletedWorkflows() throws GitAPIException, IOException {
         return gitService.getDeletedFiles();
     }
