@@ -5,6 +5,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 
@@ -16,10 +17,15 @@ public class GitService {
 
     private Git git;
 
+    @PostConstruct
     public void init() throws IOException, GitAPIException {
         File repoDir = new File(workflowRepoDir);
         if (!repoDir.exists()) {
             repoDir.mkdirs();
+        }
+
+        File gitDir = new File(repoDir, ".git");
+        if (!gitDir.exists()) {
             Git.init().setDirectory(repoDir).call();
         }
         git = Git.open(repoDir);

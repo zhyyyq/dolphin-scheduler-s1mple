@@ -75,6 +75,12 @@ public class WorkflowService {
 
         String filename = workflowUuid + ".yaml";
         Path filePath = Paths.get(workflowRepoDir, filename);
+        
+        // Ensure parent directory exists
+        Path parentDir = filePath.getParent();
+        if (!Files.exists(parentDir)) {
+            Files.createDirectories(parentDir);
+        }
 
         if (workflowDto.getOriginalFilename() != null && !workflowDto.getOriginalFilename().equals(filename)) {
             Path oldFilePath = Paths.get(workflowRepoDir, workflowDto.getOriginalFilename());
