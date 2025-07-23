@@ -231,8 +231,7 @@ public class WorkflowService {
 
                 // Safely delete file from repo and commit
                 if (Files.exists(filePath)) {
-                    Files.delete(filePath);
-                    gitService.gitCommit(filename, "Delete workflow: " + workflow.getName());
+                    gitService.gitRmAndCommit(filename, "Delete workflow: " + workflow.getName());
                 }
                 deletedSomething = true;
             }

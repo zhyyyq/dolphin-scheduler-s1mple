@@ -52,6 +52,14 @@ public class GitService {
         git.commit().setMessage(message).call();
     }
 
+    public void gitRmAndCommit(String filename, String message) throws GitAPIException, IOException {
+        if (git == null) {
+            init();
+        }
+        git.rm().addFilepattern(filename).call();
+        git.commit().setMessage(message).call();
+    }
+
     public List<Map<String, Object>> getFileHistory(String filename) throws GitAPIException, IOException {
         if (git == null) {
             init();
@@ -124,5 +132,36 @@ public class GitService {
             return rev.getName();
         }
         return null;
+    }
+
+    public List<Map<String, Object>> getDeletedFiles() throws GitAPIException, IOException {
+        if (git == null) {
+            init();
+        }
+        List<Map<String, Object>> deletedFiles = new java.util.ArrayList<>();
+        try (RevWalk revWalk = new RevWalk(git.getRepository())) {
+            Iterable<RevCommit> logs = git.log().all().call();
+            for (RevCommit commit : logs) {
+                if (commit.getParentCount() > 0) {
+                    RevCommit parent = revWalk.parseCommit(commit.getParent(0).getId());
+                    try (DiffFormatter diffFormatter = new DiffFormatter(new ByteArrayOutputStream())) {
+                        diffFormatter.setRepository(git.getRepository());
+                        List<DiffEntry> diffs = diffFormatter.scan(parent.getTree(), commit.getTree());
+                        for (DiffEntry diff : diffs) {
+                            if (diff.getChangeType() == DiffEntry.ChangeType.DELETE) {
+                                Map<String, Object> fileData = new java.util.HashMap<>();
+                                fileData.put("path", diff.getOldPath());
+                                fileData.put("commit", commit.getName());
+                                fileData.put("author", commit.getAuthorIdent().getName());
+                                fileData.put("date", commit.getAuthorIdent().getWhen());
+                                fileData.put("message", commit.getFullMessage());
+                                deletedFiles.add(fileData);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return deletedFiles;
     }
 }
