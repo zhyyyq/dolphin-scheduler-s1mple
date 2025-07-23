@@ -172,4 +172,17 @@ public class WorkflowController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @PostMapping("/revert")
+    public ResponseEntity<?> revertWorkflow(@RequestBody Map<String, String> payload) {
+        try {
+            String workflowUuid = payload.get("workflow_uuid");
+            String commitHash = payload.get("commit_hash");
+            workflowService.revertToCommit(workflowUuid, commitHash);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("Error reverting workflow", e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 }

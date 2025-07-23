@@ -185,4 +185,12 @@ public class GitService {
         git.checkout().setStartPoint(commitHash + "^").addPath(path).call();
         git.commit().setMessage("Restore file " + path + " from commit " + commitHash).call();
     }
+
+    public void revertFileToCommit(String filename, String commitHash) throws GitAPIException, IOException {
+        if (git == null) {
+            init();
+        }
+        git.checkout().setStartPoint(commitHash).addPath(filename).call();
+        git.commit().setMessage("Revert " + filename + " to commit " + commitHash).call();
+    }
 }

@@ -313,4 +313,9 @@ public class WorkflowService {
         }
         workflowRepository.save(workflow);
     }
+
+    public void revertToCommit(String workflowUuid, String commitHash) throws GitAPIException, IOException {
+        String filename = workflowUuid + ".yaml";
+        gitService.revertFileToCommit(filename, commitHash);
+    }
 }
