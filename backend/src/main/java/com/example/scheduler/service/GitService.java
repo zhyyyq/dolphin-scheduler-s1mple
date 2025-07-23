@@ -114,4 +114,15 @@ public class GitService {
         }
         return diffData;
     }
+
+    public String getLatestCommit(String filename) throws GitAPIException, IOException {
+        if (git == null) {
+            init();
+        }
+        Iterable<RevCommit> logs = git.log().addPath(filename).setMaxCount(1).call();
+        for (RevCommit rev : logs) {
+            return rev.getName();
+        }
+        return null;
+    }
 }

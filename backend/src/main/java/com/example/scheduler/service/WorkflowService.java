@@ -203,6 +203,13 @@ public class WorkflowService {
         String workflowUuid = filename.replace(".yaml", "");
         Workflow workflow = workflowRepository.findById(workflowUuid).orElseThrow(() -> new RuntimeException("Workflow not found"));
         dsService.submitWorkflowToDs(filename);
+
+        Path filePath = Paths.get(workflowRepoDir, filename);
+        String content = new String(Files.readAllBytes(filePath));
+        String commitId = gitService.getLatestCommit(filename);
+        String newContent = "# online-version: " + commitId + "\n" + content;
+        Files.write(filePath, newContent.getBytes());
+        gitService.gitCommit(filename, "Online workflow " + workflow.getName());
     }
 
     public void deleteWorkflow(String workflowUuid, Long projectCode, Long workflowCode) throws Exception, GitAPIException {
