@@ -232,7 +232,7 @@ public class WorkflowService {
                 // Safely delete file from repo and commit
                 if (Files.exists(filePath)) {
                     Files.delete(filePath);
-                    gitService.gitCommit(filename, "Delete workflow: " + filename);
+                    gitService.gitCommit(filename, "Delete workflow: " + workflow.getName());
                 }
                 deletedSomething = true;
             }
@@ -284,5 +284,9 @@ public class WorkflowService {
     public Map<String, Object> getWorkflowAtCommit(String workflowUuid, String commitHash) throws GitAPIException, IOException {
         String filename = workflowUuid + ".yaml";
         return gitService.getCommitDiff(filename, commitHash);
+    }
+
+    public List<Map<String, Object>> getDeletedWorkflows() throws GitAPIException, IOException {
+        return gitService.getDeletedFiles();
     }
 }

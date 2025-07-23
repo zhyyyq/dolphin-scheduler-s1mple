@@ -102,8 +102,12 @@ public class WorkflowController {
 
     @GetMapping("/deleted")
     public ResponseEntity<?> getDeletedWorkflows() {
-        // This is a placeholder. The actual implementation will depend on the GitService.
-        return ResponseEntity.ok(new ArrayList<>());
+        try {
+            return ResponseEntity.ok(workflowService.getDeletedWorkflows());
+        } catch (Exception e) {
+            logger.error("Error getting deleted workflows", e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 
     @PostMapping("/{workflowUuid}/execute")
