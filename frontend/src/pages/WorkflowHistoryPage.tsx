@@ -105,9 +105,9 @@ const WorkflowHistoryPage: React.FC = () => {
     },
     {
       title: 'Date',
-      dataIndex: 'timestamp',
-      key: 'timestamp',
-      render: (timestamp) => new Date(timestamp * 1000).toLocaleString(),
+      dataIndex: 'date',
+      key: 'date',
+      render: (date) => new Date(date).toLocaleString(),
     },
     {
       title: '操作',

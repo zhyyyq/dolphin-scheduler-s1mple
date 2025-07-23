@@ -153,6 +153,10 @@ public class GitService {
                         List<DiffEntry> diffs = diffFormatter.scan(parent.getTree(), commit.getTree());
                         for (DiffEntry diff : diffs) {
                             if (diff.getChangeType() == DiffEntry.ChangeType.DELETE) {
+                                File file = new File(workflowRepoDir, diff.getOldPath());
+                                if (file.exists()) {
+                                    continue;
+                                }
                                 Map<String, Object> fileData = new java.util.HashMap<>();
                                 fileData.put("path", diff.getOldPath());
                                 fileData.put("commit", commit.getName());
