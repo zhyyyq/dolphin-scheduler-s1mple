@@ -34,7 +34,7 @@ public class DsController {
     }
 
     @PostMapping("/execute/{projectCode}/{processDefinitionCode}")
-    public ResponseEntity<?> executeDsWorkflow(@PathVariable Long projectCode, @PathVariable Long processDefinitionCode, @RequestBody Map<String, Object> payload) {
+    public ResponseEntity<?> executeDsWorkflow(@PathVariable String projectCode, @PathVariable String processDefinitionCode, @RequestBody Map<String, Object> payload) {
         try {
             return ResponseEntity.ok(dsService.executeDsWorkflow(projectCode, processDefinitionCode, payload));
         } catch (Exception e) {

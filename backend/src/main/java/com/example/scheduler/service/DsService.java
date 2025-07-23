@@ -6,9 +6,12 @@ import com.google.gson.JsonObject;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -42,7 +45,7 @@ public class DsService {
     @Value("${workflow.repo.dir}")
     private String workflowRepoDir;
 
-    public List<Map<String, Object>> getEnvironments() throws Exception {
+    public String getEnvCode() throws Exception {
         HttpGet request = new HttpGet(dsUrl + "/environment/list-paging?pageNo=1&pageSize=1000&searchVal=");
         request.addHeader("token", token);
         CloseableHttpResponse response = httpClient.execute(request);
@@ -52,7 +55,7 @@ public class DsService {
         if (data.get("code").getAsInt() != 0) {
             throw new Exception("DS API error (list-paging): " + data.get("msg").getAsString());
         }
-        return gson.fromJson(data.getAsJsonObject("data").getAsJsonArray("totalList"), List.class);
+        return data.getAsJsonObject("data").getAsJsonArray("totalList").get(0).getAsJsonObject().get("code").getAsString();
     }
 
     public List<Map<String, Object>> getWorkflows() throws Exception {
@@ -185,56 +188,61 @@ public class DsService {
         }
     }
 
-    public Map<String, Object> executeDsWorkflow(Long projectCode, Long processDefinitionCode, Map<String, Object> payload) throws Exception {
+    public String executeDsWorkflow(String projectCode, String processDefinitionCode, Map<String, Object> payload) throws Exception {
         HttpPost executeRequest = new HttpPost(dsUrl + "/projects/" + projectCode + "/executors/start-process-instance");
         executeRequest.addHeader("token", token);
+        executeRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
-        Map<String, Object> apiPayload = new HashMap<>();
-        apiPayload.put("processDefinitionCode", processDefinitionCode);
-        apiPayload.put("failureStrategy", "CONTINUE");
-        apiPayload.put("warningType", "NONE");
-        apiPayload.put("warningGroupId", null);
-        apiPayload.put("execType", null);
-        apiPayload.put("startNodeList", "");
-        apiPayload.put("taskDependType", "TASK_POST");
-        apiPayload.put("runMode", "RUN_MODE_SERIAL");
-        apiPayload.put("processInstancePriority", "MEDIUM");
-        apiPayload.put("workerGroup", "default");
-        apiPayload.put("environmentCode", payload.getOrDefault("environmentCode", -1));
-        apiPayload.put("timeout", null);
-        apiPayload.put("scheduleTime", "");
-        apiPayload.put("expectedParallelismNumber", null);
-        apiPayload.put("dryRun", 0);
-        apiPayload.put("testFlag", 0);
+        List<NameValuePair> params = new ArrayList<>();
+        params.add(new BasicNameValuePair("processDefinitionCode", processDefinitionCode));
+        params.add(new BasicNameValuePair("failureStrategy", "CONTINUE"));
+        params.add(new BasicNameValuePair("warningType", "NONE"));
+        params.add(new BasicNameValuePair("warningGroupId", ""));
+        params.add(new BasicNameValuePair("startNodeList", ""));
+        params.add(new BasicNameValuePair("taskDependType", "TASK_POST"));
+        params.add(new BasicNameValuePair("complementDependentMode", "OFF_MODE"));
+        params.add(new BasicNameValuePair("runMode", "RUN_MODE_SERIAL"));
+        params.add(new BasicNameValuePair("processInstancePriority", "MEDIUM"));
+        params.add(new BasicNameValuePair("workerGroup", "default"));
+        params.add(new BasicNameValuePair("tenantCode", "default"));
+        params.add(new BasicNameValuePair("environmentCode", payload.get("environmentCode").toString()));
+        params.add(new BasicNameValuePair("startParams", "[]"));
+        params.add(new BasicNameValuePair("expectedParallelismNumber", "2"));
+        params.add(new BasicNameValuePair("dryRun", "0"));
+        params.add(new BasicNameValuePair("testFlag", "0"));
+        params.add(new BasicNameValuePair("version", payload.get("version").toString()));
+        params.add(new BasicNameValuePair("allLevelDependent", "false"));
+
 
         if ((boolean) payload.getOrDefault("isBackfill", false)) {
-            apiPayload.put("execType", "COMPLEMENT_DATA");
+            params.add(new BasicNameValuePair("execType", "COMPLEMENT_DATA"));
             if ("parallel".equals(payload.get("runMode"))) {
-                apiPayload.put("runMode", "RUN_MODE_PARALLEL");
+                params.add(new BasicNameValuePair("runMode", "RUN_MODE_PARALLEL"));
             }
-            apiPayload.put("complementDependentMode", "OFF_MODE");
             if ("ASC".equalsIgnoreCase((String) payload.getOrDefault("runOrder", "desc"))) {
-                apiPayload.put("executionOrder", "ASC_ORDER");
+                params.add(new BasicNameValuePair("executionOrder", "ASC_ORDER"));
             } else {
-                apiPayload.put("executionOrder", "DESC_ORDER");
+                params.add(new BasicNameValuePair("executionOrder", "DESC_ORDER"));
             }
+            Map<String, String> scheduleTimeObj = new HashMap<>();
+            scheduleTimeObj.put("complementStartDate", (String) payload.get("startDate"));
+            scheduleTimeObj.put("complementEndDate", (String) payload.get("endDate"));
+            params.add(new BasicNameValuePair("scheduleTime", gson.toJson(scheduleTimeObj)));
         } else {
-            apiPayload.put("execType", "START_PROCESS");
+            params.add(new BasicNameValuePair("execType", "START_PROCESS"));
+            params.add(new BasicNameValuePair("executionOrder", "DESC_ORDER"));
+            params.add(new BasicNameValuePair("scheduleTime", ""));
         }
 
-        Map<String, String> scheduleTimeObj = new HashMap<>();
-        scheduleTimeObj.put("complementStartDate", (String) payload.get("startDate"));
-        scheduleTimeObj.put("complementEndDate", (String) payload.get("endDate"));
-        apiPayload.put("scheduleTime", gson.toJson(scheduleTimeObj));
 
-        executeRequest.setEntity(new StringEntity(gson.toJson(apiPayload)));
+        executeRequest.setEntity(new UrlEncodedFormEntity(params));
         CloseableHttpResponse executeResponse = httpClient.execute(executeRequest);
         String executeResponseString = EntityUtils.toString(executeResponse.getEntity());
         JsonObject executeData = gson.fromJson(executeResponseString, JsonObject.class);
         if (executeData.get("code").getAsInt() != 0) {
             throw new Exception("DS API error (execute): " + executeData.get("msg").getAsString());
         }
-        return gson.fromJson(executeData.getAsJsonObject("data"), Map.class);
+        return executeData.get("data").getAsString();
     }
 
     public Map<String, Object> getWorkflowInstanceStats() throws Exception {

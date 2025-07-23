@@ -244,7 +244,7 @@ public class WorkflowService {
         }
     }
 
-    public Map<String, Object> executeWorkflow(String workflowUuid, Map<String, Object> payload) throws Exception {
+    public String executeWorkflow(String workflowUuid, Map<String, Object> payload) throws Exception {
         Workflow workflow = workflowRepository.findById(workflowUuid).orElseThrow(() -> new RuntimeException("Workflow not found in database."));
 
         List<Map<String, Object>> dsWorkflows = dsService.getWorkflows();
@@ -255,15 +255,11 @@ public class WorkflowService {
 
         String projectCode = dsWorkflow.get("projectCode").toString();
         String workflowCode = dsWorkflow.get("code").toString();
+        String version = (int)(double) dsWorkflow.get("version") + "";
+        String environmentCode = dsService.getEnvCode();
 
-        List<Map<String, Object>> environments = dsService.getEnvironments();
-        Map<String, Object> defaultEnv = environments.stream()
-                .filter(env -> "default".equals(env.get("name")))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("A 'default' environment was not found in DolphinScheduler. Please create one."));
-
-        payload.put("environmentCode", defaultEnv.get("code"));
-
+        payload.put("environmentCode", environmentCode);
+        payload.put("version", version);
         return dsService.executeDsWorkflow(projectCode, workflowCode, payload);
     }
 
