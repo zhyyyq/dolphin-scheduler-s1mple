@@ -90,6 +90,11 @@ const WorkflowEditorPage: React.FC = () => {
               relations.push({ from: dep, to: task.name });
             }
           }
+          if ((task.task_type === 'Switch' || task.type === 'Switch') && Array.isArray(task.condition)) {
+            for (const cond of task.condition) {
+              relations.push({ from: task.name, to: cond.task });
+            }
+          }
         }
         loadGraphData(tasks, relations);
       } catch (error) {
@@ -117,7 +122,13 @@ const WorkflowEditorPage: React.FC = () => {
     const tasks = nodes.map(node => {
       const nodeData = { ...node.data };
       const deps = edges
-        .filter(edge => edge.target.cell === node.id)
+        .filter(edge => {
+          const sourceNode = nodes.find(n => n.id === edge.source.cell);
+          if (sourceNode && (sourceNode.data.task_type === 'Switch' || sourceNode.data.type === 'Switch')) {
+            return false;
+          }
+          return edge.target.cell === node.id;
+        })
         .map(edge => {
           const sourceNode = nodes.find(n => n.id === edge.source.cell);
           return sourceNode ? sourceNode.data.label : null;
@@ -127,8 +138,29 @@ const WorkflowEditorPage: React.FC = () => {
       const taskPayload: any = {
         ...nodeData,
         name: nodeData.label,
-        deps: deps,
       };
+
+      if (deps.length > 0) {
+        taskPayload.deps = deps;
+      }
+
+      if (taskPayload.task_type === 'Switch' || taskPayload.type === 'Switch') {
+        const conditions = edges
+          .filter(edge => edge.source.cell === node.id)
+          .map(edge => {
+            const targetNode = nodes.find(n => n.id === edge.target.cell);
+            if (targetNode) {
+              return {
+                task: targetNode.data.label,
+                condition: targetNode.data.condition,
+              };
+            }
+            return null;
+          })
+          .filter(Boolean);
+        taskPayload.condition = conditions;
+        delete taskPayload.deps;
+      }
       
       delete taskPayload.label;
       delete taskPayload._display_type; // Remove internal display type
@@ -299,7 +331,7 @@ const WorkflowEditorPage: React.FC = () => {
         } catch (err) {
           message.error('解析或加载导入的 YAML 文件失败。');
         }
-      };
+      };generateYamlStr 
       reader.readAsText(file);
     }
     // Reset file input to allow importing the same file again
