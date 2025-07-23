@@ -214,13 +214,22 @@ const WorkflowEditorPage: React.FC = () => {
     if (!graph) return;
     const task = taskTypes.find(t => t.type === e.key);
     if (task) {
+      const existingNodes = graph.getNodes();
+      let newNodeName = task.label;
+      let counter = 1;
+      while (existingNodes.some(n => n.getData().label === newNodeName)) {
+        newNodeName = `${task.label}_${counter}`;
+        counter++;
+      }
+
       graph.addNode({
         shape: 'task-node',
         x: contextMenu.px,
         y: contextMenu.py,
-        data: { 
-          label: task.label, 
-          type: task.type, 
+        data: {
+          name: newNodeName,
+          label: newNodeName,
+          type: task.type,
           command: task.command,
           _display_type: task.type, // Set display type for new nodes
         },
