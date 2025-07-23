@@ -142,17 +142,25 @@ public class WorkflowService {
     }
 
     public void deleteWorkflow(String workflowUuid, Long projectCode, Long workflowCode) throws Exception, GitAPIException {
+        boolean deletedFromDs = false;
         if (projectCode != null && workflowCode != null) {
             dsService.deleteDsWorkflow(projectCode, workflowCode);
+            deletedFromDs = true;
         }
+
+        boolean deletedFromDb = false;
         if (workflowRepository.existsById(workflowUuid)) {
             workflowRepository.deleteById(workflowUuid);
+            deletedFromDb = true;
         }
-        String filename = workflowUuid + ".yaml";
-        Path filePath = Paths.get(workflowRepoDir, filename);
-        if (Files.exists(filePath)) {
-            Files.delete(filePath);
-            gitService.gitCommit(filename, "Delete workflow " + workflowUuid);
+
+        if (deletedFromDs || deletedFromDb) {
+            String filename = workflowUuid + ".yaml";
+            Path filePath = Paths.get(workflowRepoDir, filename);
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+                gitService.gitCommit(filename, "Delete workflow " + workflowUuid);
+            }
         }
     }
 }

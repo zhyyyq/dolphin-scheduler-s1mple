@@ -6,9 +6,9 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/scheduler.log</file>
+        <file>./backend/logs/scheduler.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/scheduler.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>./backend/logs/scheduler.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
