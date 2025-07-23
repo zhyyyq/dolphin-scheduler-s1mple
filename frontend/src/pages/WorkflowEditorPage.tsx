@@ -109,9 +109,6 @@ const WorkflowEditorPage: React.FC = () => {
     } else {
       doc.deleteIn(['workflow', 'schedule']);
     }
-    if (workflowUuid) {
-      doc.setIn(['workflow', 'uuid'], workflowUuid);
-    }
 
     const { cells } = graph.toJSON();
     const nodes = cells.filter(cell => cell.shape === 'task-node');

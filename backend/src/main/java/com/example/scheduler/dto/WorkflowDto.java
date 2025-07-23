@@ -7,4 +7,5 @@ public class WorkflowDto {
     private String name;
     private String content;
     private String originalFilename;
+    private String uuid;
 }

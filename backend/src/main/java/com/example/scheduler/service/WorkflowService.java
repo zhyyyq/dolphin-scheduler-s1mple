@@ -35,11 +35,8 @@ public class WorkflowService {
     private String workflowRepoDir;
 
     public Map<String, String> saveWorkflowYaml(WorkflowDto workflowDto) throws IOException, GitAPIException {
-        Yaml yaml = new Yaml();
-        Map<String, Object> data = yaml.load(workflowDto.getContent());
-        Map<String, Object> workflowMeta = (Map<String, Object>) data.get("workflow");
-        String workflowName = (String) workflowMeta.get("name");
-        String workflowUuid = (String) workflowMeta.get("uuid");
+        String workflowName = workflowDto.getName();
+        String workflowUuid = workflowDto.getUuid();
         boolean isCreate = workflowUuid == null;
 
         if (isCreate) {
