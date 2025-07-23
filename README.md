@@ -1,25 +1,25 @@
-## 基于dolphin 原始镜像的调整
+# this is a low code platform for dolphin-scheduler using pydolphinscheduler as cli 
 
-### 1. jar包准备 见jars
+## feature
 
-1.mysql
-2.db2
-3.hive
+- version control yaml file
+- antv x6 editing the yaml file for pydolphin
+- simple dash board
+- file upload and download
+  
 
-### 2. python 安装
+# how to run this 
 
-见worker里面docker镜像的操作
+## start the dolphin-scheduler service using docker 
 
-### 3. 配置修改
+docker compose --profile schemea up -d
 
-打开了python-api gateway
-允许default tenant
+docker compose --profile all up -d
 
-### 4. 如何测试
+## start the backend
 
-1. 初始化数据库 docker compose --profile=schema  up --build -d
-2. 构建镜像 并启动服务 docker compose --profile=all  up --build -d
+cd backend; mvn spring-boot:start
 
-### 5.如何同步到内网
+## start the frontend
 
-4.2 操作完之后，导出docker 基础镜像，上传到内网替换
+cd frontend; npm run dev
