@@ -104,4 +104,14 @@ public class WorkflowController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @PostMapping("/reparse")
+    public ResponseEntity<?> reparseWorkflow(@RequestBody WorkflowDto workflowDto) {
+        try {
+            return ResponseEntity.ok(workflowService.reparseWorkflow(workflowDto));
+        } catch (Exception e) {
+            logger.error("Error reparsing workflow", e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 }

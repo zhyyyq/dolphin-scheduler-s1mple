@@ -87,8 +87,13 @@ public class DsService {
             for (int j = 0; j < projectWorkflows.size(); j++) {
                 JsonObject wf = projectWorkflows.get(j).getAsJsonObject();
                 wf.addProperty("projectName", project.get("name").getAsString());
-                wf.addProperty("uuid", "ds-" + projectCode + "-" + wf.get("code").getAsLong());
-                allWorkflows.add(gson.fromJson(wf, Map.class));
+                long workflowCode = wf.get("code").getAsLong();
+                wf.addProperty("uuid", "ds-" + projectCode + "-" + workflowCode);
+                
+                Map<String, Object> wfMap = gson.fromJson(wf, Map.class);
+                wfMap.put("code", String.valueOf(workflowCode));
+                wfMap.put("projectCode", String.valueOf(projectCode));
+                allWorkflows.add(wfMap);
             }
         }
 
