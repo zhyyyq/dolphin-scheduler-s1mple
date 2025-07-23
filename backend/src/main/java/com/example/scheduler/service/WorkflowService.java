@@ -288,4 +288,23 @@ public class WorkflowService {
     public List<Map<String, Object>> getDeletedWorkflows() throws GitAPIException, IOException {
         return gitService.getDeletedFiles();
     }
+
+    public void restoreWorkflow(String path, String commitHash) throws GitAPIException, IOException {
+        gitService.restoreFileFromCommit(path, commitHash);
+        String workflowUuid = path.replace(".yaml", "");
+        Workflow workflow = new Workflow();
+        workflow.setUuid(workflowUuid);
+        
+        Path filePath = Paths.get(workflowRepoDir, path);
+        String content = new String(Files.readAllBytes(filePath));
+        Yaml yaml = new Yaml();
+        Map<String, Object> data = yaml.load(content);
+        Map<String, Object> workflowMeta = (Map<String, Object>) data.get("workflow");
+        if (workflowMeta != null) {
+            workflow.setName((String) workflowMeta.get("name"));
+        } else {
+            workflow.setName(workflowUuid);
+        }
+        workflowRepository.save(workflow);
+    }
 }

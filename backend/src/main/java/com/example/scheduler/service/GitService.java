@@ -164,4 +164,12 @@ public class GitService {
         }
         return deletedFiles;
     }
+
+    public void restoreFileFromCommit(String path, String commitHash) throws GitAPIException, IOException {
+        if (git == null) {
+            init();
+        }
+        git.checkout().setStartPoint(commitHash).addPath(path).call();
+        git.commit().setMessage("Restore file " + path + " from commit " + commitHash).call();
+    }
 }

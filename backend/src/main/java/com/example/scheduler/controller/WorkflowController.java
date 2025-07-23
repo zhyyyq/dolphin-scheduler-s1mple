@@ -149,4 +149,17 @@ public class WorkflowController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @PostMapping("/restore")
+    public ResponseEntity<?> restoreWorkflow(@RequestBody Map<String, String> payload) {
+        try {
+            String path = payload.get("path");
+            String commitHash = payload.get("commit");
+            workflowService.restoreWorkflow(path, commitHash);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("Error restoring workflow", e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 }
