@@ -32,6 +32,8 @@ public class RequestLoggingFilter implements Filter {
             chain.doFilter(requestWrapper, responseWrapper);
         } catch (Exception e) {
             logger.error("Error processing request", e);
+            responseWrapper.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            responseWrapper.getWriter().write(e.getMessage());
             throw e;
         } finally {
             String responseBody = new String(responseWrapper.getContentAsByteArray(), response.getCharacterEncoding());

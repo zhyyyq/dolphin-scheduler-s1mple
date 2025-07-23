@@ -227,27 +227,27 @@ public class WorkflowService {
     public void deleteWorkflow(String workflowUuid, Long projectCode, Long workflowCode) throws Exception, GitAPIException {
         boolean deletedSomething = false;
 
-        // 1. Attempt to delete from DolphinScheduler if codes are provided
-        if (projectCode != null && workflowCode != null) {
-            dsService.deleteDsWorkflow(projectCode, workflowCode);
-            deletedSomething = true;
-        }
-
-        // 2. Attempt to delete locally if a DB entry exists for the UUID
-        if (workflowRepository.existsById(workflowUuid)) {
-            Workflow workflow = workflowRepository.findById(workflowUuid).get();
-            String filename = workflow.getUuid() + ".yaml";
-            Path filePath = Paths.get(workflowRepoDir, filename);
-
-            // Delete from DB
-            workflowRepository.delete(workflow);
-
-            // Safely delete file from repo and commit
-            if (Files.exists(filePath)) {
-                Files.delete(filePath);
-                gitService.gitCommit(filename, "Delete workflow: " + filename);
+        if (workflowUuid.startsWith("ds-")) {
+            if (projectCode != null && workflowCode != null) {
+                dsService.deleteDsWorkflow(projectCode, workflowCode);
+                deletedSomething = true;
             }
-            deletedSomething = true;
+        } else {
+            if (workflowRepository.existsById(workflowUuid)) {
+                Workflow workflow = workflowRepository.findById(workflowUuid).get();
+                String filename = workflow.getUuid() + ".yaml";
+                Path filePath = Paths.get(workflowRepoDir, filename);
+
+                // Delete from DB
+                workflowRepository.delete(workflow);
+
+                // Safely delete file from repo and commit
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                    gitService.gitCommit(filename, "Delete workflow: " + filename);
+                }
+                deletedSomething = true;
+            }
         }
 
         if (!deletedSomething) {
