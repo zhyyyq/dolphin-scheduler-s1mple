@@ -77,17 +77,27 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
 
 
     graphInstance.on('node:added', ({ node }) => {
+      const data = node.getData();
       const allNodes = graphInstance.getNodes();
-      const baseName = node.getData().label;
+      const baseName = data.label;
       let newName = baseName;
       let counter = 1;
       while (allNodes.some(n => n.getData().label === newName && n.id !== node.id)) {
         newName = `${baseName}-${counter}`;
         counter++;
       }
-      if (newName !== baseName) {
-        node.setData({ ...node.getData(), label: newName });
+      
+      const newData = { ...data, label: newName };
+
+      if (!data.type) {
+        newData.type = data.task_type;
       }
+      
+      if (!data.task_params) {
+        newData.task_params = {};
+      }
+
+      node.setData(newData);
     });
 
     return () => {

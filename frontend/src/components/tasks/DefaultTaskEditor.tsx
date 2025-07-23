@@ -17,16 +17,18 @@ const DefaultTaskEditor: React.FC<DefaultTaskEditorProps> = ({ initialValues, fo
     const { name, ...rest } = initialValues;
     
     // Also remove fields that are added by the backend or are not part of the core definition
-    delete rest.deps;
-    delete rest.id;
-    delete rest.x;
-    delete rest.y;
-    delete rest.label;
-    delete rest._display_type;
-    delete rest.type;
-    delete rest.task_type;
+    const coreFields = ['deps', 'id', 'x', 'y', 'label', '_display_type', 'type', 'task_type', 'name'];
+    const task_params: { [key: string]: any } = {};
 
-    const yamlString = yaml.dump(rest);
+    for (const key in rest) {
+      if (!coreFields.includes(key)) {
+        task_params[key] = rest[key];
+        delete rest[key];
+      }
+    }
+    rest.task_params = task_params;
+
+    const yamlString = yaml.dump(rest.task_params);
     
     // Set the value in the antd form instance
     form.setFieldsValue({ yaml_content: yamlString });

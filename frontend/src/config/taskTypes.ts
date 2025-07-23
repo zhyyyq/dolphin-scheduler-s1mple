@@ -17,15 +17,15 @@ import {
 } from '@ant-design/icons';
 
 export const taskTypes = [
-  { label: 'Shell', type: 'SHELL', command: 'echo "Hello"', category: 'general', icon: CodeOutlined },
-  { label: 'Python', type: 'PYTHON', command: 'print("Hello")', category: 'general', icon: CodeOutlined },
-  { label: 'Conditions', type: 'CONDITIONS', command: '', category: 'control_flow', icon: ApartmentOutlined },
-  { label: 'Switch', type: 'SWITCH', command: '', category: 'control_flow', icon: ForkOutlined },
-  { label: 'Dependent', type: 'DEPENDENT', command: '', category: 'control_flow', icon: NodeIndexOutlined },
-  { label: 'Sub Process', type: 'SUB_PROCESS', command: '', category: 'control_flow', icon: PartitionOutlined },
+  { label: 'Shell', type: 'Shell', command: 'echo "Hello"', category: 'general', icon: CodeOutlined },
+  { label: 'Python', type: 'Python', command: 'print("Hello")', category: 'general', icon: CodeOutlined },
+  { label: 'Conditions', type: 'Conditions', command: '', category: 'control_flow', icon: ApartmentOutlined },
+  { label: 'Switch', type: 'Switch', command: '', category: 'control_flow', icon: ForkOutlined },
+  { label: 'Dependent', type: 'Dependent', command: '', category: 'control_flow', icon: NodeIndexOutlined },
+  { label: 'Sub Process', type: 'SubProcess', command: '', category: 'control_flow', icon: PartitionOutlined },
   { 
     label: 'SQL', 
-    type: 'SQL', 
+    type: 'Sql', 
     category: 'data', 
     icon: DatabaseOutlined,
     default_params: {
@@ -37,18 +37,18 @@ export const taskTypes = [
       display_rows: 10,
     } 
   },
-  { label: 'DataX', type: 'DATAX', command: '', category: 'data', icon: SendOutlined },
-  { label: 'Spark', type: 'SPARK', command: '', category: 'big_data', icon: RocketOutlined },
-  { label: 'Flink', type: 'FLINK', command: '', category: 'big_data', icon: RocketOutlined },
-  { label: 'Map Reduce', type: 'MR', command: '', category: 'big_data', icon: RocketOutlined },
-  { label: 'Kubernetes', type: 'K8S', command: '', category: 'cloud_ml', icon: DeploymentUnitOutlined },
-  { label: 'SageMaker', type: 'SAGEMAKER', command: '', category: 'cloud_ml', icon: CloudOutlined },
-  { label: 'MLflow', type: 'MLFLOW', command: '', category: 'cloud_ml', icon: ExperimentOutlined },
-  { label: 'OpenMLDB', type: 'OPENMLDB', command: '', category: 'cloud_ml', icon: ReadOutlined },
-  { label: 'PyTorch', type: 'PYTORCH', command: '', category: 'cloud_ml', icon: GithubOutlined },
+  { label: 'DataX', type: 'DataX', command: '', category: 'data', icon: SendOutlined },
+  { label: 'Spark', type: 'Spark', command: '', category: 'big_data', icon: RocketOutlined },
+  { label: 'Flink', type: 'Flink', command: '', category: 'big_data', icon: RocketOutlined },
+  { label: 'Map Reduce', type: 'MapReduce', command: '', category: 'big_data', icon: RocketOutlined },
+  { label: 'Kubernetes', type: 'Kubernetes', command: '', category: 'cloud_ml', icon: DeploymentUnitOutlined },
+  { label: 'SageMaker', type: 'SageMaker', command: '', category: 'cloud_ml', icon: CloudOutlined },
+  { label: 'MLflow', type: 'MLflow', command: '', category: 'cloud_ml', icon: ExperimentOutlined },
+  { label: 'OpenMLDB', type: 'OpenMLDB', command: '', category: 'cloud_ml', icon: ReadOutlined },
+  { label: 'PyTorch', type: 'PyTorch', command: '', category: 'cloud_ml', icon: GithubOutlined },
   { label: 'DVC', type: 'DVC', command: '', category: 'cloud_ml', icon: GithubOutlined },
-  { label: 'HTTP', type: 'HTTP', command: 'curl http://example.com', category: 'other', icon: CloudServerOutlined },
-  { label: 'Procedure', type: 'PROCEDURE', command: '', category: 'other', icon: SettingOutlined },
+  { label: 'HTTP', type: 'Http', command: 'curl http://example.com', category: 'other', icon: CloudServerOutlined },
+  { label: 'Procedure', type: 'Procedure', command: '', category: 'other', icon: SettingOutlined },
 ];
 
 export const taskCategories = [
