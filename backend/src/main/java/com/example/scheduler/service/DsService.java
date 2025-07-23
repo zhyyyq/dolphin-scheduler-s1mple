@@ -39,6 +39,9 @@ public class DsService {
     private final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(DsService.class);
 
+    @Value("${workflow.repo.dir}")
+    private String workflowRepoDir;
+
     public List<Map<String, Object>> getEnvironments() throws Exception {
         HttpGet request = new HttpGet(dsUrl + "/environment/list-paging?pageNo=1&pageSize=1000&searchVal=");
         request.addHeader("token", token);
@@ -148,7 +151,6 @@ public class DsService {
             throw new Exception("Invalid workflow filename.");
         }
 
-        String workflowRepoDir = System.getenv("WORKFLOW_REPO_DIR");
         Path filePath = Paths.get(workflowRepoDir, filename);
         if (!Files.exists(filePath)) {
             throw new Exception("Workflow file '" + filename + "' not found.");

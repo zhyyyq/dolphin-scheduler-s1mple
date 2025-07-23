@@ -199,9 +199,9 @@ public class WorkflowService {
         return combinedWorkflows;
     }
 
-    public void onlineWorkflow(String workflowUuid) throws Exception {
+    public void onlineWorkflow(String filename) throws Exception {
+        String workflowUuid = filename.replace(".yaml", "");
         Workflow workflow = workflowRepository.findById(workflowUuid).orElseThrow(() -> new RuntimeException("Workflow not found"));
-        String filename = workflow.getUuid() + ".yaml";
         dsService.submitWorkflowToDs(filename);
     }
 
