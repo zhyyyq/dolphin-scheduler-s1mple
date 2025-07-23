@@ -253,8 +253,8 @@ public class WorkflowService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Could not find a corresponding online workflow in DolphinScheduler."));
 
-        Long projectCode = ((Number) dsWorkflow.get("projectCode")).longValue();
-        Long workflowCode = ((Number) dsWorkflow.get("code")).longValue();
+        String projectCode = dsWorkflow.get("projectCode").toString();
+        String workflowCode = dsWorkflow.get("code").toString();
 
         List<Map<String, Object>> environments = dsService.getEnvironments();
         Map<String, Object> defaultEnv = environments.stream()
