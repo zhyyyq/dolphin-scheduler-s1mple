@@ -22,23 +22,23 @@ public class RequestLoggingFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse res = (HttpServletResponse) response;
 
-        BufferedRequestWrapper requestWrapper = new BufferedRequestWrapper(req);
         ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(res);
 
-        logger.info("Received request: {} {} from {}", requestWrapper.getMethod(), requestWrapper.getRequestURI(), requestWrapper.getRemoteAddr());
-        logger.info("Request body: {}", requestWrapper.getRequestBody());
-
-        try {
+        // For multipart requests, don't wrap the request, just log and proceed.
+        if (req.getContentType() != null && req.getContentType().startsWith("multipart/form-data")) {
+            logger.info("Received multipart request: {} {} from {}", req.getMethod(), req.getRequestURI(), req.getRemoteAddr());
+            chain.doFilter(req, responseWrapper);
+        } else {
+            // For other requests, wrap the request to log the body.
+            BufferedRequestWrapper requestWrapper = new BufferedRequestWrapper(req);
+            logger.info("Received request: {} {} from {}", requestWrapper.getMethod(), requestWrapper.getRequestURI(), requestWrapper.getRemoteAddr());
+            logger.info("Request body: {}", requestWrapper.getRequestBody());
             chain.doFilter(requestWrapper, responseWrapper);
-        } catch (Exception e) {
-            logger.error("Error processing request", e);
-            responseWrapper.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            responseWrapper.getWriter().write(e.getMessage());
-            throw e;
-        } finally {
-            String responseBody = new String(responseWrapper.getContentAsByteArray(), response.getCharacterEncoding());
-            logger.info("Response body: {}", responseBody);
-            responseWrapper.copyBodyToResponse();
         }
+
+        // Log response
+        String responseBody = new String(responseWrapper.getContentAsByteArray(), response.getCharacterEncoding());
+        logger.info("Response body: {}", responseBody);
+        responseWrapper.copyBodyToResponse();
     }
 }
