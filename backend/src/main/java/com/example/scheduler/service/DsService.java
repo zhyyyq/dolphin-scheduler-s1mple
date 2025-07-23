@@ -11,10 +11,13 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +32,7 @@ public class DsService {
 
     private final CloseableHttpClient httpClient = HttpClients.createDefault();
     private final Gson gson = new Gson();
+    private static final Logger logger = LoggerFactory.getLogger(DsService.class);
 
     public List<Map<String, Object>> getWorkflows() throws Exception {
         List<Map<String, Object>> allWorkflows = new ArrayList<>();
@@ -57,7 +61,7 @@ public class DsService {
             JsonObject workflowsData = gson.fromJson(workflowsResponseString, JsonObject.class);
 
             if (workflowsData.get("code").getAsInt() != 0) {
-                // Log warning and continue
+                logger.warn("Failed to get workflows for project {}: {}", projectCode, workflowsData.get("msg").getAsString());
                 continue;
             }
 
@@ -125,62 +129,51 @@ public class DsService {
         return gson.fromJson(executeData.getAsJsonObject("data"), Map.class);
     }
 
-    public Map<String, Object> getDashboardStats() throws Exception {
-        Map<String, Object> stats = new java.util.HashMap<>();
-        stats.put("success", 0);
-        stats.put("failure", 0);
-        stats.put("running", 0);
-        stats.put("other", 0);
-        stats.put("total", 0);
+    public Map<String, Integer> getWorkflowInstanceStats() throws Exception {
+        Map<String, Integer> stats = new HashMap<>();
+        stats.put("RUNNING_EXECUTION", 0);
+        stats.put("SUCCESS", 0);
+        stats.put("FAILURE", 0);
+        stats.put("STOP", 0);
+        stats.put("KILL", 0);
 
-        // 1. Get the first project
-        HttpGet projectsRequest = new HttpGet(dsUrl + "/projects?pageNo=1&pageSize=1");
+        // 1. Get all projects
+        HttpGet projectsRequest = new HttpGet(dsUrl + "/projects?pageNo=1&pageSize=100");
         projectsRequest.addHeader("token", token);
         CloseableHttpResponse projectsResponse = httpClient.execute(projectsRequest);
         String projectsResponseString = EntityUtils.toString(projectsResponse.getEntity());
         JsonObject projectsData = gson.fromJson(projectsResponseString, JsonObject.class);
 
-        if (projectsData.get("code").getAsInt() != 0 || projectsData.getAsJsonObject("data").getAsJsonArray("totalList").size() == 0) {
-            throw new Exception("Could not find any projects in DolphinScheduler.");
-        }
-        long projectCode = projectsData.getAsJsonObject("data").getAsJsonArray("totalList").get(0).getAsJsonObject().get("code").getAsLong();
-
-        // 2. Get process instances for the project
-        HttpGet instancesRequest = new HttpGet(dsUrl + "/projects/" + projectCode + "/process-instances?pageNo=1&pageSize=100");
-        instancesRequest.addHeader("token", token);
-        CloseableHttpResponse instancesResponse = httpClient.execute(instancesRequest);
-        String instancesResponseString = EntityUtils.toString(instancesResponse.getEntity());
-        JsonObject instancesData = gson.fromJson(instancesResponseString, JsonObject.class);
-
-        if (instancesData.get("code").getAsInt() != 0) {
-            throw new Exception("DS API error (process-instances): " + instancesData.get("msg").getAsString());
+        if (projectsData.get("code").getAsInt() != 0) {
+            throw new Exception("DS API error (projects): " + projectsData.get("msg").getAsString());
         }
 
-        JsonArray instanceList = instancesData.getAsJsonObject("data").getAsJsonArray("totalList");
-        stats.put("total", instancesData.getAsJsonObject("data").get("total").getAsInt());
-        stats.put("recent_instances", gson.fromJson(instanceList, List.class));
+        JsonArray projectList = projectsData.getAsJsonObject("data").getAsJsonArray("totalList");
 
-        for (int i = 0; i < instanceList.size(); i++) {
-            JsonObject instance = instanceList.get(i).getAsJsonObject();
-            String state = instance.get("state").getAsString();
-            switch (state) {
-                case "SUCCESS":
-                    stats.put("success", (int) stats.get("success") + 1);
-                    break;
-                case "FAILURE":
-                case "STOP":
-                case "KILL":
-                    stats.put("failure", (int) stats.get("failure") + 1);
-                    break;
-                case "RUNNING_EXECUTION":
-                    stats.put("running", (int) stats.get("running") + 1);
-                    break;
-                default:
-                    stats.put("other", (int) stats.get("other") + 1);
-                    break;
+        // 2. For each project, get its process instances
+        for (int i = 0; i < projectList.size(); i++) {
+            JsonObject project = projectList.get(i).getAsJsonObject();
+            long projectCode = project.get("code").getAsLong();
+            HttpGet instancesRequest = new HttpGet(dsUrl + "/projects/" + projectCode + "/process-instances?pageNo=1&pageSize=100");
+            instancesRequest.addHeader("token", token);
+            CloseableHttpResponse instancesResponse = httpClient.execute(instancesRequest);
+            String instancesResponseString = EntityUtils.toString(instancesResponse.getEntity());
+            JsonObject instancesData = gson.fromJson(instancesResponseString, JsonObject.class);
+
+            if (instancesData.get("code").getAsInt() != 0) {
+                logger.warn("Failed to get instances for project {}: {}", projectCode, instancesData.get("msg").getAsString());
+                continue;
+            }
+
+            JsonArray instanceList = instancesData.getAsJsonObject("data").getAsJsonArray("totalList");
+            for (int j = 0; j < instanceList.size(); j++) {
+                JsonObject instance = instanceList.get(j).getAsJsonObject();
+                String state = instance.get("state").getAsString();
+                if (stats.containsKey(state)) {
+                    stats.put(state, stats.get(state) + 1);
+                }
             }
         }
-
         return stats;
     }
 }
