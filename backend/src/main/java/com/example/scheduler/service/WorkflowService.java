@@ -48,9 +48,9 @@ public class WorkflowService {
         boolean isCreate = workflowUuid == null;
 
         if (isCreate) {
-            if (workflowRepository.findByName(workflowName).isPresent()) {
-                throw new RuntimeException("A workflow with the name '" + workflowName + "' already exists.");
-            }
+            // if (workflowRepository.findByName(workflowName).isPresent()) {
+            //     throw new RuntimeException("A workflow with the name '" + workflowName + "' already exists.");
+            // }
         } else {
             if (workflowRepository.findByNameAndUuidNot(workflowName, workflowUuid).isPresent()) {
                 throw new RuntimeException("A workflow with the name '" + workflowName + "' already exists.");

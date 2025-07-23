@@ -178,8 +178,15 @@ const WorkflowEditorPage: React.FC = () => {
     try {
       const doc = yaml.parseDocument(yamlContent);
       const workflowNameFromYaml = doc.getIn(['workflow', 'name']) as string || 'my-workflow';
-      const response = await api.post<{ preview: { tasks: Task[], relations: { from: string, to: string }[] } }>('/api/reparse', { code: yamlContent });
-      const { tasks, relations } = response.preview;
+      const tasks = (doc.get('tasks') as any).toJSON();
+      const relations: { from: string, to: string }[] = [];
+      for (const task of tasks) {
+        if (task.deps) {
+          for (const dep of task.deps) {
+            relations.push({ from: dep, to: task.name });
+          }
+        }
+      }
       graph.clearCells();
       loadGraphData(tasks, relations);
       setWorkflowName(workflowNameFromYaml);
@@ -262,8 +269,15 @@ const WorkflowEditorPage: React.FC = () => {
           }
 
           // Reparse and load graph
-          const response = await api.post<{ preview: { tasks: Task[], relations: { from: string, to: string }[] } }>('/api/reparse', { code: content });
-          const { tasks, relations } = response.preview;
+          const tasks = (doc.get('tasks') as any).toJSON();
+          const relations: { from: string, to: string }[] = [];
+          for (const task of tasks) {
+            if (task.deps) {
+              for (const dep of task.deps) {
+                relations.push({ from: dep, to: task.name });
+              }
+            }
+          }
           graph?.clearCells();
           loadGraphData(tasks, relations);
 

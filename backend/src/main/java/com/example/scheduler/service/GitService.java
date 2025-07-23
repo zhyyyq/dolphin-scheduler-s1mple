@@ -19,6 +19,7 @@ public class GitService {
     public void init() throws IOException, GitAPIException {
         File repoDir = new File(workflowRepoDir);
         if (!repoDir.exists()) {
+            repoDir.mkdirs();
             Git.init().setDirectory(repoDir).call();
         }
         git = Git.open(repoDir);
