@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+
 @RestController
 @RequestMapping("/api/workflow")
 public class WorkflowController {
@@ -69,5 +71,11 @@ public class WorkflowController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
+    }
+
+    @GetMapping("/deleted")
+    public ResponseEntity<?> getDeletedWorkflows() {
+        // This is a placeholder. The actual implementation will depend on the GitService.
+        return ResponseEntity.ok(new ArrayList<>());
     }
 }

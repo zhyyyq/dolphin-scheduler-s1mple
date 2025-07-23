@@ -34,7 +34,7 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
     setLoading(true);
     setError(null);
     try {
-      const data = await api.get<DeletedWorkflow[]>('/api/workflows/deleted');
+      const data = await api.get<DeletedWorkflow[]>('/api/workflow/deleted');
       setDeletedWorkflows(data);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';

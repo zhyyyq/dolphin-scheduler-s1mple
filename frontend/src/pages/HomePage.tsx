@@ -60,7 +60,7 @@ const HomePage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const combinedWorkflows = await api.get<Workflow[]>('/api/workflows/combined');
+      const combinedWorkflows = await api.get<Workflow[]>('/api/workflow/combined');
       setWorkflows(combinedWorkflows);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
