@@ -95,7 +95,7 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     };
   }, [container, onNodeDoubleClick, onBlankContextMenu]);
 
-  const loadGraphData = useCallback((tasks: Task[], relations: { from: string; to: string }[]) => {
+  const loadGraphData = useCallback((tasks: Task[], relations: { from: string; to: string }[] = []) => {
     const currentGraph = graphRef.current;
     if (!currentGraph) return;
 

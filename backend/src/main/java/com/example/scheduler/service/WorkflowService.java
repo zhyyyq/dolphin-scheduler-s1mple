@@ -37,11 +37,6 @@ public class WorkflowService {
     public Map<String, String> saveWorkflowYaml(WorkflowDto workflowDto) throws IOException, GitAPIException {
         Yaml yaml = new Yaml();
         Map<String, Object> data = yaml.load(workflowDto.getContent());
-
-        if (!data.containsKey("workflow")) {
-            data.put("workflow", new java.util.HashMap<>());
-        }
-
         Map<String, Object> workflowMeta = (Map<String, Object>) data.get("workflow");
         String workflowName = (String) workflowMeta.get("name");
         String workflowUuid = (String) workflowMeta.get("uuid");
@@ -60,7 +55,6 @@ public class WorkflowService {
         String commitMessage;
         if (isCreate) {
             workflowUuid = UUID.randomUUID().toString();
-            workflowMeta.put("uuid", workflowUuid);
             commitMessage = "Create workflow " + workflowName;
             Workflow newWorkflow = new Workflow();
             newWorkflow.setUuid(workflowUuid);
@@ -90,14 +84,8 @@ public class WorkflowService {
             }
         }
 
-        if (!isCreate) {
-            workflowMeta.put("local_status", "modified");
-        } else {
-            workflowMeta.put("local_status", "new");
-        }
-
         try (FileWriter writer = new FileWriter(filePath.toFile())) {
-            yaml.dump(data, writer);
+            writer.write(workflowDto.getContent());
         }
 
         gitService.gitCommit(filename, commitMessage);
@@ -151,17 +139,27 @@ public class WorkflowService {
         
         Yaml yaml = new Yaml();
         Map<String, Object> rawData = yaml.load(content);
-        // Assuming a parseWorkflow equivalent exists or is not needed for now
-        // Map<String, Object> parsedData = parseWorkflow(content);
-
         Map<String, Object> workflowMeta = (Map<String, Object>) rawData.get("workflow");
+        List<Map<String, Object>> tasks = (List<Map<String, Object>>) rawData.get("tasks");
+        List<Map<String, Object>> relations = new java.util.ArrayList<>();
+        for (Map<String, Object> task : tasks) {
+            if (task.containsKey("deps")) {
+                List<String> deps = (List<String>) task.get("deps");
+                for (String dep : deps) {
+                    Map<String, Object> relation = new java.util.HashMap<>();
+                    relation.put("from", dep);
+                    relation.put("to", task.get("name"));
+                    relations.add(relation);
+                }
+            }
+        }
 
         Map<String, Object> map = new java.util.HashMap<>();
         map.put("name", workflow.getName());
         map.put("uuid", workflow.getUuid());
         map.put("schedule", workflowMeta.get("schedule"));
-        // map.put("tasks", parsedData.get("tasks"));
-        // map.put("relations", parsedData.get("relations"));
+        map.put("tasks", tasks);
+        map.put("relations", relations);
         map.put("filename", filename);
         map.put("yaml_content", content);
         return map;
@@ -301,6 +299,6 @@ public class WorkflowService {
 
     public Map<String, Object> getWorkflowAtCommit(String workflowUuid, String commitHash) throws GitAPIException, IOException {
         String filename = workflowUuid + ".yaml";
-        return gitService.getFileAtCommit(filename, commitHash);
+        return gitService.getCommitDiff(filename, commitHash);
     }
 }

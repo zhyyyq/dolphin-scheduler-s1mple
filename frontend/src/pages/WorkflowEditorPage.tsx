@@ -69,7 +69,7 @@ const WorkflowEditorPage: React.FC = () => {
 
   useEffect(() => {
     if (graph && workflowData) {
-      const { name, uuid, schedule, tasks, relations } = workflowData;
+      const { name, uuid, schedule, yaml_content } = workflowData;
       setWorkflowName(name);
       setWorkflowUuid(uuid);
       if (schedule !== undefined && schedule !== null) {
@@ -78,9 +78,24 @@ const WorkflowEditorPage: React.FC = () => {
       } else {
         setIsScheduleEnabled(false);
       }
-      loadGraphData(tasks, relations);
+
+      try {
+        const doc = yaml.parseDocument(yaml_content);
+        const tasks = (doc.get('tasks') as any).toJSON();
+        const relations: { from: string, to: string }[] = [];
+        for (const task of tasks) {
+          if (task.deps) {
+            for (const dep of task.deps) {
+              relations.push({ from: dep, to: task.name });
+            }
+          }
+        }
+        loadGraphData(tasks, relations);
+      } catch (error) {
+        message.error('解析工作流 YAML 失败。');
+      }
     }
-  }, [graph, workflowData, loadGraphData]);
+  }, [graph, workflowData, loadGraphData, message]);
 
   const generateYamlStr = () => {
     if (!graph) return '';

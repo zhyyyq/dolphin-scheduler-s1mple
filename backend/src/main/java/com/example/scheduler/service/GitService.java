@@ -12,6 +12,9 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.diff.DiffFormatter;
+import java.io.ByteArrayOutputStream;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -87,5 +90,28 @@ public class GitService {
             }
         }
         return fileData;
+    }
+
+    public Map<String, Object> getCommitDiff(String filename, String commitHash) throws GitAPIException, IOException {
+        if (git == null) {
+            init();
+        }
+        Map<String, Object> diffData = new java.util.HashMap<>();
+        try (RevWalk revWalk = new RevWalk(git.getRepository())) {
+            RevCommit commit = revWalk.parseCommit(git.getRepository().resolve(commitHash));
+            RevCommit parent = commit.getParentCount() > 0 ? revWalk.parseCommit(commit.getParent(0).getId()) : null;
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try (DiffFormatter diffFormatter = new DiffFormatter(out)) {
+                diffFormatter.setRepository(git.getRepository());
+                diffFormatter.setPathFilter(PathFilter.create(filename));
+                List<DiffEntry> diffs = diffFormatter.scan(parent != null ? parent.getTree() : null, commit.getTree());
+                for (DiffEntry diff : diffs) {
+                    diffFormatter.format(diff);
+                }
+                diffData.put("diff", out.toString());
+            }
+        }
+        return diffData;
     }
 }
