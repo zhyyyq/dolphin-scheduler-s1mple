@@ -105,6 +105,12 @@ public class DsService {
         }
     }
 
+    public void submitWorkflowToDs(String filename) throws Exception {
+        // This is a placeholder. The actual implementation will depend on the DS API.
+        // You might need to read the file content and send it in the request body.
+        System.out.println("Submitting workflow " + filename + " to DolphinScheduler...");
+    }
+
     public Map<String, Object> executeDsWorkflow(Long projectCode, Long processDefinitionCode, Map<String, Object> payload) throws Exception {
         HttpPost executeRequest = new HttpPost(dsUrl + "/projects/" + projectCode + "/executors/start-process-instance");
         executeRequest.addHeader("token", token);
