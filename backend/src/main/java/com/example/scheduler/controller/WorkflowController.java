@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/workflow")
+@RequestMapping("/api/workflows")
 public class WorkflowController {
 
     @Autowired
