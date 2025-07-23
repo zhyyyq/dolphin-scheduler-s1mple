@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/workflow")
@@ -77,5 +78,14 @@ public class WorkflowController {
     public ResponseEntity<?> getDeletedWorkflows() {
         // This is a placeholder. The actual implementation will depend on the GitService.
         return ResponseEntity.ok(new ArrayList<>());
+    }
+
+    @PostMapping("/{workflowUuid}/execute")
+    public ResponseEntity<?> executeWorkflow(@PathVariable String workflowUuid, @RequestBody Map<String, Object> payload) {
+        try {
+            return ResponseEntity.ok(workflowService.executeWorkflow(workflowUuid, payload));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
     }
 }

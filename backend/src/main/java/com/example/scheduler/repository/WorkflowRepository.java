@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface WorkflowRepository extends JpaRepository<Workflow, String> {
     Optional<Workflow> findByName(String name);
+    Optional<Workflow> findByNameAndUuidNot(String name, String uuid);
 }

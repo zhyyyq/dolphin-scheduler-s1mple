@@ -15,7 +15,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +38,19 @@ public class DsService {
     private final CloseableHttpClient httpClient = HttpClients.createDefault();
     private final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(DsService.class);
+
+    public List<Map<String, Object>> getEnvironments() throws Exception {
+        HttpGet request = new HttpGet(dsUrl + "/environment/list-paging?pageNo=1&pageSize=1000&searchVal=");
+        request.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JsonObject data = gson.fromJson(responseString, JsonObject.class);
+
+        if (data.get("code").getAsInt() != 0) {
+            throw new Exception("DS API error (list-paging): " + data.get("msg").getAsString());
+        }
+        return gson.fromJson(data.getAsJsonObject("data").getAsJsonArray("totalList"), List.class);
+    }
 
     public List<Map<String, Object>> getWorkflows() throws Exception {
         List<Map<String, Object>> allWorkflows = new ArrayList<>();
@@ -82,8 +100,18 @@ public class DsService {
         HttpGet detailsRequest = new HttpGet(dsUrl + "/projects/" + projectCode + "/process-definition/" + workflowCode);
         detailsRequest.addHeader("token", token);
         CloseableHttpResponse detailsResponse = httpClient.execute(detailsRequest);
+
+        if (detailsResponse.getStatusLine().getStatusCode() == 404) {
+            logger.warn("Workflow {} not found in DS. Assuming already deleted.", workflowCode);
+            return;
+        }
+
         String detailsResponseString = EntityUtils.toString(detailsResponse.getEntity());
         JsonObject workflowData = gson.fromJson(detailsResponseString, JsonObject.class).getAsJsonObject("data");
+
+        if (workflowData == null) {
+            throw new Exception("Workflow not found in DolphinScheduler.");
+        }
 
         // 2. If the workflow is online, take it offline first
         if (workflowData.getAsJsonObject("processDefinition").get("releaseState").getAsString().equals("ONLINE")) {
@@ -110,16 +138,90 @@ public class DsService {
     }
 
     public void submitWorkflowToDs(String filename) throws Exception {
-        // This is a placeholder. The actual implementation will depend on the DS API.
-        // You might need to read the file content and send it in the request body.
-        System.out.println("Submitting workflow " + filename + " to DolphinScheduler...");
+        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            throw new Exception("Invalid workflow filename.");
+        }
+
+        String workflowRepoDir = System.getenv("WORKFLOW_REPO_DIR");
+        Path filePath = Paths.get(workflowRepoDir, filename);
+        if (!Files.exists(filePath)) {
+            throw new Exception("Workflow file '" + filename + "' not found.");
+        }
+
+        Path tmpPath = null;
+        try {
+            Yaml yaml = new Yaml();
+            Map<String, Object> data = yaml.load(new String(Files.readAllBytes(filePath)));
+
+            // In-memory transformation for submission
+            // ... (resolve_file_placeholders_recursive and resolve_workflow_placeholders_recursive logic would go here)
+
+            if (data.containsKey("workflow") && !((Map)data.get("workflow")).containsKey("schedule")) {
+                ((Map)data.get("workflow")).put("schedule", null);
+            }
+
+            tmpPath = Files.createTempFile(null, ".yaml");
+            Files.write(tmpPath, yaml.dump(data).getBytes());
+
+            ProcessBuilder processBuilder = new ProcessBuilder("uv", "run", "pydolphinscheduler", "yaml", "-f", tmpPath.toString());
+            processBuilder.directory(new File(workflowRepoDir));
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+
+            if (exitCode != 0) {
+                throw new Exception("pydolphinscheduler CLI failed.");
+            }
+
+        } finally {
+            if (tmpPath != null) {
+                Files.deleteIfExists(tmpPath);
+            }
+        }
     }
 
     public Map<String, Object> executeDsWorkflow(Long projectCode, Long processDefinitionCode, Map<String, Object> payload) throws Exception {
         HttpPost executeRequest = new HttpPost(dsUrl + "/projects/" + projectCode + "/executors/start-process-instance");
         executeRequest.addHeader("token", token);
-        payload.put("processDefinitionCode", processDefinitionCode);
-        executeRequest.setEntity(new StringEntity(gson.toJson(payload)));
+
+        Map<String, Object> apiPayload = new HashMap<>();
+        apiPayload.put("processDefinitionCode", processDefinitionCode);
+        apiPayload.put("failureStrategy", "CONTINUE");
+        apiPayload.put("warningType", "NONE");
+        apiPayload.put("warningGroupId", null);
+        apiPayload.put("execType", null);
+        apiPayload.put("startNodeList", "");
+        apiPayload.put("taskDependType", "TASK_POST");
+        apiPayload.put("runMode", "RUN_MODE_SERIAL");
+        apiPayload.put("processInstancePriority", "MEDIUM");
+        apiPayload.put("workerGroup", "default");
+        apiPayload.put("environmentCode", payload.getOrDefault("environmentCode", -1));
+        apiPayload.put("timeout", null);
+        apiPayload.put("scheduleTime", "");
+        apiPayload.put("expectedParallelismNumber", null);
+        apiPayload.put("dryRun", 0);
+        apiPayload.put("testFlag", 0);
+
+        if ((boolean) payload.getOrDefault("isBackfill", false)) {
+            apiPayload.put("execType", "COMPLEMENT_DATA");
+            if ("parallel".equals(payload.get("runMode"))) {
+                apiPayload.put("runMode", "RUN_MODE_PARALLEL");
+            }
+            apiPayload.put("complementDependentMode", "OFF_MODE");
+            if ("ASC".equalsIgnoreCase((String) payload.getOrDefault("runOrder", "desc"))) {
+                apiPayload.put("executionOrder", "ASC_ORDER");
+            } else {
+                apiPayload.put("executionOrder", "DESC_ORDER");
+            }
+        } else {
+            apiPayload.put("execType", "START_PROCESS");
+        }
+
+        Map<String, String> scheduleTimeObj = new HashMap<>();
+        scheduleTimeObj.put("complementStartDate", (String) payload.get("startDate"));
+        scheduleTimeObj.put("complementEndDate", (String) payload.get("endDate"));
+        apiPayload.put("scheduleTime", gson.toJson(scheduleTimeObj));
+
+        executeRequest.setEntity(new StringEntity(gson.toJson(apiPayload)));
         CloseableHttpResponse executeResponse = httpClient.execute(executeRequest);
         String executeResponseString = EntityUtils.toString(executeResponse.getEntity());
         JsonObject executeData = gson.fromJson(executeResponseString, JsonObject.class);
