@@ -68,7 +68,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
 
           finalTask = {
             ...task,
-            name: values.name, // Keep name from the form
+            ...values,
             ...yamlData,
           };
         } catch (e) {
