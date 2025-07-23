@@ -120,16 +120,36 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
       nodeMap.set(task.name, node);
     });
 
-    relations.forEach(rel => {
-      const sourceNode = nodeMap.get(rel.from);
-      const targetNode = nodeMap.get(rel.to);
-      if (sourceNode && targetNode) {
-        currentGraph.addEdge({
-          shape: 'edge',
-          source: { cell: sourceNode.id, port: 'bottom' },
-          target: { cell: targetNode.id, port: 'top' },
-          attrs: { line: { stroke: '#8f8f8f', strokeWidth: 1 } },
-          zIndex: -1,
+    tasks.forEach(task => {
+      if (task.deps && task.deps.length > 0) {
+        task.deps.forEach((dep: string) => {
+          const sourceNode = nodeMap.get(dep);
+          const targetNode = nodeMap.get(task.name);
+          if (sourceNode && targetNode) {
+            currentGraph.addEdge({
+              shape: 'edge',
+              source: { cell: sourceNode.id, port: 'bottom' },
+              target: { cell: targetNode.id, port: 'top' },
+              attrs: { line: { stroke: '#8f8f8f', strokeWidth: 1 } },
+              zIndex: -1,
+            });
+          }
+        });
+      }
+
+      if ((task.task_type === 'Switch' || task.type === 'Switch') && Array.isArray(task.condition)) {
+        task.condition.forEach((cond: any) => {
+          const sourceNode = nodeMap.get(task.name);
+          const targetNode = nodeMap.get(cond.task);
+          if (sourceNode && targetNode) {
+            currentGraph.addEdge({
+              shape: 'edge',
+              source: { cell: sourceNode.id, port: 'bottom' },
+              target: { cell: targetNode.id, port: 'top' },
+              attrs: { line: { stroke: '#8f8f8f', strokeWidth: 1 } },
+              zIndex: -1,
+            });
+          }
         });
       }
     });

@@ -62,7 +62,7 @@ export interface Task {
   http_method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD';
   http_params?: HttpParam[];
   http_check_condition?: 'STATUS_CODE_DEFAULT' | 'STATUS_CODE_CUSTOM' | 'BODY_CONTAINS' | 'BODY_NOT_CONTAINS';
-  condition?: string;
+  condition?: any;
   connect_timeout?: number;
   socket_timeout?: number;
   workflow_name?: string;
@@ -71,6 +71,7 @@ export interface Task {
   failed_task?: string;
   op?: 'AND' | 'OR';
   groups?: (ConditionGroup | ConditionTask)[];
+  deps?: string[];
 }
 
 export interface Relation {
