@@ -5,3 +5,4 @@ dist
 backend/backend.log
 backend/backend.log
 backend/workflow_repo/
+backend/target
