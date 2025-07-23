@@ -79,7 +79,7 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
     setIsViewModalOpen(true);
     setViewLoading(true);
     try {
-      const response = await api.get<{ content: string }>(`/api/workflow/content/${record.commit_hash}/${record.filename}`);
+      const response = await api.get<{ content: string }>(`/api/workflow/content/${record.commit}/${record.filename}`);
       const highlightedContent = Prism.highlight(response.content, Prism.languages.yaml, 'yaml');
       setViewingContent(highlightedContent);
     } catch (err) {
