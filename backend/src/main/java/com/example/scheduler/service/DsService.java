@@ -124,4 +124,63 @@ public class DsService {
         }
         return gson.fromJson(executeData.getAsJsonObject("data"), Map.class);
     }
+
+    public Map<String, Object> getDashboardStats() throws Exception {
+        Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("success", 0);
+        stats.put("failure", 0);
+        stats.put("running", 0);
+        stats.put("other", 0);
+        stats.put("total", 0);
+
+        // 1. Get the first project
+        HttpGet projectsRequest = new HttpGet(dsUrl + "/projects?pageNo=1&pageSize=1");
+        projectsRequest.addHeader("token", token);
+        CloseableHttpResponse projectsResponse = httpClient.execute(projectsRequest);
+        String projectsResponseString = EntityUtils.toString(projectsResponse.getEntity());
+        JsonObject projectsData = gson.fromJson(projectsResponseString, JsonObject.class);
+
+        if (projectsData.get("code").getAsInt() != 0 || projectsData.getAsJsonObject("data").getAsJsonArray("totalList").size() == 0) {
+            throw new Exception("Could not find any projects in DolphinScheduler.");
+        }
+        long projectCode = projectsData.getAsJsonObject("data").getAsJsonArray("totalList").get(0).getAsJsonObject().get("code").getAsLong();
+
+        // 2. Get process instances for the project
+        HttpGet instancesRequest = new HttpGet(dsUrl + "/projects/" + projectCode + "/process-instances?pageNo=1&pageSize=100");
+        instancesRequest.addHeader("token", token);
+        CloseableHttpResponse instancesResponse = httpClient.execute(instancesRequest);
+        String instancesResponseString = EntityUtils.toString(instancesResponse.getEntity());
+        JsonObject instancesData = gson.fromJson(instancesResponseString, JsonObject.class);
+
+        if (instancesData.get("code").getAsInt() != 0) {
+            throw new Exception("DS API error (process-instances): " + instancesData.get("msg").getAsString());
+        }
+
+        JsonArray instanceList = instancesData.getAsJsonObject("data").getAsJsonArray("totalList");
+        stats.put("total", instancesData.getAsJsonObject("data").get("total").getAsInt());
+        stats.put("recent_instances", gson.fromJson(instanceList, List.class));
+
+        for (int i = 0; i < instanceList.size(); i++) {
+            JsonObject instance = instanceList.get(i).getAsJsonObject();
+            String state = instance.get("state").getAsString();
+            switch (state) {
+                case "SUCCESS":
+                    stats.put("success", (int) stats.get("success") + 1);
+                    break;
+                case "FAILURE":
+                case "STOP":
+                case "KILL":
+                    stats.put("failure", (int) stats.get("failure") + 1);
+                    break;
+                case "RUNNING_EXECUTION":
+                    stats.put("running", (int) stats.get("running") + 1);
+                    break;
+                default:
+                    stats.put("other", (int) stats.get("other") + 1);
+                    break;
+            }
+        }
+
+        return stats;
+    }
 }
