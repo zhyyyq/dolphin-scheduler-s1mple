@@ -106,7 +106,8 @@ public class WorkflowService {
                     Path filePath = Paths.get(workflowRepoDir, filename);
                     if (Files.exists(filePath)) {
                         try {
-                            map.put("updateTime", Files.getLastModifiedTime(filePath).toMillis());
+                            long lastModifiedMillis = Files.getLastModifiedTime(filePath).toMillis();
+                            map.put("updateTime", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(lastModifiedMillis)));
                             Yaml yaml = new Yaml();
                             Map<String, Object> data = yaml.load(new String(Files.readAllBytes(filePath)));
                             Map<String, Object> workflowMeta = (Map<String, Object>) data.get("workflow");
