@@ -293,4 +293,14 @@ public class WorkflowService {
         result.put("parsed", data);
         return result;
     }
+
+    public List<Map<String, Object>> getWorkflowHistory(String workflowUuid) throws GitAPIException, IOException {
+        String filename = workflowUuid + ".yaml";
+        return gitService.getFileHistory(filename);
+    }
+
+    public Map<String, Object> getWorkflowAtCommit(String workflowUuid, String commitHash) throws GitAPIException, IOException {
+        String filename = workflowUuid + ".yaml";
+        return gitService.getFileAtCommit(filename, commitHash);
+    }
 }

@@ -114,4 +114,24 @@ public class WorkflowController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @GetMapping("/{workflowUuid}/history")
+    public ResponseEntity<?> getWorkflowHistory(@PathVariable String workflowUuid) {
+        try {
+            return ResponseEntity.ok(workflowService.getWorkflowHistory(workflowUuid));
+        } catch (Exception e) {
+            logger.error("Error getting workflow history for {}", workflowUuid, e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{workflowUuid}/commit/{commitHash}")
+    public ResponseEntity<?> getWorkflowAtCommit(@PathVariable String workflowUuid, @PathVariable String commitHash) {
+        try {
+            return ResponseEntity.ok(workflowService.getWorkflowAtCommit(workflowUuid, commitHash));
+        } catch (Exception e) {
+            logger.error("Error getting workflow at commit {} for {}", commitHash, workflowUuid, e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 }

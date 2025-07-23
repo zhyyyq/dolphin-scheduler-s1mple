@@ -5,9 +5,19 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.treewalk.TreeWalk;
+import org.eclipse.jgit.treewalk.filter.PathFilter;
+
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class GitService {
@@ -39,5 +49,43 @@ public class GitService {
         git.commit().setMessage(message).call();
     }
 
-    // ... other git methods
+    public List<Map<String, Object>> getFileHistory(String filename) throws GitAPIException, IOException {
+        if (git == null) {
+            init();
+        }
+        List<Map<String, Object>> history = new java.util.ArrayList<>();
+        Iterable<RevCommit> logs = git.log().addPath(filename).call();
+        for (RevCommit rev : logs) {
+            Map<String, Object> commitData = new java.util.HashMap<>();
+            commitData.put("hash", rev.getName());
+            commitData.put("author", rev.getAuthorIdent().getName());
+            commitData.put("date", rev.getAuthorIdent().getWhen());
+            commitData.put("message", rev.getFullMessage());
+            history.add(commitData);
+        }
+        return history;
+    }
+
+    public Map<String, Object> getFileAtCommit(String filename, String commitHash) throws GitAPIException, IOException {
+        if (git == null) {
+            init();
+        }
+        Map<String, Object> fileData = new java.util.HashMap<>();
+        try (RevWalk revWalk = new RevWalk(git.getRepository())) {
+            RevCommit commit = revWalk.parseCommit(git.getRepository().resolve(commitHash));
+            RevTree tree = commit.getTree();
+            try (TreeWalk treeWalk = new TreeWalk(git.getRepository())) {
+                treeWalk.addTree(tree);
+                treeWalk.setRecursive(true);
+                treeWalk.setFilter(PathFilter.create(filename));
+                if (!treeWalk.next()) {
+                    throw new IllegalStateException("Did not find expected file '" + filename + "' in tree '" + tree.getName() + "'");
+                }
+                ObjectId objectId = treeWalk.getObjectId(0);
+                ObjectLoader loader = git.getRepository().open(objectId);
+                fileData.put("content", new String(loader.getBytes()));
+            }
+        }
+        return fileData;
+    }
 }
