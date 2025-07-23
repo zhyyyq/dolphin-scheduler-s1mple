@@ -709,3 +709,12 @@ Caused by: java.lang.Error: Unresolved compilation problems:
 10:33:41.167 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port(s): 8000 (http) with context path ''
 10:33:41.168 [restartedMain] INFO  c.e.scheduler.SchedulerApplication - Started SchedulerApplication in 0.218 seconds (JVM running for 250.087)
 10:33:41.168 [restartedMain] INFO  o.s.b.d.a.ConditionEvaluationDeltaLoggingListener - Condition evaluation unchanged
+10:33:52.781 [http-nio-8000-exec-1] INFO  o.a.c.c.C.[Tomcat-1].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+10:33:52.783 [http-nio-8000-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+10:33:52.783 [http-nio-8000-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 0 ms
+10:33:52.785 [http-nio-8000-exec-1] INFO  c.e.s.filter.RequestLoggingFilter - Received request: GET /api/workflows/combined from 0:0:0:0:0:0:0:1
+10:33:52.785 [http-nio-8000-exec-1] INFO  c.e.s.filter.RequestLoggingFilter - Request body: 
+10:33:52.787 [http-nio-8000-exec-1] INFO  c.e.s.filter.RequestLoggingFilter - Response body: 
+10:33:52.793 [http-nio-8000-exec-2] INFO  c.e.s.filter.RequestLoggingFilter - Received request: GET /api/workflows/combined from 0:0:0:0:0:0:0:1
+10:33:52.793 [http-nio-8000-exec-2] INFO  c.e.s.filter.RequestLoggingFilter - Request body: 
+10:33:52.795 [http-nio-8000-exec-2] INFO  c.e.s.filter.RequestLoggingFilter - Response body: 
