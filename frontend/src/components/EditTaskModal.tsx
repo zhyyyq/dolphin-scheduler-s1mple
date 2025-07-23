@@ -55,54 +55,52 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
 
   const handleOk = () => {
     form.validateFields().then(values => {
-      let updatedTask = { ...task, ...values };
+      let finalTask: Task = { ...task, ...values };
 
-      if (values.yaml_content) { // For the Default Editor
+      if (useDefaultEditor && values.yaml_content) {
         try {
-          const yamlData = yaml.load(values.yaml_content) as object;
-          updatedTask = { ...task, name: values.name, ...yamlData };
+          const yamlData = yaml.load(values.yaml_content) as any;
+          
+          // Prevent modification of name and type from YAML content
+          delete yamlData.name;
+          delete yamlData.type;
+          delete yamlData.task_type;
+
+          finalTask = {
+            ...task,
+            name: values.name, // Keep name from the form
+            ...yamlData,
+          };
         } catch (e) {
           console.error("Error parsing YAML:", e);
           return;
         }
-        delete updatedTask.yaml_content;
-      }
-
-      if (values.conditions_yaml) { // For the Conditions Editor
+      } else if (values.conditions_yaml) {
         try {
           const conditionsData = yaml.load(values.conditions_yaml) as { op: string, groups: any[] };
-          updatedTask = {
+          finalTask = {
             ...task,
             name: values.name,
             success_task: values.success_task,
             failed_task: values.failed_task,
-            op: conditionsData.op,
+            op: conditionsData.op as any,
             groups: conditionsData.groups,
           };
         } catch (e) {
           console.error("Error parsing YAML for Conditions:", e);
           return;
         }
-        delete updatedTask.conditions_yaml;
       }
 
-      if (values.denpendence_yaml) { // For the Dependent Editor
-        try {
-          const denpendenceData = yaml.load(values.denpendence_yaml) as object;
-          updatedTask = {
-            ...task,
-            name: values.name,
-            denpendence: denpendenceData,
-          };
-        } catch (e) {
-          console.error("Error parsing YAML for Dependent:", e);
-          return;
-        }
-        delete updatedTask.denpendence_yaml;
-      }
+      // Ensure type and task_type are not modified
+      finalTask.type = task.type;
+      finalTask.task_type = task.task_type;
 
-      updatedTask = { ...task, ...values };
-      onSave(updatedTask);
+      // Remove temporary fields
+      delete (finalTask as any).yaml_content;
+      delete (finalTask as any).conditions_yaml;
+
+      onSave(finalTask);
 
     }).catch(info => {
       console.log('Validate Failed:', info);

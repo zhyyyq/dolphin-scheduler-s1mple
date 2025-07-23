@@ -229,6 +229,7 @@ const WorkflowEditorPage: React.FC = () => {
         data: {
           name: newNodeName,
           label: newNodeName,
+          task_type: task.type,
           type: task.type,
           command: task.command,
           _display_type: task.type, // Set display type for new nodes
