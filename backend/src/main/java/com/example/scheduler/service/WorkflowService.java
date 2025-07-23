@@ -145,10 +145,14 @@ public class WorkflowService {
         if (projectCode != null && workflowCode != null) {
             dsService.deleteDsWorkflow(projectCode, workflowCode);
         }
-        workflowRepository.deleteById(workflowUuid);
+        if (workflowRepository.existsById(workflowUuid)) {
+            workflowRepository.deleteById(workflowUuid);
+        }
         String filename = workflowUuid + ".yaml";
         Path filePath = Paths.get(workflowRepoDir, filename);
-        Files.deleteIfExists(filePath);
-        gitService.gitCommit(filename, "Delete workflow " + workflowUuid);
+        if (Files.exists(filePath)) {
+            Files.delete(filePath);
+            gitService.gitCommit(filename, "Delete workflow " + workflowUuid);
+        }
     }
 }

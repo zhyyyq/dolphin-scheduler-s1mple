@@ -28,10 +28,15 @@ public class RequestLoggingFilter implements Filter {
         logger.info("Received request: {} {} from {}", requestWrapper.getMethod(), requestWrapper.getRequestURI(), requestWrapper.getRemoteAddr());
         logger.info("Request body: {}", requestWrapper.getRequestBody());
 
-        chain.doFilter(requestWrapper, responseWrapper);
-
-        String responseBody = new String(responseWrapper.getContentAsByteArray(), response.getCharacterEncoding());
-        logger.info("Response body: {}", responseBody);
-        responseWrapper.copyBodyToResponse();
+        try {
+            chain.doFilter(requestWrapper, responseWrapper);
+        } catch (Exception e) {
+            logger.error("Error processing request", e);
+            throw e;
+        } finally {
+            String responseBody = new String(responseWrapper.getContentAsByteArray(), response.getCharacterEncoding());
+            logger.info("Response body: {}", responseBody);
+            responseWrapper.copyBodyToResponse();
+        }
     }
 }
