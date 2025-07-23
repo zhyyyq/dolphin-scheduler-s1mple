@@ -7,9 +7,11 @@ import 'prismjs/themes/prism.css';
 import api from '../api';
 
 interface DeletedWorkflow {
-  filename: string;
-  commit_hash: string;
+  path: string;
+  commit: string;
+  message: string;
   name: string;
+  filename: string;
 }
 
 interface RestoreWorkflowModalProps {
@@ -61,8 +63,8 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
   const handleRestore = async (record: DeletedWorkflow) => {
     try {
       await api.post('/api/workflow/restore', {
-        filename: record.filename,
-        commit_hash: record.commit_hash,
+        path: record.path,
+        commit: record.commit,
       });
       message.success(`工作流 ${record.name} 已成功恢复。`);
       onRestored();
@@ -101,9 +103,9 @@ const RestoreWorkflowModal: React.FC<RestoreWorkflowModalProps> = ({ open, onCan
     },
     {
       title: '删除于 (Commit)',
-      dataIndex: 'commit_hash',
-      key: 'commit_hash',
-      render: (hash: string) => <code>{hash.substring(0, 7)}</code>,
+      dataIndex: 'commit',
+      key: 'commit',
+      render: (hash: string) => <code>{hash ? hash.substring(0, 7) : 'N/A'}</code>,
     },
     {
       title: '操作',

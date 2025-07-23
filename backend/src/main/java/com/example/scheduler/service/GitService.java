@@ -155,6 +155,11 @@ public class GitService {
                                 fileData.put("author", commit.getAuthorIdent().getName());
                                 fileData.put("date", commit.getAuthorIdent().getWhen());
                                 fileData.put("message", commit.getFullMessage());
+                                fileData.put("filename", diff.getOldPath());
+                                String message = commit.getFullMessage();
+                                if (message.startsWith("Delete workflow: ")) {
+                                    fileData.put("name", message.substring("Delete workflow: ".length()));
+                                }
                                 deletedFiles.add(fileData);
                             }
                         }
