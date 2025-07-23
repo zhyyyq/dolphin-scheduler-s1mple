@@ -277,4 +277,14 @@ public class WorkflowService {
 
         return dsService.executeDsWorkflow(projectCode, workflowCode, payload);
     }
+
+    public Map<String, Object> reparseWorkflow(WorkflowDto workflowDto) throws IOException {
+        Yaml yaml = new Yaml();
+        Map<String, Object> data = yaml.load(workflowDto.getContent());
+        // Assuming a parseWorkflow equivalent exists or is not needed for now
+        // Map<String, Object> parsedData = parseWorkflow(workflowDto.getContent());
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("parsed", data);
+        return result;
+    }
 }

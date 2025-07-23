@@ -77,6 +77,10 @@ const api = {
       method: 'DELETE',
     });
     return handleResponse(response);
+  },
+
+  async reparseWorkflow(content: string): Promise<any> {
+    return this.post('/api/workflow/reparse', { content });
   }
 };
 

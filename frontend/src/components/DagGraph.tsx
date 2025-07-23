@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Graph, Node } from '@antv/x6';
 import { PreviewData, Task } from '../types';
 import dagre from 'dagre';
+import api from '../api';
 
 interface DagGraphProps {
   data: PreviewData | null;
@@ -96,6 +97,17 @@ const DagGraph: React.FC<DagGraphProps> = ({ data, onNodeDoubleClick }) => {
           onNodeDoubleClick({ name: label, command, type: taskType });
         });
       }
+
+      graph.on('node:contextmenu', async ({ node, e }) => {
+        e.preventDefault();
+        const { label, command, taskType } = node.getData();
+        if (taskType === 'sub-process') {
+          // Handle sub-process context menu
+        } else {
+          const newWorkflow = await api.reparseWorkflow(command);
+          console.log(newWorkflow);
+        }
+      });
     }
     
     return () => {
