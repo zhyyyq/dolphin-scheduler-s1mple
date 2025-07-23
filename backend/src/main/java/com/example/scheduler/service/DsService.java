@@ -174,11 +174,20 @@ public class DsService {
 
             ProcessBuilder processBuilder = new ProcessBuilder("uv", "run", "pydolphinscheduler", "yaml", "-f", tmpPath.toString());
             processBuilder.directory(new File(workflowRepoDir));
+            processBuilder.redirectErrorStream(true);
             Process process = processBuilder.start();
-            int exitCode = process.waitFor();
+            
+            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()));
+            String line;
+            StringBuilder output = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                logger.info("CLI: " + line);
+                output.append(line).append("\n");
+            }
 
+            int exitCode = process.waitFor();
             if (exitCode != 0) {
-                throw new Exception("pydolphinscheduler CLI failed.");
+                throw new Exception("pydolphinscheduler CLI failed with exit code " + exitCode + ":\n" + output.toString());
             }
 
         } finally {
