@@ -136,6 +136,19 @@ const HomePage: React.FC = () => {
             localParams: params.localParams || [],
             resourceList: [],
           };
+        } else if (task.type === 'SWITCH') {
+          const params = task.task_params || {};
+          const dependTaskList = (params.dependTaskList || []).map((item: any) => ({
+            ...item,
+            nextNode: taskNameToCodeMap.get(item.nextNode),
+          }));
+          taskParams = {
+            localParams: params.localParams || [],
+            switchResult: JSON.stringify({
+              dependTaskList: dependTaskList,
+            }),
+            rawScript: '', // Switch tasks don't have a raw script
+          };
         } else {
           // Default for SHELL and other script-based tasks
           const params = task.task_params || {};

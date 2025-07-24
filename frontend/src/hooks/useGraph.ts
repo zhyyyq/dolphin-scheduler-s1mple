@@ -8,7 +8,7 @@ import { Task } from '../types';
 
 interface UseGraphProps {
   container: HTMLDivElement | null;
-  onNodeDoubleClick: (node: any) => void;
+  onNodeDoubleClick?: (node: any) => void;
   onBlankContextMenu: (e: any, x: number, y: number) => void;
 }
 
@@ -70,7 +70,9 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     graphInstance.bindKey('ctrl+z', () => graphInstance.undo());
     graphInstance.bindKey('ctrl+y', () => graphInstance.redo());
 
-    graphInstance.on('node:dblclick', ({ node }) => onNodeDoubleClick(node));
+    if (onNodeDoubleClick) {
+      graphInstance.on('node:dblclick', ({ node }) => onNodeDoubleClick(node));
+    }
     graphInstance.on('blank:contextmenu', ({ e, x, y }) => onBlankContextMenu(e, x, y));
     graphInstance.on('node:contextmenu', ({ e }) => e.preventDefault());
     graphInstance.on('edge:contextmenu', ({ e }) => e.preventDefault());

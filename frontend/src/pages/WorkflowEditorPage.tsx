@@ -27,6 +27,7 @@ const WorkflowEditorPage: React.FC = () => {
   const [isYamlModalVisible, setIsYamlModalVisible] = useState(false);
   const [yamlContent, setYamlContent] = useState('');
   const [currentNode, setCurrentNode] = useState<any>(null);
+  const [allTasksForModal, setAllTasksForModal] = useState<Task[]>([]);
   const [nodeName, setNodeName] = useState('');
   const [nodeCommand, setNodeCommand] = useState('');
   const [workflowName, setWorkflowName] = useState('my-workflow');
@@ -36,11 +37,6 @@ const WorkflowEditorPage: React.FC = () => {
   const [workflowData, setWorkflowData] = useState<WorkflowDetail | null>(null);
   const [originalYaml, setOriginalYaml] = useState<string>('');
 
-  const handleNodeDoubleClick = useCallback((node: any) => {
-    const nodeData = node.getData();
-    setCurrentNode({ ...nodeData, id: node.id });
-  }, []);
-
   const handleBlankContextMenu = useCallback((e: any, x: number, y: number) => {
     e.preventDefault();
     setContextMenu({ visible: true, x: e.clientX, y: e.clientY, px: x, py: y });
@@ -48,9 +44,27 @@ const WorkflowEditorPage: React.FC = () => {
 
   const { graph, loadGraphData, autoLayout } = useGraph({
     container: container,
-    onNodeDoubleClick: handleNodeDoubleClick,
     onBlankContextMenu: handleBlankContextMenu,
   });
+
+  useEffect(() => {
+    if (graph) {
+      const handleNodeDoubleClick = (args: { node: any }) => {
+        const { node } = args;
+        const allNodes = graph.getNodes().map(n => n.getData() as Task);
+        setAllTasksForModal(allNodes);
+
+        const nodeData = node.getData();
+        setCurrentNode({ ...nodeData, id: node.id });
+      };
+
+      graph.on('node:dblclick', handleNodeDoubleClick);
+
+      return () => {
+        graph.off('node:dblclick', handleNodeDoubleClick);
+      };
+    }
+  }, [graph]);
 
   useEffect(() => {
     if (workflow_uuid) {
@@ -376,6 +390,7 @@ const WorkflowEditorPage: React.FC = () => {
         <EditTaskModal
           open={!!currentNode}
           task={currentNode}
+          allTasks={allTasksForModal}
           onCancel={handleCancelTask}
           onSave={handleSaveTask}
         />

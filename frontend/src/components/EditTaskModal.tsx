@@ -8,11 +8,12 @@ import { taskTypes } from '../config/taskTypes';
 interface EditTaskModalProps {
   open: boolean;
   task: Task | null;
+  allTasks: Task[];
   onCancel: () => void;
   onSave: (updated_task: Task) => void;
 }
 
-const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onSave }) => {
+const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, onCancel, onSave }) => {
   const [form] = Form.useForm();
   const [useDefaultEditor, setUseDefaultEditor] = useState(false);
 
@@ -108,7 +109,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
       const EditorComponent = taskConfig.editor as React.FC<any>;
       // Pass form and initialValues to all editors.
       // Editors that don't need them will simply ignore them.
-      return <EditorComponent form={form} initialValues={task} />;
+      return <EditorComponent form={form} initialValues={task} allTasks={allTasks} />;
     }
 
     return <DefaultTaskEditor initialValues={task} form={form} />;
