@@ -35,16 +35,13 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, onC
 
   const handleOk = () => {
     form.validateFields().then(values => {
-      // This is the key fix: form values should be merged into task_params,
-      // not spread directly onto the task object.
-      const updated_task_params = { ...task?.task_params, ...values };
-      
-      // The name is a top-level property, not part of task_params.
-      delete updated_task_params.name;
+      const { name, command, ...other_values } = values;
+      const updated_task_params = { ...task?.task_params, ...other_values };
 
       let finalTask: Task = {
         ...task!,
-        name: values.name, // Keep name at the top level
+        name: name,
+        command: command,
         task_params: updated_task_params,
       };
 

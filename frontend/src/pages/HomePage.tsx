@@ -13,6 +13,12 @@ import BackfillModal from '../components/BackfillModal';
 
 const { Title } = Typography;
 
+interface Parameter {
+  name: string;
+  type: string;
+  value: any;
+}
+
 interface ActionButtonsProps {
   record: Workflow;
   onDelete: (record: Workflow) => void;
@@ -108,30 +114,9 @@ const HomePage: React.FC = () => {
       const doc = yaml.parse(yamlContent);
       const workflow = doc.workflow || {};
       let tasks = doc.tasks || [];
-      const parameters = doc.parameters || [];
+      const parameters: Parameter[] = doc.parameters || [];
 
-      // --- Parameter Substitution ---
-      if (parameters.length > 0) {
-        const paramMap = new Map(parameters.map((p: any) => [p.name, p.value]));
-
-        const substitute = (obj: any): any => {
-          if (typeof obj === 'string') {
-            return obj.replace(/\$\{(\w+)\}/g, (match, varName) => {
-              return paramMap.has(varName) ? String(paramMap.get(varName)) : match;
-            });
-          }
-          if (Array.isArray(obj)) {
-            return obj.map(substitute);
-          }
-          if (obj !== null && typeof obj === 'object') {
-            return Object.fromEntries(
-              Object.entries(obj).map(([key, value]) => [key, substitute(value)])
-            );
-          }
-          return obj;
-        };
-        tasks = substitute(tasks);
-      }
+      const paramDefinitions = new Map(parameters.map((p: Parameter) => [p.name, p]));
 
       // 2. Generate task codes
       const taskNameToCodeMap = new Map<string, number>();
@@ -176,10 +161,35 @@ const HomePage: React.FC = () => {
           };
         } else {
           // Default for SHELL and other script-based tasks
-          const params = task.task_params || {};
+          const rawScript = task.command || '';
+          const usedParamNames = new Set<string>();
+          
+          // Find all used parameters in the script
+          const regex = /\$\{(\w+)\}/g;
+          let match;
+          while ((match = regex.exec(rawScript)) !== null) {
+            usedParamNames.add(match[1]);
+          }
+
+          const localParams = Array.from(usedParamNames)
+            .map(name => {
+              const paramDef = paramDefinitions.get(name);
+              if (paramDef) {
+                return {
+                  prop: paramDef.name,
+                  direct: 'IN',
+                  type: paramDef.type || 'VARCHAR',
+                  value: paramDef.value,
+                };
+              }
+              return null;
+            })
+            .filter(Boolean);
+
           taskParams = {
-            rawScript: task.command || '',
-            localParams: params.localParams || [],
+            rawScript: rawScript,
+            localParams: localParams,
+            resourceList: [], // Ensure resourceList is present
           };
         }
 

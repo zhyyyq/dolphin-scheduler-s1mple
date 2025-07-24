@@ -149,58 +149,107 @@ const WorkflowEditorPage: React.FC = () => {
     }
 
     const { cells } = graph.toJSON();
-    const allNodes = cells.filter(cell => cell.shape === 'task-node');
+    const allGraphNodes = cells.filter(cell => cell.shape === 'task-node');
     const edges = cells.filter(cell => cell.shape === 'edge');
+    const nodeMap = new Map(allGraphNodes.map(n => [n.id, n.data]));
 
-    // --- Separate Nodes into Tasks and Parameters ---
+    // Identify all connected parameter nodes to distinguish them from global ones
+    const connectedParamIds = new Set();
+    edges.forEach(edge => {
+      const sourceNode = nodeMap.get(edge.source.cell);
+      const targetNode = nodeMap.get(edge.target.cell);
+      if (sourceNode?.type === 'PARAMS') connectedParamIds.add(edge.source.cell);
+      if (targetNode?.type === 'PARAMS') connectedParamIds.add(edge.target.cell);
+    });
+
     const tasks = [];
-    const parameters = [];
+    const globalParameters = [];
 
-    for (const node of allNodes) {
-      const nodeData = { ...node.data };
-      
-      // Common cleanup
-      delete nodeData.label;
-      delete nodeData._display_type;
-      delete nodeData.id;
+    for (const node of allGraphNodes) {
+      const nodeData = node.data;
 
       if (nodeData.type === 'PARAMS') {
-        // This is a Parameter Node
-        parameters.push({
-          name: nodeData.name,
-          type: nodeData.task_params?.type || 'VARCHAR',
-          value: nodeData.task_params?.value || '',
-        });
-      } else {
-        // This is a Task Node
-        const deps = edges
-          .filter(edge => edge.target.cell === node.id)
-          .map(edge => {
-            const sourceNode = allNodes.find(n => n.id === edge.source.cell);
-            return sourceNode ? sourceNode.data.label : null;
-          })
-          .filter(Boolean);
-
-        const taskPayload: any = {
-          ...nodeData,
-          name: nodeData.label,
-        };
-
-        if (deps.length > 0) {
-          taskPayload.deps = deps;
+        if (!connectedParamIds.has(node.id)) {
+          // This is a global parameter
+          globalParameters.push({
+            name: nodeData.name,
+            type: nodeData.task_params?.type || 'VARCHAR',
+            value: nodeData.task_params?.value || '',
+          });
         }
-        
-        // Clean up undefined command property
-        if (taskPayload.command === undefined) {
-          delete taskPayload.command;
-        }
-
-        tasks.push(taskPayload);
+        continue; // Parameters are processed via their connections to tasks
       }
+
+      // It's a task node
+      const deps: string[] = [];
+      const localParams: any[] = [];
+
+      // Handle INCOMING connections (Dependencies and IN-parameters)
+      const incomingEdges = edges.filter(edge => edge.target.cell === node.id);
+      for (const edge of incomingEdges) {
+        const sourceNodeData = nodeMap.get(edge.source.cell);
+        if (sourceNodeData) {
+          if (sourceNodeData.type === 'PARAMS') {
+            localParams.push({
+              prop: sourceNodeData.name,
+              direct: 'IN',
+              type: sourceNodeData.task_params?.type || 'VARCHAR',
+              value: sourceNodeData.task_params?.value || '',
+            });
+          } else {
+            deps.push(sourceNodeData.name);
+          }
+        }
+      }
+
+      // Handle OUTGOING connections (OUT-parameters)
+      const outgoingEdges = edges.filter(edge => edge.source.cell === node.id);
+      for (const edge of outgoingEdges) {
+        const targetNodeData = nodeMap.get(edge.target.cell);
+        if (targetNodeData && targetNodeData.type === 'PARAMS') {
+          localParams.push({
+            prop: targetNodeData.name,
+            direct: 'OUT',
+            type: targetNodeData.task_params?.type || 'VARCHAR',
+            value: targetNodeData.task_params?.value || '',
+          });
+        }
+      }
+
+      const taskPayload: any = {
+        name: nodeData.name,
+        task_type: nodeData.task_type,
+        type: nodeData.type,
+        command: nodeData.command,
+        task_params: { ...(nodeData.task_params || {}) },
+      };
+      
+      delete taskPayload.task_params.localParams; // remove from old location
+      
+      if (localParams.length > 0) {
+        taskPayload.localParams = localParams; // add to top level
+      }
+      
+      if (deps.length > 0) {
+        taskPayload.deps = deps;
+      }
+
+      if (taskPayload.command === undefined) {
+        delete taskPayload.command;
+      }
+      if (Object.keys(taskPayload.task_params).length === 0) {
+        delete taskPayload.task_params;
+      }
+
+      tasks.push(taskPayload);
     }
 
     doc.set('tasks', tasks);
-    doc.set('parameters', parameters);
+    if (globalParameters.length > 0) {
+      doc.set('parameters', globalParameters);
+    } else {
+      doc.delete('parameters');
+    }
 
     return doc.toString();
   };
@@ -290,43 +339,68 @@ const WorkflowEditorPage: React.FC = () => {
 
   const handleMenuClick = (e: { key: string }) => {
     if (!graph) return;
-    const task = taskTypes.find(t => t.type === e.key);
-    if (task) {
+
+    if (e.key === 'ADD_PARAM') {
       const existingNodes = graph.getNodes();
-      let newNodeName = task.label;
+      let newNodeName = '参数';
       let counter = 1;
       while (existingNodes.some(n => n.getData().label === newNodeName)) {
-        newNodeName = `${task.label}_${counter}`;
+        newNodeName = `参数_${counter}`;
         counter++;
       }
 
-      const nodeData: Partial<Task> = {
+      const nodeData: Task = {
         name: newNodeName,
         label: newNodeName,
-        task_type: task.type,
-        type: task.type,
-        task_params: (task as any).default_params || {},
-        _display_type: task.type,
-      };
-
-      if (['SHELL', 'PYTHON', 'HTTP'].includes(task.type)) {
-        nodeData.command = task.command;
-      }
-
-      if (task.type === 'PARAMS') {
-        nodeData.task_params = {
+        type: 'PARAMS',
+        task_type: 'PARAMS',
+        command: '', // Add empty command to satisfy Task type
+        task_params: {
           prop: newNodeName,
           type: 'VARCHAR',
           value: '',
-        };
-      }
+        },
+        _display_type: 'PARAMS',
+      };
 
       graph.addNode({
         shape: 'task-node',
         x: contextMenu.px,
         y: contextMenu.py,
-        data: nodeData as Task,
+        data: nodeData,
       });
+
+    } else {
+      const task = taskTypes.find(t => t.type === e.key);
+      if (task) {
+        const existingNodes = graph.getNodes();
+        let newNodeName = task.label;
+        let counter = 1;
+        while (existingNodes.some(n => n.getData().label === newNodeName)) {
+          newNodeName = `${task.label}_${counter}`;
+          counter++;
+        }
+
+        const nodeData: Partial<Task> = {
+          name: newNodeName,
+          label: newNodeName,
+          task_type: task.type,
+          type: task.type,
+          task_params: (task as any).default_params || {},
+          _display_type: task.type,
+        };
+
+        if (['SHELL', 'PYTHON', 'HTTP'].includes(task.type)) {
+          nodeData.command = task.command;
+        }
+
+        graph.addNode({
+          shape: 'task-node',
+          x: contextMenu.px,
+          y: contextMenu.py,
+          data: nodeData as Task,
+        });
+      }
     }
     setContextMenu({ ...contextMenu, visible: false });
   };

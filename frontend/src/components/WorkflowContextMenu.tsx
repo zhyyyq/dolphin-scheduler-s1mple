@@ -28,6 +28,15 @@ export const WorkflowContextMenu: React.FC<WorkflowContextMenuProps> = ({
       })),
   }));
 
+  // Manually add the "Add Parameter" option to the "General" category
+  const generalCategory = menuItems.find(item => item.key === 'general');
+  if (generalCategory) {
+    generalCategory.children.unshift({
+      key: 'ADD_PARAM',
+      label: '参数',
+    });
+  }
+
   return (
     <div style={{ position: 'fixed', top: y, left: x, zIndex: 1000 }}>
       <Menu

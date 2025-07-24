@@ -1,9 +1,7 @@
 import React from 'react';
-import { Input, Form, Typography } from 'antd';
-import LocalParamsEditor from './common/LocalParamsEditor';
+import { Input, Form } from 'antd';
 
 const { TextArea } = Input;
-const { Title } = Typography;
 
 const ShellTaskEditor: React.FC = () => {
   return (
@@ -15,8 +13,6 @@ const ShellTaskEditor: React.FC = () => {
       >
         <TextArea rows={10} placeholder="请输入脚本内容" />
       </Form.Item>
-      <Title level={5}>自定义参数</Title>
-      <LocalParamsEditor />
     </>
   );
 };
