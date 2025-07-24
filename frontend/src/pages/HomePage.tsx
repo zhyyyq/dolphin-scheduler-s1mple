@@ -121,20 +121,24 @@ const HomePage: React.FC = () => {
       const taskDefinitionJson = tasks.map((task: Task) => {
         const taskCode = taskNameToCodeMap.get(task.name);
         
-        // Special handling for SQL task params
-        let finalTaskParams: Record<string, any> = { ...task.task_params };
+        let taskParams: Record<string, any>;
+
         if (task.type === 'SQL') {
-          const { preStatements, postStatements, ...rest } = task.task_params || {};
-          finalTaskParams = {
-            ...rest,
-            preStatements: preStatements ? (preStatements as string).split(';').filter((s: string) => s.trim() !== '') : [],
-            postStatements: postStatements ? (postStatements as string).split(';').filter((s: string) => s.trim() !== '') : [],
+          const params = task.task_params || {};
+          taskParams = {
+            type: params.datasourceType, // Read from the renamed field
+            datasource: params.datasource,
+            sql: params.sql,
+            sqlType: params.sqlType,
+            preStatements: params.preStatements ? (params.preStatements as string).split(';').filter((s: string) => s.trim() !== '') : [],
+            postStatements: params.postStatements ? (params.postStatements as string).split(';').filter((s: string) => s.trim() !== '') : [],
+            displayRows: params.displayRows,
             localParams: [],
             resourceList: [],
           };
         } else {
-          finalTaskParams = {
-            ...task.task_params,
+          // Default for SHELL and other script-based tasks
+          taskParams = {
             rawScript: task.command || '',
             localParams: [],
           };
@@ -145,7 +149,7 @@ const HomePage: React.FC = () => {
           name: task.name,
           description: task.description || '',
           taskType: (task.type || 'SHELL').toUpperCase(),
-          taskParams: finalTaskParams,
+          taskParams: taskParams,
           failRetryTimes: 0,
           failRetryInterval: 1,
           timeoutFlag: 'CLOSE',

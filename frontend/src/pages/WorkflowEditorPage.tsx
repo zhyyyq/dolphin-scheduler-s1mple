@@ -168,6 +168,12 @@ const WorkflowEditorPage: React.FC = () => {
       delete taskPayload.label;
       delete taskPayload._display_type; // Remove internal display type
       delete taskPayload.id; // Remove internal id
+      
+      // Clean up undefined command property
+      if (taskPayload.command === undefined) {
+        delete taskPayload.command;
+      }
+      
       return taskPayload;
     });
 
@@ -295,7 +301,10 @@ const WorkflowEditorPage: React.FC = () => {
           label: newNodeName,
           task_type: task.type,
           type: task.type,
-          command: task.command,
+          // Only add command for script-based tasks
+          command: ['SHELL', 'PYTHON', 'HTTP'].includes(task.type) ? task.command : undefined,
+          // Initialize task_params with defaults if they exist
+          task_params: (task as any).default_params || {},
           _display_type: task.type, // Set display type for new nodes
         },
       });

@@ -1,34 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Input, Form, Switch, Space, Button } from 'antd';
 import { Task } from '../types';
-import SqlTaskEditor from './tasks/SqlTaskEditor';
-import ShellTaskEditor from './tasks/ShellTaskEditor';
-import SwitchTaskEditor from './tasks/SwitchTaskEditor';
-import SubWorkflowTaskEditor from './tasks/SubWorkflowTaskEditor';
-import SparkTaskEditor from './tasks/SparkTaskEditor';
-import PythonTaskEditor from './tasks/PythonTaskEditor';
-import ConditionsTaskEditor from './tasks/ConditionsTaskEditor';
-import DataXTaskEditor from './tasks/DataXTaskEditor';
-import CustomDataXTaskEditor from './tasks/CustomDataXTaskEditor';
-import DependentTaskEditor from './tasks/DependentTaskEditor';
-import DVCInitTaskEditor from './tasks/DVCInitTaskEditor';
-import DVCUploadTaskEditor from './tasks/DVCUploadTaskEditor';
-import DVCDownloadTaskEditor from './tasks/DVCDownloadTaskEditor';
-import FlinkTaskEditor from './tasks/FlinkTaskEditor';
-import HttpTaskEditor from './tasks/HttpTaskEditor';
-import K8STaskEditor from './tasks/K8STaskEditor';
-import MapReduceTaskEditor from './tasks/MapReduceTaskEditor';
-import MLFlowProjectsCustomTaskEditor from './tasks/MLFlowProjectsCustomTaskEditor';
-import MLFlowProjectsAutoMLTaskEditor from './tasks/MLFlowProjectsAutoMLTaskEditor';
-import MLflowModelsTaskEditor from './tasks/MLflowModelsTaskEditor';
-import MLFlowProjectsBasicAlgorithmTaskEditor from './tasks/MLFlowProjectsBasicAlgorithmTaskEditor';
-import OpenMLDBTaskEditor from './tasks/OpenMLDBTaskEditor';
-import ProcedureTaskEditor from './tasks/ProcedureTaskEditor';
-import PytorchTaskEditor from './tasks/PytorchTaskEditor';
-import SagemakerTaskEditor from './tasks/SagemakerTaskEditor';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
-// Import other specific editors as needed
+import { taskTypes } from '../config/taskTypes';
 
 interface EditTaskModalProps {
   open: boolean;
@@ -112,61 +87,16 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
       return <DefaultTaskEditor initialValues={task} form={form} />;
     }
 
-    switch (task.task_type) {
-      case 'Sql':
-        return <SqlTaskEditor />;
-      case 'Shell':
-        return <ShellTaskEditor />;
-      case 'Switch':
-        return <SwitchTaskEditor />;
-      case 'SubWorkflow':
-        return <SubWorkflowTaskEditor />;
-      case 'Spark':
-        return <SparkTaskEditor />;
-      case 'Python':
-        return <PythonTaskEditor />;
-      case 'Condition':
-        return <ConditionsTaskEditor form={form} initialValues={task} />;
-      case 'DataX':
-        return <DataXTaskEditor />;
-      case 'CustomDataX':
-        return <CustomDataXTaskEditor />;
-      case 'Dependent':
-        return <DependentTaskEditor form={form} initialValues={task} />;
-      case 'DVCInit':
-        return <DVCInitTaskEditor />;
-      case 'DVCUpload':
-        return <DVCUploadTaskEditor />;
-      case 'DVCDownload':
-        return <DVCDownloadTaskEditor />;
-      case 'Flink':
-        return <FlinkTaskEditor />;
-      case 'Http':
-        return <HttpTaskEditor form={form} initialValues={task} />;
-      case 'K8S':
-        return <K8STaskEditor />;
-      case 'MR':
-        return <MapReduceTaskEditor />;
-      case 'MLFlowProjectsCustom':
-        return <MLFlowProjectsCustomTaskEditor />;
-      case 'MLFlowProjectsAutoML':
-        return <MLFlowProjectsAutoMLTaskEditor />;
-      case 'MLflowModels':
-        return <MLflowModelsTaskEditor />;
-      case 'MLFlowProjectsBasicAlgorithm':
-        return <MLFlowProjectsBasicAlgorithmTaskEditor />;
-      case 'OpenMLDB':
-        return <OpenMLDBTaskEditor />;
-      case 'Procedure':
-        return <ProcedureTaskEditor />;
-      case 'pytorch':
-        return <PytorchTaskEditor />;
-      case 'Sagemaker':
-        return <SagemakerTaskEditor />;
-      // Add cases for other task types here
-      default:
-        return <DefaultTaskEditor initialValues={task} form={form} />;
+    const taskConfig = taskTypes.find(t => t.type === task?.task_type);
+
+    if (taskConfig && taskConfig.editor) {
+      const EditorComponent = taskConfig.editor as React.FC<any>;
+      // Pass form and initialValues to all editors.
+      // Editors that don't need them will simply ignore them.
+      return <EditorComponent form={form} initialValues={task} />;
     }
+
+    return <DefaultTaskEditor initialValues={task} form={form} />;
   };
 
   return (

@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   CodeOutlined,
   ApartmentOutlined,
@@ -16,39 +17,61 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 
+// Import all task editors
+import ShellTaskEditor from '../components/tasks/ShellTaskEditor';
+import PythonTaskEditor from '../components/tasks/PythonTaskEditor';
+import ConditionsTaskEditor from '../components/tasks/ConditionsTaskEditor';
+import SwitchTaskEditor from '../components/tasks/SwitchTaskEditor';
+import DependentTaskEditor from '../components/tasks/DependentTaskEditor';
+import SubWorkflowTaskEditor from '../components/tasks/SubWorkflowTaskEditor';
+import SqlTaskEditor from '../components/tasks/SqlTaskEditor';
+import DataXTaskEditor from '../components/tasks/DataXTaskEditor';
+import SparkTaskEditor from '../components/tasks/SparkTaskEditor';
+import FlinkTaskEditor from '../components/tasks/FlinkTaskEditor';
+import MapReduceTaskEditor from '../components/tasks/MapReduceTaskEditor';
+import KubernetesTaskEditor from '../components/tasks/K8STaskEditor';
+import SagemakerTaskEditor from '../components/tasks/SagemakerTaskEditor';
+import MLflowModelsTaskEditor from '../components/tasks/MLflowModelsTaskEditor';
+import OpenMLDBTaskEditor from '../components/tasks/OpenMLDBTaskEditor';
+import PytorchTaskEditor from '../components/tasks/PytorchTaskEditor';
+import DVCTaskEditor from '../components/tasks/DVCInitTaskEditor'; // Assuming DVC uses one of these
+import HttpTaskEditor from '../components/tasks/HttpTaskEditor';
+import ProcedureTaskEditor from '../components/tasks/ProcedureTaskEditor';
+
 export const taskTypes = [
-  { label: 'Shell', type: 'Shell', command: 'echo "Hello"', category: 'general', icon: CodeOutlined },
-  { label: 'Python', type: 'Python', command: 'print("Hello")', category: 'general', icon: CodeOutlined },
-  { label: 'Conditions', type: 'Conditions', command: '', category: 'control_flow', icon: ApartmentOutlined },
-  { label: 'Switch', type: 'Switch', command: '', category: 'control_flow', icon: ForkOutlined },
-  { label: 'Dependent', type: 'Dependent', command: '', category: 'control_flow', icon: NodeIndexOutlined },
-  { label: 'Sub Process', type: 'SubProcess', command: '', category: 'control_flow', icon: PartitionOutlined },
+  { label: 'Shell', type: 'SHELL', command: 'echo "Hello"', category: 'general', icon: CodeOutlined, editor: ShellTaskEditor },
+  { label: 'Python', type: 'PYTHON', command: 'print("Hello")', category: 'general', icon: CodeOutlined, editor: PythonTaskEditor },
+  { label: 'Conditions', type: 'CONDITIONS', command: '', category: 'control_flow', icon: ApartmentOutlined, editor: ConditionsTaskEditor },
+  { label: 'Switch', type: 'SWITCH', command: '', category: 'control_flow', icon: ForkOutlined, editor: SwitchTaskEditor },
+  { label: 'Dependent', type: 'DEPENDENT', command: '', category: 'control_flow', icon: NodeIndexOutlined, editor: DependentTaskEditor },
+  { label: 'Sub Process', type: 'SUB_PROCESS', command: '', category: 'control_flow', icon: PartitionOutlined, editor: SubWorkflowTaskEditor },
   { 
     label: 'SQL', 
-    type: 'Sql', 
+    type: 'SQL', 
     category: 'data', 
     icon: DatabaseOutlined,
+    editor: SqlTaskEditor,
     default_params: {
-      datasource_name: 'db',
-      sql_type: '0',
-      sql: 'SELECT * FROM table',
-      pre_sql: '',
-      post_sql: '',
-      display_rows: 10,
+      datasource: 1,
+      sqlType: '0',
+      sql: 'SELECT * FROM a',
+      preStatements: '',
+      postStatements: '',
+      displayRows: 10,
     } 
   },
-  { label: 'DataX', type: 'DataX', command: '', category: 'data', icon: SendOutlined },
-  { label: 'Spark', type: 'Spark', command: '', category: 'big_data', icon: RocketOutlined },
-  { label: 'Flink', type: 'Flink', command: '', category: 'big_data', icon: RocketOutlined },
-  { label: 'Map Reduce', type: 'MapReduce', command: '', category: 'big_data', icon: RocketOutlined },
-  { label: 'Kubernetes', type: 'Kubernetes', command: '', category: 'cloud_ml', icon: DeploymentUnitOutlined },
-  { label: 'SageMaker', type: 'SageMaker', command: '', category: 'cloud_ml', icon: CloudOutlined },
-  { label: 'MLflow', type: 'MLflow', command: '', category: 'cloud_ml', icon: ExperimentOutlined },
-  { label: 'OpenMLDB', type: 'OpenMLDB', command: '', category: 'cloud_ml', icon: ReadOutlined },
-  { label: 'PyTorch', type: 'PyTorch', command: '', category: 'cloud_ml', icon: GithubOutlined },
-  { label: 'DVC', type: 'DVC', command: '', category: 'cloud_ml', icon: GithubOutlined },
-  { label: 'HTTP', type: 'Http', command: 'curl http://example.com', category: 'other', icon: CloudServerOutlined },
-  { label: 'Procedure', type: 'Procedure', command: '', category: 'other', icon: SettingOutlined },
+  { label: 'DataX', type: 'DATAX', command: '', category: 'data', icon: SendOutlined, editor: DataXTaskEditor },
+  { label: 'Spark', type: 'SPARK', command: '', category: 'big_data', icon: RocketOutlined, editor: SparkTaskEditor },
+  { label: 'Flink', type: 'FLINK', command: '', category: 'big_data', icon: RocketOutlined, editor: FlinkTaskEditor },
+  { label: 'Map Reduce', type: 'MAP_REDUCE', command: '', category: 'big_data', icon: RocketOutlined, editor: MapReduceTaskEditor },
+  { label: 'Kubernetes', type: 'KUBERNETES', command: '', category: 'cloud_ml', icon: DeploymentUnitOutlined, editor: KubernetesTaskEditor },
+  { label: 'SageMaker', type: 'SAGEMAKER', command: '', category: 'cloud_ml', icon: CloudOutlined, editor: SagemakerTaskEditor },
+  { label: 'MLflow', type: 'ML_FLOW', command: '', category: 'cloud_ml', icon: ExperimentOutlined, editor: MLflowModelsTaskEditor },
+  { label: 'OpenMLDB', type: 'OPEN_MLDB', command: '', category: 'cloud_ml', icon: ReadOutlined, editor: OpenMLDBTaskEditor },
+  { label: 'PyTorch', type: 'PYTORCH', command: '', category: 'cloud_ml', icon: GithubOutlined, editor: PytorchTaskEditor },
+  { label: 'DVC', type: 'DVC', command: '', category: 'cloud_ml', icon: GithubOutlined, editor: DVCTaskEditor },
+  { label: 'HTTP', type: 'HTTP', command: 'curl http://example.com', category: 'other', icon: CloudServerOutlined, editor: HttpTaskEditor },
+  { label: 'Procedure', type: 'PROCEDURE', command: '', category: 'other', icon: SettingOutlined, editor: ProcedureTaskEditor },
 ];
 
 export const taskCategories = [

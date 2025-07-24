@@ -34,18 +34,18 @@ const SqlTaskEditor: React.FC = () => {
   }, []);
 
   const handleDatasourceChange = (value: number, option: any) => {
-    // When the datasource changes, we need to update both the 'datasource' (id) and 'type' fields
+    // When the datasource changes, we need to update both the 'datasource' (id) and 'datasourceType' fields
     // in the form's underlying data store.
     form.setFieldsValue({
       datasource: value, // The ID
-      type: option.key,  // The type (e.g., POSTGRESQL)
+      datasourceType: option.key,  // The type (e.g., POSTGRESQL)
     });
   };
 
   return (
     <>
       {/* This field is for storing the datasource type, but it's hidden from the user */}
-      <Form.Item name="type" noStyle>
+      <Form.Item name="datasourceType" noStyle>
         <Input type="hidden" />
       </Form.Item>
 
