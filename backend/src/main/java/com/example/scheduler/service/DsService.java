@@ -1,8 +1,8 @@
 package com.example.scheduler.service;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -39,7 +39,6 @@ public class DsService {
     private String token;
 
     private final CloseableHttpClient httpClient = HttpClients.createDefault();
-    private final Gson gson = new Gson();
     private static final Logger logger = LoggerFactory.getLogger(DsService.class);
 
     @Value("${workflow.repo.dir}")
@@ -50,12 +49,12 @@ public class DsService {
         request.addHeader("token", token);
         CloseableHttpResponse response = httpClient.execute(request);
         String responseString = EntityUtils.toString(response.getEntity());
-        JsonObject data = gson.fromJson(responseString, JsonObject.class);
+        JSONObject data = JSON.parseObject(responseString);
 
-        if (data.get("code").getAsInt() != 0) {
-            throw new Exception("DS API error (list-paging): " + data.get("msg").getAsString());
+        if (data.getIntValue("code") != 0) {
+            throw new Exception("DS API error (list-paging): " + data.getString("msg"));
         }
-        return data.getAsJsonObject("data").getAsJsonArray("totalList").get(0).getAsJsonObject().get("code").getAsString();
+        return data.getJSONObject("data").getJSONArray("totalList").getJSONObject(0).getString("code");
     }
 
     public List<Map<String, Object>> getWorkflows() throws Exception {
@@ -66,37 +65,37 @@ public class DsService {
         projectsRequest.addHeader("token", token);
         CloseableHttpResponse projectsResponse = httpClient.execute(projectsRequest);
         String projectsResponseString = EntityUtils.toString(projectsResponse.getEntity());
-        JsonObject projectsData = gson.fromJson(projectsResponseString, JsonObject.class);
+        JSONObject projectsData = JSON.parseObject(projectsResponseString);
 
-        if (projectsData.get("code").getAsInt() != 0) {
-            throw new Exception("DS API error (projects): " + projectsData.get("msg").getAsString());
+        if (projectsData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (projects): " + projectsData.getString("msg"));
         }
 
-        JsonArray projectList = projectsData.getAsJsonObject("data").getAsJsonArray("totalList");
+        JSONArray projectList = projectsData.getJSONObject("data").getJSONArray("totalList");
 
         // 2. For each project, get its workflows
         for (int i = 0; i < projectList.size(); i++) {
-            JsonObject project = projectList.get(i).getAsJsonObject();
-            long projectCode = project.get("code").getAsLong();
+            JSONObject project = projectList.getJSONObject(i);
+            long projectCode = project.getLongValue("code");
             HttpGet workflowsRequest = new HttpGet(dsUrl + "/projects/" + projectCode + "/process-definition?pageNo=1&pageSize=100");
             workflowsRequest.addHeader("token", token);
             CloseableHttpResponse workflowsResponse = httpClient.execute(workflowsRequest);
             String workflowsResponseString = EntityUtils.toString(workflowsResponse.getEntity());
-            JsonObject workflowsData = gson.fromJson(workflowsResponseString, JsonObject.class);
+            JSONObject workflowsData = JSON.parseObject(workflowsResponseString);
 
-            if (workflowsData.get("code").getAsInt() != 0) {
-                logger.warn("Failed to get workflows for project {}: {}", projectCode, workflowsData.get("msg").getAsString());
+            if (workflowsData.getIntValue("code") != 0) {
+                logger.warn("Failed to get workflows for project {}: {}", projectCode, workflowsData.getString("msg"));
                 continue;
             }
 
-            JsonArray projectWorkflows = workflowsData.getAsJsonObject("data").getAsJsonArray("totalList");
+            JSONArray projectWorkflows = workflowsData.getJSONObject("data").getJSONArray("totalList");
             for (int j = 0; j < projectWorkflows.size(); j++) {
-                JsonObject wf = projectWorkflows.get(j).getAsJsonObject();
-                wf.addProperty("projectName", project.get("name").getAsString());
-                long workflowCode = wf.get("code").getAsLong();
-                wf.addProperty("uuid", "ds-" + projectCode + "-" + workflowCode);
+                JSONObject wf = projectWorkflows.getJSONObject(j);
+                wf.put("projectName", project.getString("name"));
+                long workflowCode = wf.getLongValue("code");
+                wf.put("uuid", "ds-" + projectCode + "-" + workflowCode);
                 
-                Map<String, Object> wfMap = gson.fromJson(wf, Map.class);
+                Map<String, Object> wfMap = wf.getInnerMap();
                 wfMap.put("code", String.valueOf(workflowCode));
                 wfMap.put("projectCode", String.valueOf(projectCode));
                 allWorkflows.add(wfMap);
@@ -118,21 +117,21 @@ public class DsService {
         }
 
         String detailsResponseString = EntityUtils.toString(detailsResponse.getEntity());
-        JsonObject workflowData = gson.fromJson(detailsResponseString, JsonObject.class).getAsJsonObject("data");
+        JSONObject workflowData = JSON.parseObject(detailsResponseString).getJSONObject("data");
 
         if (workflowData == null) {
             throw new Exception("Workflow not found in DolphinScheduler.");
         }
 
         // 2. If the workflow is online, take it offline first
-        if (workflowData.getAsJsonObject("processDefinition").get("releaseState").getAsString().equals("ONLINE")) {
+        if (workflowData.getJSONObject("processDefinition").getString("releaseState").equals("ONLINE")) {
             HttpPost releaseRequest = new HttpPost(dsUrl + "/projects/" + projectCode + "/process-definition/" + workflowCode + "/release?releaseState=OFFLINE");
             releaseRequest.addHeader("token", token);
             CloseableHttpResponse releaseResponse = httpClient.execute(releaseRequest);
             String releaseResponseString = EntityUtils.toString(releaseResponse.getEntity());
-            JsonObject releaseData = gson.fromJson(releaseResponseString, JsonObject.class);
-            if (releaseData.get("code").getAsInt() != 0) {
-                throw new Exception("DS API error (set offline): " + releaseData.get("msg").getAsString());
+            JSONObject releaseData = JSON.parseObject(releaseResponseString);
+            if (releaseData.getIntValue("code") != 0) {
+                throw new Exception("DS API error (set offline): " + releaseData.getString("msg"));
             }
         }
 
@@ -141,9 +140,9 @@ public class DsService {
         deleteRequest.addHeader("token", token);
         CloseableHttpResponse deleteResponse = httpClient.execute(deleteRequest);
         String deleteResponseString = EntityUtils.toString(deleteResponse.getEntity());
-        JsonObject deleteData = gson.fromJson(deleteResponseString, JsonObject.class);
-        if (deleteData.get("code").getAsInt() != 0) {
-            throw new Exception("DS API error (delete): " + deleteData.get("msg").getAsString());
+        JSONObject deleteData = JSON.parseObject(deleteResponseString);
+        if (deleteData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (delete): " + deleteData.getString("msg"));
         }
     }
 
@@ -164,19 +163,19 @@ public class DsService {
 
         // 2. Prepare task definitions
         List<Map<String, Object>> tasks = (List<Map<String, Object>>) workflowData.get("tasks");
-        JsonArray taskList = new JsonArray();
+        JSONArray taskList = new JSONArray();
         for (Map<String, Object> task : tasks) {
-            JsonObject taskJson = new JsonObject();
-            taskJson.addProperty("taskType", task.get("type").toString());
-            taskJson.addProperty("name", task.get("name").toString());
-            taskJson.add("taskParams", gson.toJsonTree(task.get("params")));
+            JSONObject taskJson = new JSONObject();
+            taskJson.put("taskType", task.get("type").toString());
+            taskJson.put("name", task.get("name").toString());
+            taskJson.put("taskParams", JSON.toJSON(task.get("params")));
             taskList.add(taskJson);
         }
 
         // 3. Prepare process definition
-        JsonObject processDefinition = new JsonObject();
-        processDefinition.addProperty("name", workflowName);
-        processDefinition.add("taskDefinitionJson", taskList);
+        JSONObject processDefinition = new JSONObject();
+        processDefinition.put("name", workflowName);
+        processDefinition.put("taskDefinitionJson", taskList);
         // ... add other process definition properties
 
         // 4. Create or update workflow
@@ -187,10 +186,10 @@ public class DsService {
 
         CloseableHttpResponse response = httpClient.execute(request);
         String responseString = EntityUtils.toString(response.getEntity());
-        JsonObject responseData = gson.fromJson(responseString, JsonObject.class);
+        JSONObject responseData = JSON.parseObject(responseString);
 
-        if (responseData.get("code").getAsInt() != 0) {
-            throw new Exception("DS API error (create/update workflow): " + responseData.get("msg").getAsString());
+        if (responseData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (create/update workflow): " + responseData.getString("msg"));
         }
     }
 
@@ -200,10 +199,11 @@ public class DsService {
         request.addHeader("token", token);
         CloseableHttpResponse response = httpClient.execute(request);
         String responseString = EntityUtils.toString(response.getEntity());
-        JsonObject data = gson.fromJson(responseString, JsonObject.class);
-
-        if (data.getAsJsonObject("data").getAsJsonArray("totalList").size() > 0) {
-            return data.getAsJsonObject("data").getAsJsonArray("totalList").get(0).getAsJsonObject().get("code").getAsLong();
+        JSONObject data = JSON.parseObject(responseString);
+        
+        JSONObject dataElement = data.getJSONObject("data");
+        if (dataElement != null && dataElement.getJSONArray("totalList").size() > 0) {
+            return dataElement.getJSONArray("totalList").getJSONObject(0).getLongValue("code");
         } else {
             // Create project
             HttpPost createRequest = new HttpPost(dsUrl + "/projects");
@@ -216,12 +216,17 @@ public class DsService {
             
             CloseableHttpResponse createResponse = httpClient.execute(createRequest);
             String createResponseString = EntityUtils.toString(createResponse.getEntity());
-            JsonObject createData = gson.fromJson(createResponseString, JsonObject.class);
+            JSONObject createData = JSON.parseObject(createResponseString);
             
-            if (createData.get("code").getAsInt() != 0) {
-                throw new Exception("DS API error (create project): " + createData.get("msg").getAsString());
+            if (createData.getIntValue("code") != 0) {
+                throw new Exception("DS API error (create project): " + createData.getString("msg"));
             }
-            return createData.getAsJsonObject("data").get("code").getAsLong();
+            
+            JSONObject createDataElement = createData.getJSONObject("data");
+            if (createDataElement == null) {
+                throw new Exception("DS API error (create project): response did not contain project data.");
+            }
+            return createDataElement.getLongValue("code");
         }
     }
 
@@ -264,7 +269,7 @@ public class DsService {
             Map<String, String> scheduleTimeObj = new HashMap<>();
             scheduleTimeObj.put("complementStartDate", (String) payload.get("startDate"));
             scheduleTimeObj.put("complementEndDate", (String) payload.get("endDate"));
-            params.add(new BasicNameValuePair("scheduleTime", gson.toJson(scheduleTimeObj)));
+            params.add(new BasicNameValuePair("scheduleTime", JSON.toJSONString(scheduleTimeObj)));
         } else {
             params.add(new BasicNameValuePair("execType", "START_PROCESS"));
             params.add(new BasicNameValuePair("executionOrder", "DESC_ORDER"));
@@ -275,11 +280,11 @@ public class DsService {
         executeRequest.setEntity(new UrlEncodedFormEntity(params));
         CloseableHttpResponse executeResponse = httpClient.execute(executeRequest);
         String executeResponseString = EntityUtils.toString(executeResponse.getEntity());
-        JsonObject executeData = gson.fromJson(executeResponseString, JsonObject.class);
-        if (executeData.get("code").getAsInt() != 0) {
-            throw new Exception("DS API error (execute): " + executeData.get("msg").getAsString());
+        JSONObject executeData = JSON.parseObject(executeResponseString);
+        if (executeData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (execute): " + executeData.getString("msg"));
         }
-        return executeData.get("data").getAsString();
+        return executeData.getString("data");
     }
 
     public Map<String, Object> getWorkflowInstanceStats() throws Exception {
@@ -296,31 +301,31 @@ public class DsService {
         projectsRequest.addHeader("token", token);
         CloseableHttpResponse projectsResponse = httpClient.execute(projectsRequest);
         String projectsResponseString = EntityUtils.toString(projectsResponse.getEntity());
-        JsonObject projectsData = gson.fromJson(projectsResponseString, JsonObject.class);
+        JSONObject projectsData = JSON.parseObject(projectsResponseString);
 
-        if (projectsData.get("code").getAsInt() != 0 || projectsData.getAsJsonObject("data").getAsJsonArray("totalList").size() == 0) {
+        if (projectsData.getIntValue("code") != 0 || projectsData.getJSONObject("data").getJSONArray("totalList").size() == 0) {
             throw new Exception("Could not find any projects in DolphinScheduler.");
         }
-        long projectCode = projectsData.getAsJsonObject("data").getAsJsonArray("totalList").get(0).getAsJsonObject().get("code").getAsLong();
+        long projectCode = projectsData.getJSONObject("data").getJSONArray("totalList").getJSONObject(0).getLongValue("code");
 
         // 2. Get process instances for the project
         HttpGet instancesRequest = new HttpGet(dsUrl + "/projects/" + projectCode + "/process-instances?pageNo=1&pageSize=100");
         instancesRequest.addHeader("token", token);
         CloseableHttpResponse instancesResponse = httpClient.execute(instancesRequest);
         String instancesResponseString = EntityUtils.toString(instancesResponse.getEntity());
-        JsonObject instancesData = gson.fromJson(instancesResponseString, JsonObject.class);
+        JSONObject instancesData = JSON.parseObject(instancesResponseString);
 
-        if (instancesData.get("code").getAsInt() != 0) {
-            throw new Exception("DS API error (process-instances): " + instancesData.get("msg").getAsString());
+        if (instancesData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (process-instances): " + instancesData.getString("msg"));
         }
 
-        JsonArray instanceList = instancesData.getAsJsonObject("data").getAsJsonArray("totalList");
-        stats.put("total", instancesData.getAsJsonObject("data").get("total").getAsInt());
-        stats.put("recent_instances", gson.fromJson(instanceList, List.class));
+        JSONArray instanceList = instancesData.getJSONObject("data").getJSONArray("totalList");
+        stats.put("total", instancesData.getJSONObject("data").getIntValue("total"));
+        stats.put("recent_instances", instanceList.toJavaList(Map.class));
 
         for (int i = 0; i < instanceList.size(); i++) {
-            JsonObject instance = instanceList.get(i).getAsJsonObject();
-            String state = instance.get("state").getAsString();
+            JSONObject instance = instanceList.getJSONObject(i);
+            String state = instance.getString("state");
             switch (state) {
                 case "SUCCESS":
                     stats.put("success", (int) stats.get("success") + 1);
