@@ -215,6 +215,22 @@ public class DsService {
         if (existingDsWorkflow != null) {
             // UPDATE
             long workflowCode = Long.parseLong(existingDsWorkflow.get("code").toString());
+
+            // Step 1: Take the workflow offline before updating
+            HttpPost releaseRequestOffline = new HttpPost(dsUrl + "/projects/" + projectCode + "/process-definition/" + workflowCode + "/release");
+            releaseRequestOffline.addHeader("token", token);
+            List<NameValuePair> releaseParamsOffline = new ArrayList<>();
+            releaseParamsOffline.add(new BasicNameValuePair("releaseState", "OFFLINE"));
+            releaseRequestOffline.setEntity(new UrlEncodedFormEntity(releaseParamsOffline));
+            CloseableHttpResponse releaseResponseOffline = httpClient.execute(releaseRequestOffline);
+            String releaseResponseStringOffline = EntityUtils.toString(releaseResponseOffline.getEntity());
+            JSONObject releaseDataOffline = JSON.parseObject(releaseResponseStringOffline);
+            // We can ignore the error if it's already offline, but log a warning.
+            if (releaseDataOffline.getIntValue("code") != 0) {
+                 logger.warn("Could not set workflow to OFFLINE before update (it might be already offline): " + releaseDataOffline.getString("msg"));
+            }
+
+            // Step 2: Perform the update
             url = dsUrl + "/projects/" + projectCode + "/process-definition/" + workflowCode;
             putRequest = new org.apache.http.client.methods.HttpPut(url);
             putRequest.addHeader("token", token);

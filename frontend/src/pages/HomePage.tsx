@@ -133,14 +133,15 @@ const HomePage: React.FC = () => {
             preStatements: params.preStatements ? (params.preStatements as string).split(';').filter((s: string) => s.trim() !== '') : [],
             postStatements: params.postStatements ? (params.postStatements as string).split(';').filter((s: string) => s.trim() !== '') : [],
             displayRows: params.displayRows,
-            localParams: [],
+            localParams: params.localParams || [],
             resourceList: [],
           };
         } else {
           // Default for SHELL and other script-based tasks
+          const params = task.task_params || {};
           taskParams = {
             rawScript: task.command || '',
-            localParams: [],
+            localParams: params.localParams || [],
           };
         }
 

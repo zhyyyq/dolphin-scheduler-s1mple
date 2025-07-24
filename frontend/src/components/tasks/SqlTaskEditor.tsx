@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Form, Select } from 'antd';
+import { Input, Form, Select, Typography } from 'antd';
 import api from '../../api';
+import LocalParamsEditor from './common/LocalParamsEditor';
 
 const { TextArea } = Input;
+const { Title } = Typography;
 const { Option } = Select;
 
 interface Datasource {
@@ -89,6 +91,9 @@ const SqlTaskEditor: React.FC = () => {
       <Form.Item label="显示行数" name="displayRows" initialValue={10}>
         <Input type="number" />
       </Form.Item>
+
+      <Title level={5}>自定义参数</Title>
+      <LocalParamsEditor />
     </>
   );
 };
