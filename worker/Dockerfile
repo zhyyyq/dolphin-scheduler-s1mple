@@ -1,4 +1,4 @@
-FROM ghcr.io/apache/dolphinscheduler/dolphinscheduler-worker:3.3.0-alpha
+FROM apache/dolphinscheduler-worker:3.3.0-alpha
 
 # install python
 
