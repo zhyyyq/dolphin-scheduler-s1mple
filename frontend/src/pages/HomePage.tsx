@@ -189,6 +189,7 @@ const HomePage: React.FC = () => {
       // 5. Assemble payload and send to new API endpoint
       const payload = {
         name: workflow.name || record.name,
+        project: workflow.project || 'default',
         description: workflow.description || '',
         globalParams: workflow.globalParams ? JSON.stringify(workflow.globalParams) : '[]',
         timeout: workflow.timeout || 0,
@@ -198,11 +199,7 @@ const HomePage: React.FC = () => {
         locations: workflowDetail.locations || JSON.stringify(locations),
       };
 
-      if (!record.projectCode) {
-        throw new Error("工作流缺少 'projectCode'，无法上线。");
-      }
-
-      await api.createOrUpdateDsWorkflow(record.projectCode, payload);
+      await api.createOrUpdateDsWorkflow(payload);
       message.success('工作流上线/同步成功。');
       fetchWorkflows();
 

@@ -175,10 +175,10 @@ public class WorkflowController {
         }
     }
 
-    @PostMapping("/ds/{projectCode}")
-    public ResponseEntity<?> createOrUpdateDsWorkflow(@PathVariable long projectCode, @RequestBody Map<String, Object> payload) {
+    @PostMapping("/ds")
+    public ResponseEntity<?> createOrUpdateDsWorkflow(@RequestBody Map<String, Object> payload) {
         try {
-            workflowService.createOrUpdateDsWorkflow(projectCode, payload);
+            workflowService.createOrUpdateDsWorkflow(payload);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             logger.error("Error creating or updating DS workflow", e);

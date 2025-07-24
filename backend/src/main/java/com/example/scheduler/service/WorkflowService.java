@@ -250,8 +250,8 @@ public class WorkflowService {
         workflowRepository.save(workflow);
     }
 
-    public void createOrUpdateDsWorkflow(long projectCode, Map<String, Object> payload) throws Exception {
-        dsService.createOrUpdateWorkflow(projectCode, payload);
+    public void createOrUpdateDsWorkflow(Map<String, Object> payload) throws Exception {
+        dsService.createOrUpdateWorkflow(payload);
     }
 
     public void deleteWorkflow(String workflowUuid, Long projectCode, Long workflowCode) throws Exception, GitAPIException {

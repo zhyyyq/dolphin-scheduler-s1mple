@@ -147,32 +147,37 @@ public class DsService {
         }
     }
 
-    public void createOrUpdateWorkflow(long projectCode, Map<String, Object> payload) throws Exception {
+    public void createOrUpdateWorkflow(Map<String, Object> payload) throws Exception {
         String workflowName = (String) payload.get("name");
+        String projectName = (String) payload.getOrDefault("project", "default");
+
         if (workflowName == null || workflowName.trim().isEmpty()) {
             throw new Exception("Workflow name cannot be empty.");
         }
 
-        // Check if workflow exists to decide between create and update
+        // 1. Find or create project
+        long projectCode = findOrCreateProject(projectName);
+
+        // 2. Check if workflow exists to decide between create and update
         Map<String, Object> existingDsWorkflow = getWorkflows().stream()
             .filter(wf -> wf.get("name").equals(workflowName) && Long.parseLong(wf.get("projectCode").toString()) == projectCode)
             .findFirst()
             .orElse(null);
 
-        // Prepare parameters from payload
+        // 3. Prepare parameters from payload
         List<NameValuePair> params = new ArrayList<>();
-        params.add(new BasicNameValuePair("name", workflowName));
-        params.add(new BasicNameValuePair("taskRelationJson", (String) payload.get("taskRelationJson")));
-        params.add(new BasicNameValuePair("taskDefinitionJson", (String) payload.get("taskDefinitionJson")));
-        params.add(new BasicNameValuePair("locations", (String) payload.get("locations")));
-        params.add(new BasicNameValuePair("description", (String) payload.get("description")));
-        params.add(new BasicNameValuePair("globalParams", (String) payload.get("globalParams")));
-        params.add(new BasicNameValuePair("timeout", payload.get("timeout").toString()));
-        params.add(new BasicNameValuePair("executionType", (String) payload.get("executionType")));
+        for (Map.Entry<String, Object> entry : payload.entrySet()) {
+            if (entry.getValue() != null && !entry.getKey().equals("project")) { // Don't send project name as a param
+                params.add(new BasicNameValuePair(entry.getKey(), entry.getValue().toString()));
+            }
+        }
 
-        logger.info("Sending create/update request for workflow '{}' in project {}", workflowName, projectCode);
+        logger.info("Sending create/update request for workflow '{}' with params:", workflowName);
+        for(NameValuePair nvp : params) {
+            logger.info("  - {}: {}", nvp.getName(), nvp.getValue());
+        }
 
-        // Execute Create or Update
+        // 4. Execute Create or Update
         String url;
         HttpPost postRequest = null;
         org.apache.http.client.methods.HttpPut putRequest = null;
@@ -202,7 +207,7 @@ public class DsService {
             throw new Exception("DS API error (create/update workflow): " + responseData.getString("msg"));
         }
 
-        // Release the workflow to make it online
+        // 5. Release the workflow to make it online
         String taskDefinitionJson = (String) payload.get("taskDefinitionJson");
         if (taskDefinitionJson != null && !taskDefinitionJson.equals("[]")) {
             JSONObject processDefinition = responseData.getJSONObject("data");

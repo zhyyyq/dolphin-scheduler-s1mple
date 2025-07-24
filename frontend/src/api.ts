@@ -83,8 +83,8 @@ const api = {
     return this.post('/api/workflow/reparse', { content });
   },
 
-  async createOrUpdateDsWorkflow(projectCode: number, payload: Record<string, any>): Promise<any> {
-    return this.post(`/api/workflow/ds/${projectCode}`, payload);
+  async createOrUpdateDsWorkflow(payload: Record<string, any>): Promise<any> {
+    return this.post('/api/workflow/ds', payload);
   }
 };
 
