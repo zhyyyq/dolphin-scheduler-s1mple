@@ -32,7 +32,11 @@ public class RequestLoggingFilter implements Filter {
             // For other requests, wrap the request to log the body.
             BufferedRequestWrapper requestWrapper = new BufferedRequestWrapper(req);
             logger.info("Received request: {} {} from {}", requestWrapper.getMethod(), requestWrapper.getRequestURI(), requestWrapper.getRemoteAddr());
-            logger.info("Request body: {}", requestWrapper.getRequestBody());
+            try {
+                logger.info("Request body: {}", requestWrapper.getRequestBody());
+            } catch (Exception e) {
+                logger.warn("Could not log request body: {}", e.getMessage());
+            }
             chain.doFilter(requestWrapper, responseWrapper);
         }
 

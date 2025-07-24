@@ -147,108 +147,29 @@ public class DsService {
         }
     }
 
-    public void createOrUpdateWorkflow(String filename) throws Exception {
-        Path filePath = Paths.get(workflowRepoDir, filename);
-        if (!Files.exists(filePath)) {
-            throw new Exception("Workflow file '" + filename + "' not found.");
-        }
+    public void createOrUpdateWorkflow(Map<String, Object> payload) throws Exception {
+        String workflowName = (String) payload.get("name");
+        String projectName = (String) payload.getOrDefault("project", "default");
 
-        Yaml yaml = new Yaml();
-        Map<String, Object> data = yaml.load(new String(Files.readAllBytes(filePath)));
-        Map<String, Object> workflowData = (Map<String, Object>) data.get("workflow");
-        if (workflowData == null) {
-            throw new Exception("YAML file must contain a 'workflow' section.");
-        }
-        String workflowName = (String) workflowData.get("name");
         if (workflowName == null || workflowName.trim().isEmpty()) {
-            throw new Exception("Workflow name ('name' field inside 'workflow' section) cannot be empty.");
+            throw new Exception("Workflow name cannot be empty.");
         }
-        String projectName = (String) workflowData.getOrDefault("project", "default");
-        String description = (String) workflowData.get("description");
 
         // 1. Find or create project
         long projectCode = findOrCreateProject(projectName);
 
-        // 2. Parse tasks and dependencies
-        List<Map<String, Object>> tasks = (List<Map<String, Object>>) workflowData.get("tasks");
-        if (tasks == null) {
-            tasks = new ArrayList<>();
-        }
-
-        // 3. Generate task codes
-        JSONArray taskCodes;
-        if (!tasks.isEmpty()) {
-            HttpGet genCodeRequest = new HttpGet(dsUrl + "/projects/" + projectCode + "/process-definitions/gen-task-code-list?genNum=" + tasks.size());
-            genCodeRequest.addHeader("token", token);
-            CloseableHttpResponse genCodeResponse = httpClient.execute(genCodeRequest);
-            String genCodeResponseString = EntityUtils.toString(genCodeResponse.getEntity());
-            JSONObject genCodeData = JSON.parseObject(genCodeResponseString);
-            if (genCodeData.getIntValue("code") != 0) {
-                throw new Exception("DS API error (gen-task-code-list): " + genCodeData.getString("msg"));
-            }
-            taskCodes = genCodeData.getJSONArray("data");
-        } else {
-            taskCodes = new JSONArray();
-        }
-
-        // 4. Build task definitions, relations, and locations
-        Map<String, Long> taskNameToCodeMap = new HashMap<>();
-        for (int i = 0; i < tasks.size(); i++) {
-            taskNameToCodeMap.put((String) tasks.get(i).get("name"), taskCodes.getLong(i));
-        }
-
-        JSONArray taskDefinitionJson = new JSONArray();
-        JSONArray taskRelationJson = new JSONArray();
-        JSONObject locations = new JSONObject();
-
-        for (int i = 0; i < tasks.size(); i++) {
-            Map<String, Object> taskMap = tasks.get(i);
-            String taskName = (String) taskMap.get("name");
-            long taskCode = taskNameToCodeMap.get(taskName);
-
-            // Task Definition
-            JSONObject taskJson = new JSONObject();
-            taskJson.put("code", taskCode);
-            taskJson.put("name", taskName);
-            taskJson.put("taskType", taskMap.get("type").toString());
-            taskJson.put("taskParams", JSON.toJSON(taskMap.get("params")));
-            taskJson.put("description", taskMap.get("description"));
-            taskJson.put("preTasks", new JSONArray()); // Dependencies are handled by taskRelationJson
-            taskDefinitionJson.add(taskJson);
-
-            // Task Relations
-            List<String> dependsOn = (List<String>) taskMap.getOrDefault("depends_on", new ArrayList<>());
-            for (String depName : dependsOn) {
-                if (taskNameToCodeMap.containsKey(depName)) {
-                    JSONObject relation = new JSONObject();
-                    relation.put("preTaskCode", taskNameToCodeMap.get(depName));
-                    relation.put("postTaskCode", taskCode);
-                    taskRelationJson.add(relation);
-                }
-            }
-
-            // Locations
-            JSONObject location = new JSONObject();
-            location.put("taskCode", taskCode);
-            location.put("x", 150 + (i * 200));
-            location.put("y", 150);
-            locations.put(String.valueOf(taskCode), location);
-        }
-
-        // 5. Check if workflow exists to decide between create and update
+        // 2. Check if workflow exists to decide between create and update
         Map<String, Object> existingDsWorkflow = getWorkflows().stream()
             .filter(wf -> wf.get("name").equals(workflowName) && Long.parseLong(wf.get("projectCode").toString()) == projectCode)
             .findFirst()
             .orElse(null);
 
+        // 3. Prepare parameters from payload
         List<NameValuePair> params = new ArrayList<>();
-        params.add(new BasicNameValuePair("name", workflowName));
-        params.add(new BasicNameValuePair("taskDefinitionJson", taskDefinitionJson.toJSONString()));
-        params.add(new BasicNameValuePair("taskRelationJson", taskRelationJson.toJSONString()));
-        params.add(new BasicNameValuePair("tenantCode", "default"));
-        params.add(new BasicNameValuePair("locations", locations.toJSONString()));
-        if (description != null) {
-            params.add(new BasicNameValuePair("description", description));
+        for (Map.Entry<String, Object> entry : payload.entrySet()) {
+            if (entry.getValue() != null) {
+                params.add(new BasicNameValuePair(entry.getKey(), entry.getValue().toString()));
+            }
         }
 
         logger.info("Sending create/update request for workflow '{}' with params:", workflowName);
@@ -256,6 +177,7 @@ public class DsService {
             logger.info("  - {}: {}", nvp.getName(), nvp.getValue());
         }
 
+        // 4. Execute Create or Update
         String url;
         HttpPost postRequest = null;
         org.apache.http.client.methods.HttpPut putRequest = null;
@@ -263,22 +185,18 @@ public class DsService {
         if (existingDsWorkflow != null) {
             // UPDATE
             long workflowCode = Long.parseLong(existingDsWorkflow.get("code").toString());
-            url = dsUrl + "/projects/" + projectCode + "/process-definitions/" + workflowCode;
+            url = dsUrl + "/projects/" + projectCode + "/process-definition/" + workflowCode;
             putRequest = new org.apache.http.client.methods.HttpPut(url);
             putRequest.addHeader("token", token);
             putRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
             putRequest.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
         } else {
             // CREATE
-            try {
-                url = dsUrl + "/projects/" + projectCode + "/process-definitions";
-                URIBuilder builder = new URIBuilder(url);
-                builder.addParameters(params);
-                postRequest = new HttpPost(builder.build());
-                postRequest.addHeader("token", token);
-            } catch (java.net.URISyntaxException e) {
-                throw new Exception("Failed to build DS API URL", e);
-            }
+            url = dsUrl + "/projects/" + projectCode + "/process-definition";
+            postRequest = new HttpPost(url);
+            postRequest.addHeader("token", token);
+            postRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
+            postRequest.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
         }
 
         CloseableHttpResponse response = (putRequest != null) ? httpClient.execute(putRequest) : httpClient.execute(postRequest);
@@ -288,20 +206,23 @@ public class DsService {
         if (responseData.getIntValue("code") != 0) {
             throw new Exception("DS API error (create/update workflow): " + responseData.getString("msg"));
         }
-        
-        // Release the workflow to make it online
-        JSONObject processDefinition = responseData.getJSONObject("data");
-        long processCode = processDefinition.getLongValue("code");
-        HttpPost releaseRequest = new HttpPost(dsUrl + "/projects/" + projectCode + "/process-definitions/" + processCode + "/release");
-        releaseRequest.addHeader("token", token);
-        List<NameValuePair> releaseParams = new ArrayList<>();
-        releaseParams.add(new BasicNameValuePair("releaseState", "ONLINE"));
-        releaseRequest.setEntity(new UrlEncodedFormEntity(releaseParams));
-        CloseableHttpResponse releaseResponse = httpClient.execute(releaseRequest);
-        String releaseResponseString = EntityUtils.toString(releaseResponse.getEntity());
-        JSONObject releaseData = JSON.parseObject(releaseResponseString);
-        if (releaseData.getIntValue("code") != 0) {
-            throw new Exception("DS API error (release workflow): " + releaseData.getString("msg"));
+
+        // 5. Release the workflow to make it online
+        String taskDefinitionJson = (String) payload.get("taskDefinitionJson");
+        if (taskDefinitionJson != null && !taskDefinitionJson.equals("[]")) {
+            JSONObject processDefinition = responseData.getJSONObject("data");
+            long processCode = processDefinition.getLongValue("code");
+            HttpPost releaseRequest = new HttpPost(dsUrl + "/projects/" + projectCode + "/process-definition/" + processCode + "/release");
+            releaseRequest.addHeader("token", token);
+            List<NameValuePair> releaseParams = new ArrayList<>();
+            releaseParams.add(new BasicNameValuePair("releaseState", "ONLINE"));
+            releaseRequest.setEntity(new UrlEncodedFormEntity(releaseParams));
+            CloseableHttpResponse releaseResponse = httpClient.execute(releaseRequest);
+            String releaseResponseString = EntityUtils.toString(releaseResponse.getEntity());
+            JSONObject releaseData = JSON.parseObject(releaseResponseString);
+            if (releaseData.getIntValue("code") != 0) {
+                throw new Exception("DS API error (release workflow): " + releaseData.getString("msg"));
+            }
         }
     }
 

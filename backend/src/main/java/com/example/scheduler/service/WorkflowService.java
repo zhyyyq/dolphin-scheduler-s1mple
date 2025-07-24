@@ -222,14 +222,33 @@ public class WorkflowService {
             throw new Exception("Workflow file '" + filename + "' not found in repository.");
         }
 
-        // Submit to DolphinScheduler first
-        dsService.createOrUpdateWorkflow(filename);
+        // Since the logic is now in the frontend, we need to simulate the payload.
+        // This is a temporary solution. Ideally, the frontend would send the full payload.
+        String fileContent = new String(Files.readAllBytes(filePath));
+        Yaml yaml = new Yaml();
+        Map<String, Object> data = yaml.load(fileContent);
+        Map<String, Object> workflowData = (Map<String, Object>) data.get("workflow");
+        if (workflowData == null) {
+            throw new Exception("YAML file must contain a 'workflow' section.");
+        }
+        // This is a placeholder for the frontend to build the full params.
+        // For now, we just pass the workflow name and project.
+        Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("name", workflowData.get("name"));
+        payload.put("project", workflowData.getOrDefault("project", "default"));
+        // The frontend should provide the rest of the parameters.
+        // dsService.createOrUpdateWorkflow(payload);
+
 
         // If submission is successful, update git and the database
         gitService.gitCommit(filename, "Online workflow " + workflow.getName());
         String commitId = gitService.getLatestCommit(filename);
         workflow.setOnlineVersion(commitId);
         workflowRepository.save(workflow);
+    }
+
+    public void createOrUpdateDsWorkflow(Map<String, Object> payload) throws Exception {
+        dsService.createOrUpdateWorkflow(payload);
     }
 
     public void deleteWorkflow(String workflowUuid, Long projectCode, Long workflowCode) throws Exception, GitAPIException {
