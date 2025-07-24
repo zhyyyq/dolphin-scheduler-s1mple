@@ -121,8 +121,9 @@ const WorkflowEditorPage: React.FC = () => {
   const generateYamlStr = () => {
     if (!graph) return '';
 
-    const doc = yaml.parseDocument(originalYaml || 'workflow:\n  name: new-workflow\ntasks: []');
+    const doc = yaml.parseDocument(originalYaml || 'workflow:\n  name: new-workflow\ntasks: []\nparameters: []');
 
+    // --- Workflow Metadata ---
     doc.setIn(['workflow', 'name'], workflowName);
     if (isScheduleEnabled) {
       doc.setIn(['workflow', 'schedule'], workflowSchedule);
@@ -131,86 +132,58 @@ const WorkflowEditorPage: React.FC = () => {
     }
 
     const { cells } = graph.toJSON();
-    const nodes = cells.filter(cell => cell.shape === 'task-node');
+    const allNodes = cells.filter(cell => cell.shape === 'task-node');
     const edges = cells.filter(cell => cell.shape === 'edge');
 
-    const tasks = nodes.map(node => {
+    // --- Separate Nodes into Tasks and Parameters ---
+    const tasks = [];
+    const parameters = [];
+
+    for (const node of allNodes) {
       const nodeData = { ...node.data };
-      const deps = edges
-        .filter(edge => {
-          const sourceNode = nodes.find(n => n.id === edge.source.cell);
-          if (sourceNode && (sourceNode.data.task_type === 'Switch' || sourceNode.data.type === 'Switch')) {
-            return false;
-          }
-          return edge.target.cell === node.id;
-        })
-        .map(edge => {
-          const sourceNode = nodes.find(n => n.id === edge.source.cell);
-          return sourceNode ? sourceNode.data.label : null;
-        })
-        .filter(Boolean);
+      
+      // Common cleanup
+      delete nodeData.label;
+      delete nodeData._display_type;
+      delete nodeData.id;
 
-      const taskPayload: any = {
-        ...nodeData,
-        name: nodeData.label,
-      };
-
-      if (deps.length > 0) {
-        taskPayload.deps = deps;
-      }
-
-      if (taskPayload.task_type === 'Switch' || taskPayload.type === 'Switch') {
-        const originalConditions = Array.isArray(nodeData.condition) ? nodeData.condition : [];
-        const conditions = edges
-          .filter(edge => edge.source.cell === node.id)
+      if (nodeData.type === 'PARAMS') {
+        // This is a Parameter Node
+        parameters.push({
+          name: nodeData.name,
+          type: nodeData.task_params?.type || 'VARCHAR',
+          value: nodeData.task_params?.value || '',
+        });
+      } else {
+        // This is a Task Node
+        const deps = edges
+          .filter(edge => edge.target.cell === node.id)
           .map(edge => {
-            const targetNode = nodes.find(n => n.id === edge.target.cell);
-            if (targetNode) {
-              const originalCondition = originalConditions.find((c: any) => c.task === targetNode.data.label);
-              return {
-                task: targetNode.data.label,
-                condition: originalCondition ? originalCondition.condition : undefined,
-              };
-            }
-            return null;
+            const sourceNode = allNodes.find(n => n.id === edge.source.cell);
+            return sourceNode ? sourceNode.data.label : null;
           })
           .filter(Boolean);
-        taskPayload.condition = conditions;
-        delete taskPayload.deps;
+
+        const taskPayload: any = {
+          ...nodeData,
+          name: nodeData.label,
+        };
+
+        if (deps.length > 0) {
+          taskPayload.deps = deps;
+        }
+        
+        // Clean up undefined command property
+        if (taskPayload.command === undefined) {
+          delete taskPayload.command;
+        }
+
+        tasks.push(taskPayload);
       }
-      
-      delete taskPayload.label;
-      delete taskPayload._display_type; // Remove internal display type
-      delete taskPayload.id; // Remove internal id
-      
-      // Clean up undefined command property
-      if (taskPayload.command === undefined) {
-        delete taskPayload.command;
-      }
-      
-      return taskPayload;
-    });
+    }
 
     doc.set('tasks', tasks);
-
-    // Traverse the document to set flow style for http_params
-    const tasksNode = doc.get('tasks', true);
-    if (tasksNode instanceof yaml.YAMLSeq && tasksNode.items) {
-      tasksNode.items.forEach(taskNode => {
-        if (taskNode instanceof yaml.YAMLMap) {
-          const httpParamsNode = taskNode.get('http_params', true);
-          if (httpParamsNode instanceof yaml.YAMLSeq && httpParamsNode.items) {
-            // Do not set flow on the sequence itself.
-            // httpParamsNode.flow = true; 
-            httpParamsNode.items.forEach(item => {
-              if (item instanceof yaml.YAMLMap) {
-                item.flow = true; // Set flow style on each object within the sequence
-              }
-            });
-          }
-        }
-      });
-    }
+    doc.set('parameters', parameters);
 
     return doc.toString();
   };

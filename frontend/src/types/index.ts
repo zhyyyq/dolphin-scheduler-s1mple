@@ -12,8 +12,15 @@ export interface Workflow {
   local_status?: 'new' | 'modified' | 'synced' | 'ahead' | 'behind' | 'diverged' | 'unknown';
 }
 
+export interface Parameter {
+  name: string;
+  type: 'VARCHAR' | 'INTEGER' | 'LONG' | 'FLOAT' | 'DOUBLE' | 'DATE' | 'TIMESTAMP' | 'BOOLEAN';
+  value: any;
+}
+
 export interface WorkflowDetail extends Workflow {
   tasks?: Task[];
+  parameters?: Parameter[];
   relations?: Relation[];
   filename: string;
   yaml_content: string;
@@ -49,6 +56,7 @@ export interface ConditionGroup {
 export interface Task {
   id?: string;
   name: string;
+  label?: string;
   type?: string;
   task_type?: string;
   description?: string;

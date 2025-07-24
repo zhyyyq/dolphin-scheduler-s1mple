@@ -48,6 +48,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, onC
         task_params: updated_task_params,
       };
 
+      // For PARAMS node, sync the node name with the parameter's prop
+      if (task.type === 'PARAMS' && values.prop) {
+        finalTask.name = values.prop;
+        finalTask.label = values.prop;
+      }
+
       if (useDefaultEditor && values.yaml_content) {
         try {
           const yamlData = yaml.load(values.yaml_content) as any;

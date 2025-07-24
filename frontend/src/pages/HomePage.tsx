@@ -127,13 +127,12 @@ const HomePage: React.FC = () => {
         if (task.type === 'PARAMS') {
           taskType = 'SHELL';
           const params = task.task_params || {};
-          const localParams = params.localParams || [];
-          const script = localParams
-            .map((p: { prop: string; value: string; }) => `echo "#{${p.prop}}=${p.value}"`)
-            .join('\n');
+          const prop = params.prop || task.name; // Fallback to task name if prop is not set
+          const value = params.value || '';
+          const script = `echo "#{${prop}}=${value}"`;
           taskParams = {
             rawScript: script,
-            localParams: [], // These are now part of the script
+            localParams: [],
           };
         } else if (task.type === 'SQL') {
           const params = task.task_params || {};
