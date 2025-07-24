@@ -9,7 +9,7 @@ export interface Workflow {
   isLocal?: boolean;
   schedule_text?: string;
   schedule_human_readable?: string;
-  local_status?: 'new' | 'modified' | 'synced';
+  local_status?: 'new' | 'modified' | 'synced' | 'ahead' | 'behind' | 'diverged' | 'unknown';
 }
 
 export interface WorkflowDetail extends Workflow {

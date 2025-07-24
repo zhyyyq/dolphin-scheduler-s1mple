@@ -15,4 +15,6 @@ public class Workflow {
     private String uuid;
 
     private String name;
+
+    private String onlineVersion;
 }

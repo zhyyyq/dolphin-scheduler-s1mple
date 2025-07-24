@@ -71,17 +71,6 @@ public class WorkflowController {
         }
     }
 
-    @PostMapping("/submit")
-    public ResponseEntity<?> submitWorkflow(@RequestBody Map<String, String> payload) {
-        try {
-            workflowService.onlineWorkflow(payload.get("filename"));
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            logger.error("Error submitting workflow", e);
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
-
     @DeleteMapping("/{workflowUuid}")
     public ResponseEntity<?> deleteWorkflow(@PathVariable String workflowUuid,
                                              @RequestParam(required = false) Long projectCode,

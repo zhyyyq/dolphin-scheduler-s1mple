@@ -14,6 +14,7 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
+import org.eclipse.jgit.revwalk.filter.RevFilter;
 import java.io.ByteArrayOutputStream;
 
 import javax.annotation.PostConstruct;
@@ -192,5 +193,34 @@ public class GitService {
         }
         git.checkout().setStartPoint(commitHash).addPath(filename).call();
         git.commit().setMessage("Revert " + filename + " to commit " + commitHash).call();
+    }
+
+    public String getCommitRelationship(String commit1, String commit2) throws IOException, GitAPIException {
+        if (git == null) {
+            init();
+        }
+        try (RevWalk revWalk = new RevWalk(git.getRepository())) {
+            ObjectId id1 = git.getRepository().resolve(commit1);
+            ObjectId id2 = git.getRepository().resolve(commit2);
+
+            if (id1 == null || id2 == null) {
+                return "unknown";
+            }
+
+            if (id1.equals(id2)) {
+                return "equal";
+            }
+
+            RevCommit c1 = revWalk.parseCommit(id1);
+            RevCommit c2 = revWalk.parseCommit(id2);
+
+            if (revWalk.isMergedInto(c1, c2)) {
+                return "behind";
+            } else if (revWalk.isMergedInto(c2, c1)) {
+                return "ahead";
+            } else {
+                return "diverged";
+            }
+        }
     }
 }

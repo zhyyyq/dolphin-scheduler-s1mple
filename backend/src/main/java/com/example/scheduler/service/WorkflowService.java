@@ -108,14 +108,26 @@ public class WorkflowService {
                         try {
                             long lastModifiedMillis = Files.getLastModifiedTime(filePath).toMillis();
                             map.put("updateTime", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new java.util.Date(lastModifiedMillis)));
+                            
+                            String onlineVersion = workflow.getOnlineVersion();
+
+                            String latestCommit = gitService.getLatestCommit(filename);
+
+                            if (onlineVersion != null && !onlineVersion.isEmpty() && latestCommit != null) {
+                                String relationship = gitService.getCommitRelationship(latestCommit, onlineVersion);
+                                map.put("local_status", relationship);
+                            } else {
+                                map.put("local_status", "unknown");
+                            }
+
+                            String content = new String(Files.readAllBytes(filePath));
                             Yaml yaml = new Yaml();
-                            Map<String, Object> data = yaml.load(new String(Files.readAllBytes(filePath)));
+                            Map<String, Object> data = yaml.load(content);
                             Map<String, Object> workflowMeta = (Map<String, Object>) data.get("workflow");
                             if (workflowMeta != null) {
                                 map.put("schedule", workflowMeta.get("schedule"));
-                                map.put("local_status", workflowMeta.getOrDefault("local_status", "synced"));
                             }
-                        } catch (IOException e) {
+                        } catch (IOException | GitAPIException e) {
                             // Log the error
                         }
                     }
@@ -163,8 +175,8 @@ public class WorkflowService {
             Map<String, Object> combinedWf = new java.util.HashMap<>();
 
             if (dsWf != null && localWf != null) {
-                combinedWf.putAll(localWf);
                 combinedWf.putAll(dsWf);
+                combinedWf.put("local_status", localWf.get("local_status"));
                 combinedWf.put("uuid", localWf.get("uuid"));
                 combinedWf.put("isLocal", true);
             } else if (dsWf != null) {
@@ -200,19 +212,24 @@ public class WorkflowService {
         return combinedWorkflows;
     }
 
-    public void onlineWorkflow(String filename) throws Exception {
-        String workflowUuid = filename.replace(".yaml", "");
-        Workflow workflow = workflowRepository.findById(workflowUuid).orElseThrow(() -> new RuntimeException("Workflow not found"));
+    public void onlineWorkflow(String workflowUuid) throws Exception {
+        String filename = workflowUuid + ".yaml";
+        Workflow workflow = workflowRepository.findById(workflowUuid)
+                .orElseThrow(() -> new RuntimeException("Workflow with UUID " + workflowUuid + " not found in database."));
+        
+        Path filePath = Paths.get(workflowRepoDir, filename);
+        if (!Files.exists(filePath)) {
+            throw new Exception("Workflow file '" + filename + "' not found in repository.");
+        }
+
+        // Submit to DolphinScheduler first
         dsService.submitWorkflowToDs(filename);
 
+        // If submission is successful, update git and the database
         gitService.gitCommit(filename, "Online workflow " + workflow.getName());
         String commitId = gitService.getLatestCommit(filename);
-
-        Path filePath = Paths.get(workflowRepoDir, filename);
-        String content = new String(Files.readAllBytes(filePath));
-        String newContent = "# online-version: " + commitId + "\n" + content;
-        Files.write(filePath, newContent.getBytes());
-        gitService.gitCommit(filename, "Update online-version for " + workflow.getName());
+        workflow.setOnlineVersion(commitId);
+        workflowRepository.save(workflow);
     }
 
     public void deleteWorkflow(String workflowUuid, Long projectCode, Long workflowCode) throws Exception, GitAPIException {

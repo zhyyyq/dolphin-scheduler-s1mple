@@ -23,7 +23,7 @@ interface ActionButtonsProps {
 const ActionButtons: React.FC<ActionButtonsProps> = ({ record, onDelete, onSubmit, onExecute, onOnline }) => {
   const workflowUuid = record.uuid;
 
-  const isModified = record.releaseState === 'ONLINE' && record.local_status === 'modified';
+  const isModified = record.releaseState === 'ONLINE' && (record.local_status === 'modified' || record.local_status === 'ahead');
 
   return (
     <Space size="middle">
@@ -95,7 +95,7 @@ const HomePage: React.FC = () => {
 
   const handleSubmit = useCallback(async (record: Workflow) => {
     try {
-      await api.post('/api/workflow/submit', { filename: record.code });
+      await api.post(`/api/workflow/${record.uuid}/online`);
       message.success('工作流提交成功。');
       fetchWorkflows();
     } catch (err) {
@@ -143,6 +143,9 @@ const HomePage: React.FC = () => {
       render: (state: Workflow['releaseState'], record: Workflow) => {
         if (state === 'ONLINE' && record.local_status === 'modified') {
           return <Tag color="processing">待更新</Tag>;
+        }
+        if (state === 'ONLINE' && record.local_status === 'ahead') {
+          return <Tag color="processing">本地领先</Tag>;
         }
 
         let color = 'default';
