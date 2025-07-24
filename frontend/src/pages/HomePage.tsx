@@ -107,7 +107,31 @@ const HomePage: React.FC = () => {
       
       const doc = yaml.parse(yamlContent);
       const workflow = doc.workflow || {};
-      const tasks = doc.tasks || [];
+      let tasks = doc.tasks || [];
+      const parameters = doc.parameters || [];
+
+      // --- Parameter Substitution ---
+      if (parameters.length > 0) {
+        const paramMap = new Map(parameters.map((p: any) => [p.name, p.value]));
+
+        const substitute = (obj: any): any => {
+          if (typeof obj === 'string') {
+            return obj.replace(/\$\{(\w+)\}/g, (match, varName) => {
+              return paramMap.has(varName) ? String(paramMap.get(varName)) : match;
+            });
+          }
+          if (Array.isArray(obj)) {
+            return obj.map(substitute);
+          }
+          if (obj !== null && typeof obj === 'object') {
+            return Object.fromEntries(
+              Object.entries(obj).map(([key, value]) => [key, substitute(value)])
+            );
+          }
+          return obj;
+        };
+        tasks = substitute(tasks);
+      }
 
       // 2. Generate task codes
       const taskNameToCodeMap = new Map<string, number>();
@@ -124,17 +148,7 @@ const HomePage: React.FC = () => {
         let taskParams: Record<string, any>;
         let taskType = (task.type || 'SHELL').toUpperCase();
 
-        if (task.type === 'PARAMS') {
-          taskType = 'SHELL';
-          const params = task.task_params || {};
-          const prop = params.prop || task.name; // Fallback to task name if prop is not set
-          const value = params.value || '';
-          const script = `echo "#{${prop}}=${value}"`;
-          taskParams = {
-            rawScript: script,
-            localParams: [],
-          };
-        } else if (task.type === 'SQL') {
+        if (task.type === 'SQL') {
           const params = task.task_params || {};
           taskParams = {
             type: params.datasourceType, // Read from the renamed field

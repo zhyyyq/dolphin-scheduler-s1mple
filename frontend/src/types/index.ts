@@ -83,6 +83,7 @@ export interface Task {
   op?: 'AND' | 'OR';
   groups?: (ConditionGroup | ConditionTask)[];
   deps?: string[];
+  _display_type?: string;
 }
 
 export interface Relation {

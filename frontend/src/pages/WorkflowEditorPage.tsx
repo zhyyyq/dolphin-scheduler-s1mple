@@ -8,6 +8,7 @@ import api from '../api';
 import { useGraph } from '../hooks/useGraph';
 import { WorkflowToolbar } from '../components/WorkflowToolbar';
 import EditTaskModal from '../components/EditTaskModal';
+import EditParamNodeModal from '../components/EditParamNodeModal';
 import { ViewYamlModal } from '../components/ViewYamlModal';
 import { WorkflowContextMenu } from '../components/WorkflowContextMenu';
 import { taskTypes } from '../config/taskTypes';
@@ -26,7 +27,8 @@ const WorkflowEditorPage: React.FC = () => {
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; px: number; py: number }>({ visible: false, x: 0, y: 0, px: 0, py: 0 });
   const [isYamlModalVisible, setIsYamlModalVisible] = useState(false);
   const [yamlContent, setYamlContent] = useState('');
-  const [currentNode, setCurrentNode] = useState<any>(null);
+  const [currentTaskNode, setCurrentTaskNode] = useState<any>(null);
+  const [currentParamNode, setCurrentParamNode] = useState<any>(null);
   const [allTasksForModal, setAllTasksForModal] = useState<Task[]>([]);
   const [nodeName, setNodeName] = useState('');
   const [nodeCommand, setNodeCommand] = useState('');
@@ -51,11 +53,15 @@ const WorkflowEditorPage: React.FC = () => {
     if (graph) {
       const handleNodeDoubleClick = (args: { node: any }) => {
         const { node } = args;
-        const allNodes = graph.getNodes().map(n => n.getData() as Task);
-        setAllTasksForModal(allNodes);
-
         const nodeData = node.getData();
-        setCurrentNode({ ...nodeData, id: node.id });
+        
+        if (nodeData.type === 'PARAMS') {
+          setCurrentParamNode({ ...nodeData, id: node.id });
+        } else {
+          const allNodes = graph.getNodes().map(n => n.getData() as Task);
+          setAllTasksForModal(allNodes);
+          setCurrentTaskNode({ ...nodeData, id: node.id });
+        }
       };
 
       graph.on('node:dblclick', handleNodeDoubleClick);
@@ -96,22 +102,33 @@ const WorkflowEditorPage: React.FC = () => {
         } else {
           setIsScheduleEnabled(false);
         }
-        const tasks = (doc.get('tasks') as any).toJSON();
+        const tasks = (doc.get('tasks') as any)?.toJSON() || [];
+        const parameters = (doc.get('parameters') as any)?.toJSON() || [];
+
+        const paramNodes = parameters.map((p: any) => ({
+          name: p.name,
+          label: p.name,
+          type: 'PARAMS',
+          task_type: 'PARAMS',
+          task_params: {
+            prop: p.name,
+            type: p.type,
+            value: p.value,
+          },
+        }));
+
+        const allNodes = [...tasks, ...paramNodes];
+        
         const locations = workflowData.locations ? JSON.parse(workflowData.locations) : null;
         const relations: { from: string, to: string }[] = [];
-        for (const task of tasks) {
+        for (const task of tasks) { // Only iterate over real tasks for deps
           if (task.deps) {
             for (const dep of task.deps) {
               relations.push({ from: dep, to: task.name });
             }
           }
-          if ((task.task_type === 'Switch' || task.type === 'Switch') && Array.isArray(task.condition)) {
-            for (const cond of task.condition) {
-              relations.push({ from: task.name, to: cond.task });
-            }
-          }
         }
-        loadGraphData(tasks, relations, locations);
+        loadGraphData(allNodes, relations, locations);
       } catch (error) {
         message.error('解析工作流 YAML 失败。');
       }
@@ -188,24 +205,28 @@ const WorkflowEditorPage: React.FC = () => {
     return doc.toString();
   };
 
-  const handleSaveTask = (updatedTask: Task) => {
-    if (graph && currentNode) {
-      const node = graph.getNodes().find(n => n.id === currentNode.id);
-      if (node) {
-        const existingData = node.getData();
-        const newData = { ...existingData, ...updatedTask };
-        // Sync name and label
-        if (newData.name) {
-          newData.label = newData.name;
-        }
-        node.setData(newData);
+  const handleSaveNode = (updatedNode: Task) => {
+    if (!graph) return;
+    
+    const nodeToUpdate = graph.getNodes().find(n => n.id === (updatedNode as any).id);
+    if (nodeToUpdate) {
+      const existingData = nodeToUpdate.getData();
+      const newData = { ...existingData, ...updatedNode };
+      
+      // Sync name and label, which is crucial for both tasks and params
+      if (newData.name) {
+        newData.label = newData.name;
       }
+      nodeToUpdate.setData(newData);
     }
-    setCurrentNode(null);
+    
+    setCurrentTaskNode(null);
+    setCurrentParamNode(null);
   };
 
-  const handleCancelTask = () => {
-    setCurrentNode(null);
+  const handleCancelEdit = () => {
+    setCurrentTaskNode(null);
+    setCurrentParamNode(null);
   };
 
   const handleShowYaml = () => {
@@ -279,21 +300,32 @@ const WorkflowEditorPage: React.FC = () => {
         counter++;
       }
 
+      const nodeData: Partial<Task> = {
+        name: newNodeName,
+        label: newNodeName,
+        task_type: task.type,
+        type: task.type,
+        task_params: (task as any).default_params || {},
+        _display_type: task.type,
+      };
+
+      if (['SHELL', 'PYTHON', 'HTTP'].includes(task.type)) {
+        nodeData.command = task.command;
+      }
+
+      if (task.type === 'PARAMS') {
+        nodeData.task_params = {
+          prop: newNodeName,
+          type: 'VARCHAR',
+          value: '',
+        };
+      }
+
       graph.addNode({
         shape: 'task-node',
         x: contextMenu.px,
         y: contextMenu.py,
-        data: {
-          name: newNodeName,
-          label: newNodeName,
-          task_type: task.type,
-          type: task.type,
-          // Only add command for script-based tasks
-          command: ['SHELL', 'PYTHON', 'HTTP'].includes(task.type) ? task.command : undefined,
-          // Initialize task_params with defaults if they exist
-          task_params: (task as any).default_params || {},
-          _display_type: task.type, // Set display type for new nodes
-        },
+        data: nodeData as Task,
       });
     }
     setContextMenu({ ...contextMenu, visible: false });
@@ -361,11 +393,17 @@ const WorkflowEditorPage: React.FC = () => {
         />
         <div ref={containerRefCallback} style={{ width: '100%', height: '100%' }}></div>
         <EditTaskModal
-          open={!!currentNode}
-          task={currentNode}
+          open={!!currentTaskNode}
+          task={currentTaskNode}
           allTasks={allTasksForModal}
-          onCancel={handleCancelTask}
-          onSave={handleSaveTask}
+          onCancel={handleCancelEdit}
+          onSave={handleSaveNode}
+        />
+        <EditParamNodeModal
+          open={!!currentParamNode}
+          node={currentParamNode}
+          onCancel={handleCancelEdit}
+          onSave={handleSaveNode}
         />
         <ViewYamlModal
           isModalVisible={isYamlModalVisible}
