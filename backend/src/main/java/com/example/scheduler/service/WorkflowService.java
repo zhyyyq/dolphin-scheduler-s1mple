@@ -223,7 +223,7 @@ public class WorkflowService {
         }
 
         // Submit to DolphinScheduler first
-        dsService.submitWorkflowToDs(filename);
+        dsService.createOrUpdateWorkflow(filename);
 
         // If submission is successful, update git and the database
         gitService.gitCommit(filename, "Online workflow " + workflow.getName());
@@ -236,23 +236,41 @@ public class WorkflowService {
         boolean deletedSomething = false;
 
         if (workflowUuid.startsWith("ds-")) {
+            // This is a remote-only workflow
             if (projectCode != null && workflowCode != null) {
                 dsService.deleteDsWorkflow(projectCode, workflowCode);
                 deletedSomething = true;
             }
         } else {
+            // This is a local or synced workflow
             if (workflowRepository.existsById(workflowUuid)) {
                 Workflow workflow = workflowRepository.findById(workflowUuid).get();
+                String workflowName = workflow.getName();
                 String filename = workflow.getUuid() + ".yaml";
                 Path filePath = Paths.get(workflowRepoDir, filename);
 
-                // Delete from DB
+                // 1. Delete from local DB
                 workflowRepository.delete(workflow);
 
-                // Safely delete file from repo and commit
+                // 2. Delete from git
                 if (Files.exists(filePath)) {
-                    gitService.gitRmAndCommit(filename, "Delete workflow: " + workflow.getName());
+                    gitService.gitRmAndCommit(filename, "Delete workflow: " + workflowName);
                 }
+
+                // 3. Delete from DolphinScheduler if it exists there
+                dsService.getWorkflows().stream()
+                    .filter(wf -> wf.get("name").equals(workflowName))
+                    .findFirst()
+                    .ifPresent(dsWf -> {
+                        try {
+                            Long pCode = Long.parseLong(dsWf.get("projectCode").toString());
+                            Long wCode = Long.parseLong(dsWf.get("code").toString());
+                            dsService.deleteDsWorkflow(pCode, wCode);
+                        } catch (Exception e) {
+                            // Log and ignore if DS deletion fails, as it might not exist
+                        }
+                    });
+                
                 deletedSomething = true;
             }
         }

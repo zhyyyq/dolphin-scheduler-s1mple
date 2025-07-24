@@ -147,53 +147,81 @@ public class DsService {
         }
     }
 
-    public void submitWorkflowToDs(String filename) throws Exception {
-        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
-            throw new Exception("Invalid workflow filename.");
-        }
-
+    public void createOrUpdateWorkflow(String filename) throws Exception {
         Path filePath = Paths.get(workflowRepoDir, filename);
         if (!Files.exists(filePath)) {
             throw new Exception("Workflow file '" + filename + "' not found.");
         }
 
-        Path tmpPath = null;
-        try {
-            Yaml yaml = new Yaml();
-            Map<String, Object> data = yaml.load(new String(Files.readAllBytes(filePath)));
+        Yaml yaml = new Yaml();
+        Map<String, Object> data = yaml.load(new String(Files.readAllBytes(filePath)));
+        Map<String, Object> workflowData = (Map<String, Object>) data.get("workflow");
+        String workflowName = (String) workflowData.get("name");
+        String projectName = (String) workflowData.getOrDefault("project", "default");
 
-            // In-memory transformation for submission
-            resolveFilePlaceholdersRecursive(data);
+        // 1. Find or create project
+        long projectCode = findOrCreateProject(projectName);
 
-            if (data.containsKey("workflow") && !((Map)data.get("workflow")).containsKey("schedule")) {
-                ((Map)data.get("workflow")).put("schedule", null);
-            }
+        // 2. Prepare task definitions
+        List<Map<String, Object>> tasks = (List<Map<String, Object>>) workflowData.get("tasks");
+        JsonArray taskList = new JsonArray();
+        for (Map<String, Object> task : tasks) {
+            JsonObject taskJson = new JsonObject();
+            taskJson.addProperty("taskType", task.get("type").toString());
+            taskJson.addProperty("name", task.get("name").toString());
+            taskJson.add("taskParams", gson.toJsonTree(task.get("params")));
+            taskList.add(taskJson);
+        }
 
-            tmpPath = Files.createTempFile(null, ".yaml");
-            Files.write(tmpPath, yaml.dump(data).getBytes());
+        // 3. Prepare process definition
+        JsonObject processDefinition = new JsonObject();
+        processDefinition.addProperty("name", workflowName);
+        processDefinition.add("taskDefinitionJson", taskList);
+        // ... add other process definition properties
 
-            ProcessBuilder processBuilder = new ProcessBuilder("uv", "run", "pydolphinscheduler", "yaml", "-f", tmpPath.toString());
-            processBuilder.directory(new File(workflowRepoDir));
-            processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
+        // 4. Create or update workflow
+        HttpPost request = new HttpPost(dsUrl + "/projects/" + projectCode + "/process-definition");
+        request.addHeader("token", token);
+        request.addHeader("Content-Type", "application/json");
+        request.setEntity(new StringEntity(processDefinition.toString()));
+
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JsonObject responseData = gson.fromJson(responseString, JsonObject.class);
+
+        if (responseData.get("code").getAsInt() != 0) {
+            throw new Exception("DS API error (create/update workflow): " + responseData.get("msg").getAsString());
+        }
+    }
+
+    private long findOrCreateProject(String projectName) throws Exception {
+        // Check if project exists
+        HttpGet request = new HttpGet(dsUrl + "/projects?searchVal=" + projectName);
+        request.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JsonObject data = gson.fromJson(responseString, JsonObject.class);
+
+        if (data.getAsJsonObject("data").getAsJsonArray("totalList").size() > 0) {
+            return data.getAsJsonObject("data").getAsJsonArray("totalList").get(0).getAsJsonObject().get("code").getAsLong();
+        } else {
+            // Create project
+            HttpPost createRequest = new HttpPost(dsUrl + "/projects");
+            createRequest.addHeader("token", token);
+            createRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
+            List<NameValuePair> params = new ArrayList<>();
+            params.add(new BasicNameValuePair("projectName", projectName));
+            params.add(new BasicNameValuePair("description", ""));
+            createRequest.setEntity(new UrlEncodedFormEntity(params));
             
-            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()));
-            String line;
-            StringBuilder output = new StringBuilder();
-            while ((line = reader.readLine()) != null) {
-                logger.info("CLI: " + line);
-                output.append(line).append("\n");
+            CloseableHttpResponse createResponse = httpClient.execute(createRequest);
+            String createResponseString = EntityUtils.toString(createResponse.getEntity());
+            JsonObject createData = gson.fromJson(createResponseString, JsonObject.class);
+            
+            if (createData.get("code").getAsInt() != 0) {
+                throw new Exception("DS API error (create project): " + createData.get("msg").getAsString());
             }
-
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new Exception("pydolphinscheduler CLI failed with exit code " + exitCode + ":\n" + output.toString());
-            }
-
-        } finally {
-            if (tmpPath != null) {
-                Files.deleteIfExists(tmpPath);
-            }
+            return createData.getAsJsonObject("data").get("code").getAsLong();
         }
     }
 
