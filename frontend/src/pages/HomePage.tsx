@@ -5,8 +5,9 @@ import {
 } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
-import { Workflow } from '../types';
+import { Workflow, WorkflowDetail, Task } from '../types';
 import api from '../api';
+import yaml from 'yaml';
 import RestoreWorkflowModal from '../components/RestoreWorkflowModal';
 import BackfillModal from '../components/BackfillModal';
 
@@ -93,17 +94,6 @@ const HomePage: React.FC = () => {
     }
   }, [fetchWorkflows, message]);
 
-  const handleSubmit = useCallback(async (record: Workflow) => {
-    try {
-      await api.post(`/api/workflow/${record.uuid}/online`);
-      message.success('工作流提交成功。');
-      fetchWorkflows();
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      message.error(errorMessage);
-    }
-  }, [fetchWorkflows, message]);
-
   const handleExecute = useCallback((record: Workflow) => {
     setSelectedWorkflow(record);
     setIsBackfillModalOpen(true);
@@ -111,14 +101,120 @@ const HomePage: React.FC = () => {
 
   const handleOnline = useCallback(async (record: Workflow) => {
     try {
-      await api.post(`/api/workflow/${record.uuid}/online`);
-      message.success('工作流上线成功。');
+      // 1. Fetch the full YAML content
+      const workflowDetail = await api.get<WorkflowDetail>(`/api/workflow/${record.uuid}`);
+      const yamlContent = workflowDetail.yaml_content;
+      
+      const doc = yaml.parse(yamlContent);
+      const workflow = doc.workflow || {};
+      const tasks = doc.tasks || [];
+
+      // 2. Generate task codes
+      const taskNameToCodeMap = new Map<string, number>();
+      const baseCode = Date.now();
+      tasks.forEach((task: Task, index: number) => {
+        const taskCode = baseCode + index;
+        taskNameToCodeMap.set(task.name, taskCode);
+      });
+
+      // 3. Build taskDefinitionJson
+      const taskDefinitionJson = tasks.map((task: Task) => {
+        const taskCode = taskNameToCodeMap.get(task.name);
+        const taskParams = {
+          ...task.task_params,
+          rawScript: task.command || '',
+          localParams: [],
+        };
+        return {
+          code: taskCode,
+          name: task.name,
+          description: task.description || '',
+          taskType: (task.type || 'SHELL').toUpperCase(),
+          taskParams: taskParams,
+          failRetryTimes: 0,
+          failRetryInterval: 1,
+          timeoutFlag: 'CLOSE',
+          timeoutNotifyStrategy: '',
+          timeout: 0,
+          delayTime: 0,
+          environmentCode: -1,
+          flag: 'YES',
+          isCache: 'NO',
+          taskPriority: 'MEDIUM',
+          workerGroup: 'default',
+          cpuQuota: -1,
+          memoryMax: -1,
+          taskExecuteType: 'BATCH'
+        };
+      });
+
+      // 4. Build taskRelationJson and locations
+      const taskRelationJson: any[] = [];
+      const locations = workflowDetail.locations ? JSON.parse(workflowDetail.locations) : [];
+      tasks.forEach((task: Task, i: number) => {
+        const taskCode = taskNameToCodeMap.get(task.name);
+        
+        if (!locations.find((l: any) => l.taskCode === task.name)) {
+          locations.push({ taskCode: task.name, x: 150 + i * 200, y: 150 });
+        }
+
+        if (!task.deps || task.deps.length === 0) {
+          taskRelationJson.push({
+            name: '',
+            preTaskCode: 0,
+            preTaskVersion: 0,
+            postTaskCode: taskCode,
+            postTaskVersion: 0,
+            conditionType: 'NONE',
+            conditionParams: {}
+          });
+        } else {
+          task.deps.forEach((depName: string) => {
+            const preTaskCode = taskNameToCodeMap.get(depName);
+            if (preTaskCode) {
+              taskRelationJson.push({
+                name: '',
+                preTaskCode: preTaskCode,
+                preTaskVersion: 0,
+                postTaskCode: taskCode,
+                postTaskVersion: 0,
+                conditionType: 'NONE',
+                conditionParams: {}
+              });
+            }
+          });
+        }
+      });
+
+      // 5. Assemble payload and send to new API endpoint
+      const payload = {
+        name: workflow.name || record.name,
+        description: workflow.description || '',
+        globalParams: workflow.globalParams ? JSON.stringify(workflow.globalParams) : '[]',
+        timeout: workflow.timeout || 0,
+        executionType: workflow.executionType || 'PARALLEL',
+        taskDefinitionJson: JSON.stringify(taskDefinitionJson),
+        taskRelationJson: JSON.stringify(taskRelationJson),
+        locations: workflowDetail.locations || JSON.stringify(locations),
+      };
+
+      if (!record.projectCode) {
+        throw new Error("工作流缺少 'projectCode'，无法上线。");
+      }
+
+      await api.createOrUpdateDsWorkflow(record.projectCode, payload);
+      message.success('工作流上线/同步成功。');
       fetchWorkflows();
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      message.error(errorMessage);
+      message.error(`上线工作流时出错: ${errorMessage}`);
     }
   }, [fetchWorkflows, message]);
+
+  const handleSubmit = useCallback((record: Workflow) => {
+    handleOnline(record);
+  }, [handleOnline]);
 
   const columns: ColumnsType<Workflow> = useMemo(() => [
     {

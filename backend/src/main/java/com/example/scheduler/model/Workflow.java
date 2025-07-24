@@ -17,4 +17,6 @@ public class Workflow {
     private String name;
 
     private String onlineVersion;
+
+    private String locations;
 }

@@ -105,12 +105,18 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     };
   }, [container, onNodeDoubleClick, onBlankContextMenu]);
 
-  const loadGraphData = useCallback((tasks: Task[], relations: { from: string; to: string }[] = []) => {
+  const loadGraphData = useCallback((
+    tasks: Task[], 
+    relations: { from: string; to: string }[] = [],
+    // locations is captured but not used for rendering, per user request.
+    locations: { taskCode: string, x: number, y: number }[] | null = null
+  ) => {
     const currentGraph = graphRef.current;
     if (!currentGraph) return;
 
     currentGraph.clearCells(); // Clear previous data before loading new
     const nodeMap = new Map();
+
     tasks.forEach((task) => {
       const rawType = task.type || task.task_type;
       let displayType = rawType;

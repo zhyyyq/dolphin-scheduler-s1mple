@@ -18,6 +18,7 @@ export interface WorkflowDetail extends Workflow {
   filename: string;
   yaml_content: string;
   schedule?: any;
+  locations?: string;
 }
 
 export interface HttpParam {
@@ -50,7 +51,9 @@ export interface Task {
   name: string;
   type?: string;
   task_type?: string;
+  description?: string;
   command: string;
+  task_params?: Record<string, any>;
   cpu_quota?: number;
   memory_max?: number;
   datasource_name?: string;

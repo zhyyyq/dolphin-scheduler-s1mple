@@ -83,6 +83,7 @@ const WorkflowEditorPage: React.FC = () => {
           setIsScheduleEnabled(false);
         }
         const tasks = (doc.get('tasks') as any).toJSON();
+        const locations = workflowData.locations ? JSON.parse(workflowData.locations) : null;
         const relations: { from: string, to: string }[] = [];
         for (const task of tasks) {
           if (task.deps) {
@@ -96,7 +97,7 @@ const WorkflowEditorPage: React.FC = () => {
             }
           }
         }
-        loadGraphData(tasks, relations);
+        loadGraphData(tasks, relations, locations);
       } catch (error) {
         message.error('解析工作流 YAML 失败。');
       }
@@ -246,10 +247,16 @@ const WorkflowEditorPage: React.FC = () => {
 
   const handleSave = async () => {
     const yamlStr = generateYamlStr();
-    if (!yamlStr) {
+    if (!yamlStr || !graph) {
       message.error('画布为空或未初始化。');
       return;
     }
+
+    const locations = graph.getNodes().map(node => {
+      const { x, y } = node.getPosition();
+      const data = node.getData();
+      return { taskCode: data.name, x, y };
+    });
 
     try {
       const response = await api.post<{ filename: string; uuid: string }>('/api/workflow/yaml', {
@@ -257,6 +264,7 @@ const WorkflowEditorPage: React.FC = () => {
         content: yamlStr,
         original_filename: workflow_uuid ? `${workflow_uuid}.yaml` : undefined,
         uuid: workflowUuid,
+        locations: JSON.stringify(locations),
       });
       setWorkflowUuid(response.uuid);
       message.success('工作流保存成功！');

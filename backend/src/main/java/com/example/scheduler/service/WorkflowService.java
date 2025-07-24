@@ -56,11 +56,13 @@ public class WorkflowService {
             Workflow newWorkflow = new Workflow();
             newWorkflow.setUuid(workflowUuid);
             newWorkflow.setName(workflowName);
+            newWorkflow.setLocations(workflowDto.getLocations());
             workflowRepository.save(newWorkflow);
         } else {
             commitMessage = "Update workflow " + workflowName;
             Workflow dbWorkflow = workflowRepository.findById(workflowUuid).orElseThrow(() -> new RuntimeException("Workflow not found"));
             dbWorkflow.setName(workflowName);
+            dbWorkflow.setLocations(workflowDto.getLocations());
             workflowRepository.save(dbWorkflow);
         }
 
@@ -152,6 +154,7 @@ public class WorkflowService {
         map.put("uuid", workflow.getUuid());
         map.put("filename", filename);
         map.put("yaml_content", content);
+        map.put("locations", workflow.getLocations());
         return map;
     }
 
@@ -247,8 +250,8 @@ public class WorkflowService {
         workflowRepository.save(workflow);
     }
 
-    public void createOrUpdateDsWorkflow(Map<String, Object> payload) throws Exception {
-        dsService.createOrUpdateWorkflow(payload);
+    public void createOrUpdateDsWorkflow(long projectCode, Map<String, Object> payload) throws Exception {
+        dsService.createOrUpdateWorkflow(projectCode, payload);
     }
 
     public void deleteWorkflow(String workflowUuid, Long projectCode, Long workflowCode) throws Exception, GitAPIException {

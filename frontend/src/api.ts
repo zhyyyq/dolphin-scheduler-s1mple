@@ -81,6 +81,10 @@ const api = {
 
   async reparseWorkflow(content: string): Promise<any> {
     return this.post('/api/workflow/reparse', { content });
+  },
+
+  async createOrUpdateDsWorkflow(projectCode: number, payload: Record<string, any>): Promise<any> {
+    return this.post(`/api/workflow/ds/${projectCode}`, payload);
   }
 };
 

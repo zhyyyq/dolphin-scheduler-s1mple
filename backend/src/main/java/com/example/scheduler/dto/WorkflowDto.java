@@ -8,4 +8,5 @@ public class WorkflowDto {
     private String content;
     private String originalFilename;
     private String uuid;
+    private String locations;
 }
