@@ -150,20 +150,24 @@ const HomePage: React.FC = () => {
 
       // 4. Build taskRelationJson and locations
       const taskRelationJson: any[] = [];
-      const locations = workflowDetail.locations ? JSON.parse(workflowDetail.locations) : [];
+      const originalLocations = workflowDetail.locations ? JSON.parse(workflowDetail.locations) : [];
+      const originalLocationsMap = new Map(originalLocations.map((l: any) => [l.taskCode, { x: l.x, y: l.y }]));
+      const payloadLocations: any[] = [];
+
       tasks.forEach((task: Task, i: number) => {
-        const taskCode = taskNameToCodeMap.get(task.name);
+        const numericTaskCode = taskNameToCodeMap.get(task.name);
         
-        if (!locations.find((l: any) => l.taskCode === task.name)) {
-          locations.push({ taskCode: task.name, x: 150 + i * 200, y: 150 });
-        }
+        const pos = originalLocationsMap.get(task.name);
+        const x = pos ? pos.x : 150 + i * 200;
+        const y = pos ? pos.y : 150;
+        payloadLocations.push({ taskCode: numericTaskCode, x, y });
 
         if (!task.deps || task.deps.length === 0) {
           taskRelationJson.push({
             name: '',
             preTaskCode: 0,
             preTaskVersion: 0,
-            postTaskCode: taskCode,
+            postTaskCode: numericTaskCode,
             postTaskVersion: 0,
             conditionType: 'NONE',
             conditionParams: {}
@@ -176,7 +180,7 @@ const HomePage: React.FC = () => {
                 name: '',
                 preTaskCode: preTaskCode,
                 preTaskVersion: 0,
-                postTaskCode: taskCode,
+                postTaskCode: numericTaskCode,
                 postTaskVersion: 0,
                 conditionType: 'NONE',
                 conditionParams: {}
@@ -196,7 +200,7 @@ const HomePage: React.FC = () => {
         executionType: workflow.executionType || 'PARALLEL',
         taskDefinitionJson: JSON.stringify(taskDefinitionJson),
         taskRelationJson: JSON.stringify(taskRelationJson),
-        locations: workflowDetail.locations || JSON.stringify(locations),
+        locations: JSON.stringify(payloadLocations),
       };
 
       await api.createOrUpdateDsWorkflow(payload);

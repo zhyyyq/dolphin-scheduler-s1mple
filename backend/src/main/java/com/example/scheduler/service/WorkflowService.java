@@ -313,7 +313,7 @@ public class WorkflowService {
 
         String projectCode = dsWorkflow.get("projectCode").toString();
         String workflowCode = dsWorkflow.get("code").toString();
-        String version = (int)(double) dsWorkflow.get("version") + "";
+        String version = dsWorkflow.get("version").toString();
         String environmentCode = dsService.getEnvCode();
 
         payload.put("environmentCode", environmentCode);
