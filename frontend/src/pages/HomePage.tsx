@@ -23,11 +23,11 @@ interface ActionButtonsProps {
 const ActionButtons: React.FC<ActionButtonsProps> = ({ record, onDelete, onSubmit, onExecute, onOnline }) => {
   const workflowUuid = record.uuid;
 
-  const isModified = record.releaseState === 'ONLINE' && (record.local_status === 'modified' || record.local_status === 'ahead');
+  const isAhead = record.releaseState === 'ONLINE' && record.local_status === 'ahead';
 
   return (
     <Space size="middle">
-      {isModified ? (
+      {isAhead ? (
         <Button type="primary" onClick={() => onOnline(record)}>同步</Button>
       ) : record.releaseState === 'ONLINE' ? (
         <Button type="primary" onClick={() => onExecute(record)}>立即执行</Button>
