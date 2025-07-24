@@ -39,11 +39,11 @@ public class WorkflowService {
         String workflowUuid = workflowDto.getUuid();
         boolean isCreate = workflowUuid == null;
 
-        if (isCreate) {
-            // if (workflowRepository.findByName(workflowName).isPresent()) {
-            //     throw new RuntimeException("A workflow with the name '" + workflowName + "' already exists.");
-            // }
-        } else {
+    if (isCreate) {
+        if (workflowRepository.findByName(workflowName).isPresent()) {
+            throw new RuntimeException("A workflow with the name '" + workflowName + "' already exists.");
+        }
+    } else {
             if (workflowRepository.findByNameAndUuidNot(workflowName, workflowUuid).isPresent()) {
                 throw new RuntimeException("A workflow with the name '" + workflowName + "' already exists.");
             }

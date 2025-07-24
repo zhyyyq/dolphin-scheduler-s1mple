@@ -106,6 +106,31 @@ public class DsService {
         return allWorkflows;
     }
 
+    public List<Map<String, Object>> getDatasources() throws Exception {
+        HttpGet request = new HttpGet(dsUrl + "/datasources?pageNo=1&pageSize=1000");
+        request.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject data = JSON.parseObject(responseString);
+
+        if (data.getIntValue("code") != 0) {
+            throw new Exception("DS API error (datasources): " + data.getString("msg"));
+        }
+
+        JSONArray datasourceList = data.getJSONObject("data").getJSONArray("totalList");
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (int i = 0; i < datasourceList.size(); i++) {
+            JSONObject ds = datasourceList.getJSONObject(i);
+            Map<String, Object> dsMap = new HashMap<>();
+            dsMap.put("label", ds.getString("name"));
+            dsMap.put("value", ds.getString("name"));
+            dsMap.put("id", ds.getIntValue("id"));
+            dsMap.put("type", ds.getString("type"));
+            result.add(dsMap);
+        }
+        return result;
+    }
+
     public void deleteDsWorkflow(Long projectCode, Long workflowCode) throws Exception {
         // 1. Get workflow details to check its state
         HttpGet detailsRequest = new HttpGet(dsUrl + "/projects/" + projectCode + "/process-definition/" + workflowCode);

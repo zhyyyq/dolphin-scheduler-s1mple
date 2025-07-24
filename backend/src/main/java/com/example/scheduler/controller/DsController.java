@@ -14,6 +14,15 @@ public class DsController {
     @Autowired
     private DsService dsService;
 
+    @GetMapping("/datasources")
+    public ResponseEntity<?> getDatasources() {
+        try {
+            return ResponseEntity.ok(dsService.getDatasources());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
     @GetMapping("/workflows")
     public ResponseEntity<?> getWorkflows() {
         try {

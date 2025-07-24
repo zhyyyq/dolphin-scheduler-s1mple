@@ -120,17 +120,32 @@ const HomePage: React.FC = () => {
       // 3. Build taskDefinitionJson
       const taskDefinitionJson = tasks.map((task: Task) => {
         const taskCode = taskNameToCodeMap.get(task.name);
-        const taskParams = {
-          ...task.task_params,
-          rawScript: task.command || '',
-          localParams: [],
-        };
+        
+        // Special handling for SQL task params
+        let finalTaskParams: Record<string, any> = { ...task.task_params };
+        if (task.type === 'SQL') {
+          const { preStatements, postStatements, ...rest } = task.task_params || {};
+          finalTaskParams = {
+            ...rest,
+            preStatements: preStatements ? (preStatements as string).split(';').filter((s: string) => s.trim() !== '') : [],
+            postStatements: postStatements ? (postStatements as string).split(';').filter((s: string) => s.trim() !== '') : [],
+            localParams: [],
+            resourceList: [],
+          };
+        } else {
+          finalTaskParams = {
+            ...task.task_params,
+            rawScript: task.command || '',
+            localParams: [],
+          };
+        }
+
         return {
           code: taskCode,
           name: task.name,
           description: task.description || '',
           taskType: (task.type || 'SHELL').toUpperCase(),
-          taskParams: taskParams,
+          taskParams: finalTaskParams,
           failRetryTimes: 0,
           failRetryInterval: 1,
           timeoutFlag: 'CLOSE',
