@@ -12,7 +12,7 @@
 
 ## start the dolphin-scheduler service using docker 
 
-docker compose --profile schemea up -d
+docker-compose --profile schema up -d
 
 docker compose --profile all up -d
 

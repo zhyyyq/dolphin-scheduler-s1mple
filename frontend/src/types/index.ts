@@ -62,6 +62,7 @@ export interface Task {
   description?: string;
   command: string;
   task_params?: Record<string, any>;
+  localParams?: any[];
   cpu_quota?: number;
   memory_max?: number;
   datasource_name?: string;

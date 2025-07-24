@@ -162,29 +162,9 @@ const HomePage: React.FC = () => {
         } else {
           // Default for SHELL and other script-based tasks
           const rawScript = task.command || '';
-          const usedParamNames = new Set<string>();
           
-          // Find all used parameters in the script
-          const regex = /\$\{(\w+)\}/g;
-          let match;
-          while ((match = regex.exec(rawScript)) !== null) {
-            usedParamNames.add(match[1]);
-          }
-
-          const localParams = Array.from(usedParamNames)
-            .map(name => {
-              const paramDef = paramDefinitions.get(name);
-              if (paramDef) {
-                return {
-                  prop: paramDef.name,
-                  direct: 'IN',
-                  type: paramDef.type || 'VARCHAR',
-                  value: paramDef.value,
-                };
-              }
-              return null;
-            })
-            .filter(Boolean);
+          // New logic: localParams are now defined directly in the task from the new editor
+          const localParams = task.localParams || [];
 
           taskParams = {
             rawScript: rawScript,
@@ -230,7 +210,9 @@ const HomePage: React.FC = () => {
         const y = pos ? (pos as any).y : 150;
         payloadLocations.push({ taskCode: numericTaskCode, x, y });
 
-        if (!task.deps || task.deps.length === 0) {
+        const taskDeps = task.deps || [];
+        if (taskDeps.length === 0) {
+          // This task has no dependencies, link it to the root (preTaskCode: 0)
           taskRelationJson.push({
             name: '',
             preTaskCode: 0,
@@ -241,8 +223,10 @@ const HomePage: React.FC = () => {
             conditionParams: {}
           });
         } else {
-          task.deps.forEach((depName: string) => {
+          // This task has dependencies
+          taskDeps.forEach((depName: string) => {
             const preTaskCode = taskNameToCodeMap.get(depName);
+            // IMPORTANT: Only create a relation if the dependency is a real task
             if (preTaskCode) {
               taskRelationJson.push({
                 name: '',
