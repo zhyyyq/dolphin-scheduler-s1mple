@@ -164,10 +164,15 @@ public class DsService {
             .findFirst()
             .orElse(null);
 
+        boolean isNew = (boolean) payload.getOrDefault("isNew", false);
+        if (isNew && existingDsWorkflow != null) {
+            throw new Exception("不允许提交重名工作流。项目 '" + projectName + "' 中已存在名为 '" + workflowName + "' 的工作流。");
+        }
+
         // 3. Prepare parameters from payload
         List<NameValuePair> params = new ArrayList<>();
         for (Map.Entry<String, Object> entry : payload.entrySet()) {
-            if (entry.getValue() != null && !entry.getKey().equals("project")) { // Don't send project name as a param
+            if (entry.getValue() != null && !entry.getKey().equals("project") && !entry.getKey().equals("isNew")) { // Don't send project or isNew as a param
                 params.add(new BasicNameValuePair(entry.getKey(), entry.getValue().toString()));
             }
         }

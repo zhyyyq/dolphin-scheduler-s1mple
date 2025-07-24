@@ -158,8 +158,8 @@ const HomePage: React.FC = () => {
         const numericTaskCode = taskNameToCodeMap.get(task.name);
         
         const pos = originalLocationsMap.get(task.name);
-        const x = pos ? pos.x : 150 + i * 200;
-        const y = pos ? pos.y : 150;
+        const x = pos ? (pos as any).x : 150 + i * 200;
+        const y = pos ? (pos as any).y : 150;
         payloadLocations.push({ taskCode: numericTaskCode, x, y });
 
         if (!task.deps || task.deps.length === 0) {
@@ -201,6 +201,7 @@ const HomePage: React.FC = () => {
         taskDefinitionJson: JSON.stringify(taskDefinitionJson),
         taskRelationJson: JSON.stringify(taskRelationJson),
         locations: JSON.stringify(payloadLocations),
+        isNew: record.releaseState === 'UNSUBMITTED',
       };
 
       await api.createOrUpdateDsWorkflow(payload);

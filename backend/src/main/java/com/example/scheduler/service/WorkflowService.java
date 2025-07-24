@@ -163,9 +163,9 @@ public class WorkflowService {
         List<Map<String, Object>> localWorkflows = getLocalWorkflows();
 
         Map<String, Map<String, Object>> localWorkflowsMap = localWorkflows.stream()
-                .collect(Collectors.toMap(wf -> (String) wf.get("name"), wf -> wf));
+                .collect(Collectors.toMap(wf -> (String) wf.get("name"), wf -> wf, (wf1, wf2) -> wf1));
         Map<String, Map<String, Object>> dsWorkflowsMap = dsWorkflows.stream()
-                .collect(Collectors.toMap(wf -> (String) wf.get("name"), wf -> wf));
+                .collect(Collectors.toMap(wf -> (String) wf.get("name"), wf -> wf, (wf1, wf2) -> wf1));
 
         List<Map<String, Object>> combinedWorkflows = new java.util.ArrayList<>();
         java.util.Set<String> allWorkflowNames = new java.util.HashSet<>();
