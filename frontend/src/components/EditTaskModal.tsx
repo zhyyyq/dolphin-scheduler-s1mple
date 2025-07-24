@@ -20,7 +20,11 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
     // Reset the switch when a new task is opened
     setUseDefaultEditor(false);
     if (open && task) {
-      form.setFieldsValue(task);
+      // Set form values from both top-level task properties and task_params
+      form.setFieldsValue({
+        ...task,
+        ...task.task_params,
+      });
     }
   }, [open, task, form]);
 
@@ -30,7 +34,18 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
 
   const handleOk = () => {
     form.validateFields().then(values => {
-      let finalTask: Task = { ...task, ...values };
+      // This is the key fix: form values should be merged into task_params,
+      // not spread directly onto the task object.
+      const updated_task_params = { ...task?.task_params, ...values };
+      
+      // The name is a top-level property, not part of task_params.
+      delete updated_task_params.name;
+
+      let finalTask: Task = {
+        ...task!,
+        name: values.name, // Keep name at the top level
+        task_params: updated_task_params,
+      };
 
       if (useDefaultEditor && values.yaml_content) {
         try {
@@ -54,7 +69,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, onCancel, onS
         try {
           const conditionsData = yaml.load(values.conditions_yaml) as { op: string, groups: any[] };
           finalTask = {
-            ...task,
+            ...task!,
             name: values.name,
             success_task: values.success_task,
             failed_task: values.failed_task,

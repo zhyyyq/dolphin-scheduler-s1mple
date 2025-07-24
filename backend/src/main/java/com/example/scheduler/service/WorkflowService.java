@@ -251,7 +251,24 @@ public class WorkflowService {
     }
 
     public void createOrUpdateDsWorkflow(Map<String, Object> payload) throws Exception {
+        // First, call the DS service to create or update the workflow
         dsService.createOrUpdateWorkflow(payload);
+
+        // If successful, update the local database with the online version (commit hash)
+        String workflowUuid = (String) payload.get("uuid");
+        if (workflowUuid == null || workflowUuid.isEmpty()) {
+            // If no UUID, we can't update the local record. This might happen for DS-native workflows.
+            return;
+        }
+
+        Workflow workflow = workflowRepository.findById(workflowUuid)
+                .orElseThrow(() -> new RuntimeException("Workflow with UUID " + workflowUuid + " not found in local database after DS update."));
+
+        String filename = workflowUuid + ".yaml";
+        String latestCommit = gitService.getLatestCommit(filename);
+
+        workflow.setOnlineVersion(latestCommit);
+        workflowRepository.save(workflow);
     }
 
     public void deleteWorkflow(String workflowUuid, Long projectCode, Long workflowCode) throws Exception, GitAPIException {

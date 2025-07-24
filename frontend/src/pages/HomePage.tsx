@@ -211,6 +211,7 @@ const HomePage: React.FC = () => {
 
       // 5. Assemble payload and send to new API endpoint
       const payload = {
+        uuid: record.uuid, // Add UUID to the payload
         name: workflow.name || record.name,
         project: workflow.project || 'default',
         description: workflow.description || '',

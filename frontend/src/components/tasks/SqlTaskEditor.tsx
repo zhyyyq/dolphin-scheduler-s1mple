@@ -65,7 +65,7 @@ const SqlTaskEditor: React.FC = () => {
         </Select>
       </Form.Item>
       
-      <Form.Item label="SQL 类型" name="sqlType" initialValue="1">
+      <Form.Item label="SQL 类型" name="sqlType" initialValue="0">
         <Select placeholder="选择 SQL 类型">
           <Option value="0">查询</Option>
           <Option value="1">非查询</Option>
