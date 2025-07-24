@@ -15,9 +15,11 @@ import {
   ReadOutlined,
   RocketOutlined,
   SettingOutlined,
+  ProfileOutlined, // Add a new icon for Params
 } from '@ant-design/icons';
 
 // Import all task editors
+import ParamsTaskEditor from '../components/tasks/ParamsTaskEditor';
 import ShellTaskEditor from '../components/tasks/ShellTaskEditor';
 import PythonTaskEditor from '../components/tasks/PythonTaskEditor';
 import ConditionsTaskEditor from '../components/tasks/ConditionsTaskEditor';
@@ -39,6 +41,7 @@ import HttpTaskEditor from '../components/tasks/HttpTaskEditor';
 import ProcedureTaskEditor from '../components/tasks/ProcedureTaskEditor';
 
 export const taskTypes = [
+  { label: 'Params', type: 'PARAMS', command: '', category: 'general', icon: ProfileOutlined, editor: ParamsTaskEditor },
   { label: 'Shell', type: 'SHELL', command: 'echo "Hello"', category: 'general', icon: CodeOutlined, editor: ShellTaskEditor },
   { label: 'Python', type: 'PYTHON', command: 'print("Hello")', category: 'general', icon: CodeOutlined, editor: PythonTaskEditor },
   { label: 'Conditions', type: 'CONDITIONS', command: '', category: 'control_flow', icon: ApartmentOutlined, editor: ConditionsTaskEditor },

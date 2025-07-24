@@ -122,8 +122,20 @@ const HomePage: React.FC = () => {
         const taskCode = taskNameToCodeMap.get(task.name);
         
         let taskParams: Record<string, any>;
+        let taskType = (task.type || 'SHELL').toUpperCase();
 
-        if (task.type === 'SQL') {
+        if (task.type === 'PARAMS') {
+          taskType = 'SHELL';
+          const params = task.task_params || {};
+          const localParams = params.localParams || [];
+          const script = localParams
+            .map((p: { prop: string; value: string; }) => `echo "#{${p.prop}}=${p.value}"`)
+            .join('\n');
+          taskParams = {
+            rawScript: script,
+            localParams: [], // These are now part of the script
+          };
+        } else if (task.type === 'SQL') {
           const params = task.task_params || {};
           taskParams = {
             type: params.datasourceType, // Read from the renamed field
@@ -162,7 +174,7 @@ const HomePage: React.FC = () => {
           code: taskCode,
           name: task.name,
           description: task.description || '',
-          taskType: (task.type || 'SHELL').toUpperCase(),
+          taskType: taskType,
           taskParams: taskParams,
           failRetryTimes: 0,
           failRetryInterval: 1,
