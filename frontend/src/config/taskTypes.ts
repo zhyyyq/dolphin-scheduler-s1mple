@@ -52,7 +52,6 @@ export const taskTypes = [
     icon: DatabaseOutlined,
     editor: SqlTaskEditor,
     default_params: {
-      datasource: 1,
       sqlType: '0',
       sql: 'SELECT * FROM a',
       preStatements: '',

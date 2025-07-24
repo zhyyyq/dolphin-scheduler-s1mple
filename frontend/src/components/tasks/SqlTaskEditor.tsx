@@ -25,6 +25,25 @@ const SqlTaskEditor: React.FC = () => {
         setLoading(true);
         const data = await api.get<Datasource[]>('/api/ds/datasources');
         setDatasources(data);
+
+        // After fetching, check if we need to set the initial datasource
+        const currentDatasourceId = form.getFieldValue('datasource');
+        if (!currentDatasourceId && data.length > 0) {
+          // If no datasource is set, default to the first one in the list
+          form.setFieldsValue({
+            datasource: data[0].id,
+            datasourceType: data[0].type,
+          });
+        } else {
+          // If a datasource ID is set but the type is missing, find and set it
+          const currentDatasourceType = form.getFieldValue('datasourceType');
+          if (currentDatasourceId && !currentDatasourceType) {
+            const matchingDs = data.find(ds => ds.id === currentDatasourceId);
+            if (matchingDs) {
+              form.setFieldsValue({ datasourceType: matchingDs.type });
+            }
+          }
+        }
       } catch (error) {
         console.error("Failed to fetch datasources", error);
       } finally {
@@ -33,13 +52,12 @@ const SqlTaskEditor: React.FC = () => {
     };
 
     fetchDatasources();
-  }, []);
+  }, [form]);
 
   const handleDatasourceChange = (value: number, option: any) => {
     // When the datasource changes, we need to update both the 'datasource' (id) and 'datasourceType' fields
     // in the form's underlying data store.
     form.setFieldsValue({
-      datasource: value, // The ID
       datasourceType: option.key,  // The type (e.g., POSTGRESQL)
     });
   };
