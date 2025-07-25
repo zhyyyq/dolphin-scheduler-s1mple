@@ -19,66 +19,32 @@ import {
 } from '@ant-design/icons';
 
 // Import all task editors
-import ShellTaskEditor from '../components/tasks/ShellTaskEditor';
-import PythonTaskEditor from '../components/tasks/PythonTaskEditor';
-import ConditionsTaskEditor from '../components/tasks/ConditionsTaskEditor';
-import SwitchTaskEditor from '../components/tasks/SwitchTaskEditor';
-import DependentTaskEditor from '../components/tasks/DependentTaskEditor';
-import SubWorkflowTaskEditor from '../components/tasks/SubWorkflowTaskEditor';
-import SqlTaskEditor from '../components/tasks/SqlTaskEditor';
-import DataXTaskEditor from '../components/tasks/DataXTaskEditor';
-import SparkTaskEditor from '../components/tasks/SparkTaskEditor';
-import FlinkTaskEditor from '../components/tasks/FlinkTaskEditor';
-import MapReduceTaskEditor from '../components/tasks/MapReduceTaskEditor';
-import KubernetesTaskEditor from '../components/tasks/K8STaskEditor';
-import SagemakerTaskEditor from '../components/tasks/SagemakerTaskEditor';
-import MLflowModelsTaskEditor from '../components/tasks/MLflowModelsTaskEditor';
-import OpenMLDBTaskEditor from '../components/tasks/OpenMLDBTaskEditor';
-import PytorchTaskEditor from '../components/tasks/PytorchTaskEditor';
-import DVCTaskEditor from '../components/tasks/DVCInitTaskEditor'; // Assuming DVC uses one of these
-import HttpTaskEditor from '../components/tasks/HttpTaskEditor';
-import ProcedureTaskEditor from '../components/tasks/ProcedureTaskEditor';
+import ShellTaskEditor from '../components/tasks/general/ShellTaskEditor';
+import PythonTaskEditor from '../components/tasks/general/PythonTaskEditor';
+import SqlTaskEditor from '../components/tasks/general/SqlTaskEditor';
+import ProcedureTaskEditor from '../components/tasks/general/ProcedureTaskEditor';
+import HttpTaskEditor from '../components/tasks/general/HttpTaskEditor';
+import ParamsTaskEditor from '../components/tasks/parameter/ParamsTaskEditor';
+import ConditionsTaskEditor from '../components/tasks/logic/ConditionsTaskEditor';
+import SwitchTaskEditor from '../components/tasks/logic/SwitchTaskEditor';
+import DependentTaskEditor from '../components/tasks/logic/DependentTaskEditor';
+import SubWorkflowTaskEditor from '../components/tasks/logic/SubProcessTaskEditor';
 
 export const taskTypes = [
   { label: 'Shell', type: 'SHELL', command: 'echo "Hello"', category: 'general', icon: CodeOutlined, editor: ShellTaskEditor },
   { label: 'Python', type: 'PYTHON', command: 'print("Hello")', category: 'general', icon: CodeOutlined, editor: PythonTaskEditor },
-  { label: 'Conditions', type: 'CONDITIONS', command: '', category: 'control_flow', icon: ApartmentOutlined, editor: ConditionsTaskEditor },
-  { label: 'Switch', type: 'SWITCH', command: '', category: 'control_flow', icon: ForkOutlined, editor: SwitchTaskEditor },
-  { label: 'Dependent', type: 'DEPENDENT', command: '', category: 'control_flow', icon: NodeIndexOutlined, editor: DependentTaskEditor },
-  { label: 'Sub Process', type: 'SUB_PROCESS', command: '', category: 'control_flow', icon: PartitionOutlined, editor: SubWorkflowTaskEditor },
-  { 
-    label: 'SQL', 
-    type: 'SQL', 
-    category: 'data', 
-    icon: DatabaseOutlined,
-    editor: SqlTaskEditor,
-    default_params: {
-      sqlType: '0',
-      sql: 'SELECT * FROM a',
-      preStatements: '',
-      postStatements: '',
-      displayRows: 10,
-    } 
-  },
-  { label: 'DataX', type: 'DATAX', command: '', category: 'data', icon: SendOutlined, editor: DataXTaskEditor },
-  { label: 'Spark', type: 'SPARK', command: '', category: 'big_data', icon: RocketOutlined, editor: SparkTaskEditor },
-  { label: 'Flink', type: 'FLINK', command: '', category: 'big_data', icon: RocketOutlined, editor: FlinkTaskEditor },
-  { label: 'Map Reduce', type: 'MAP_REDUCE', command: '', category: 'big_data', icon: RocketOutlined, editor: MapReduceTaskEditor },
-  { label: 'Kubernetes', type: 'KUBERNETES', command: '', category: 'cloud_ml', icon: DeploymentUnitOutlined, editor: KubernetesTaskEditor },
-  { label: 'SageMaker', type: 'SAGEMAKER', command: '', category: 'cloud_ml', icon: CloudOutlined, editor: SagemakerTaskEditor },
-  { label: 'MLflow', type: 'ML_FLOW', command: '', category: 'cloud_ml', icon: ExperimentOutlined, editor: MLflowModelsTaskEditor },
-  { label: 'OpenMLDB', type: 'OPEN_MLDB', command: '', category: 'cloud_ml', icon: ReadOutlined, editor: OpenMLDBTaskEditor },
-  { label: 'PyTorch', type: 'PYTORCH', command: '', category: 'cloud_ml', icon: GithubOutlined, editor: PytorchTaskEditor },
-  { label: 'DVC', type: 'DVC', command: '', category: 'cloud_ml', icon: GithubOutlined, editor: DVCTaskEditor },
-  { label: 'HTTP', type: 'HTTP', command: 'curl http://example.com', category: 'other', icon: CloudServerOutlined, editor: HttpTaskEditor },
-  { label: 'Procedure', type: 'PROCEDURE', command: '', category: 'other', icon: SettingOutlined, editor: ProcedureTaskEditor },
+  { label: 'SQL', type: 'SQL', category: 'general', icon: DatabaseOutlined, editor: SqlTaskEditor, default_params: { sqlType: '0', sql: 'SELECT * FROM a', preStatements: '', postStatements: '', displayRows: 10, } },
+  { label: 'Procedure', type: 'PROCEDURE', command: '', category: 'general', icon: SettingOutlined, editor: ProcedureTaskEditor },
+  { label: 'HTTP', type: 'HTTP', command: 'curl http://example.com', category: 'general', icon: CloudServerOutlined, editor: HttpTaskEditor },
+  { label: 'Params', type: 'PARAMS', command: '', category: 'parameter', icon: ProfileOutlined, editor: ParamsTaskEditor },
+  { label: 'Conditions', type: 'CONDITIONS', command: '', category: 'logic', icon: ApartmentOutlined, editor: ConditionsTaskEditor },
+  { label: 'Switch', type: 'SWITCH', command: '', category: 'logic', icon: ForkOutlined, editor: SwitchTaskEditor },
+  { label: 'Dependent', type: 'DEPENDENT', command: '', category: 'logic', icon: NodeIndexOutlined, editor: DependentTaskEditor },
+  { label: 'Sub Process', type: 'SUB_PROCESS', command: '', category: 'logic', icon: PartitionOutlined, editor: SubWorkflowTaskEditor },
 ];
 
 export const taskCategories = [
   { key: 'general', label: 'General' },
-  { key: 'control_flow', label: 'Control Flow' },
-  { key: 'data', label: 'Data' },
-  { key: 'big_data', label: 'Big Data' },
-  { key: 'cloud_ml', label: 'Cloud/ML' },
-  { key: 'other', label: 'Other' },
+  { key: 'parameter', label: 'Parameter' },
+  { key: 'logic', label: 'Logic' },
 ];

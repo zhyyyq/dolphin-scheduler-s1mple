@@ -13,11 +13,9 @@ const ConditionsTaskEditor: React.FC<ConditionsTaskEditorProps> = ({ form, initi
 
   useEffect(() => {
     if (initialValues) {
-      const { success_task, failed_task, op, groups } = initialValues;
+      const { op, groups } = initialValues;
       const conditionsYaml = yaml.dump({ op, groups });
       form.setFieldsValue({
-        success_task,
-        failed_task,
         conditions_yaml: conditionsYaml,
       });
     }
@@ -25,20 +23,6 @@ const ConditionsTaskEditor: React.FC<ConditionsTaskEditorProps> = ({ form, initi
 
   return (
     <>
-      <Form.Item
-        label="成功分支任务 (Success Task)"
-        name="success_task"
-        rules={[{ required: true, message: '请输入成功分支任务的名称' }]}
-      >
-        <Input />
-      </Form.Item>
-      <Form.Item
-        label="失败分支任务 (Failed Task)"
-        name="failed_task"
-        rules={[{ required: true, message: '请输入失败分支任务的名称' }]}
-      >
-        <Input />
-      </Form.Item>
       <Form.Item
         label="条件逻辑 (YAML)"
         name="conditions_yaml"

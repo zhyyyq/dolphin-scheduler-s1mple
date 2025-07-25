@@ -85,11 +85,14 @@ export interface Task {
   groups?: (ConditionGroup | ConditionTask)[];
   deps?: string[];
   _display_type?: string;
+  downstream?: Record<string, string[]>;
 }
 
 export interface Relation {
   from: string;
   to: string;
+  from_port?: string;
+  to_port?: string;
 }
 
 export interface PreviewData {

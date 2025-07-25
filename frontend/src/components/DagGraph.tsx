@@ -48,20 +48,55 @@ const DagGraph: React.FC<DagGraphProps> = ({ data, onNodeDoubleClick }) => {
   };
 
   const transformData = (graphData: PreviewData) => {
-    const nodes = graphData.tasks.map(task => ({
-      id: task.name,
-      shape: 'task-node',
-      width: 180,
-      height: 36,
-      data: {
-        label: task.name,
-        taskType: task.type,
-        command: task.command,
-      },
-    }));
+    const nodes = graphData.tasks.map(task => {
+      const nodeConfig: any = {
+        id: task.name,
+        shape: 'task-node',
+        width: 180,
+        height: 36,
+        data: {
+          label: task.name,
+          task_type: task.task_type,
+          command: task.command,
+        },
+      };
+
+      if (task.task_type === 'CONDITIONS') {
+        nodeConfig.ports = {
+          groups: {
+            in: {
+              position: 'top',
+              attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff' } },
+            },
+            out: {
+              position: 'bottom',
+              attrs: {
+                circle: {
+                  r: 4,
+                  magnet: true,
+                  stroke: '#5F95FF',
+                  strokeWidth: 1,
+                  fill: '#fff',
+                },
+              },
+              label: {
+                position: 'bottom',
+              }
+            },
+          },
+          items: [
+            { id: 'in', group: 'in' },
+            { id: 'success', group: 'out', args: { dx: -40 }, attrs: { text: { text: 'Success', fill: '#52c41a' } } },
+            { id: 'failure', group: 'out', args: { dx: 40 }, attrs: { text: { text: 'Failure', fill: '#ff4d4f' } } },
+          ],
+        };
+      }
+
+      return nodeConfig;
+    });
     const edges = graphData.relations.map(rel => ({
-      source: { cell: rel.from },
-      target: { cell: rel.to },
+      source: { cell: rel.from, port: rel.from_port },
+      target: { cell: rel.to, port: rel.to_port },
       attrs: {
         line: {
           stroke: '#8f8f8f',

@@ -6,7 +6,7 @@ interface SubProcessTaskEditorProps {
   currentNode: Node;
 }
 
-export const SubProcessTaskEditor: React.FC<SubProcessTaskEditorProps> = ({ currentNode }) => {
+const SubProcessTaskEditor: React.FC<SubProcessTaskEditorProps> = ({ currentNode }) => {
   const [workflowName, setWorkflowName] = useState(currentNode.getData()?.workflow_name || '');
 
   useEffect(() => {
@@ -29,3 +29,5 @@ export const SubProcessTaskEditor: React.FC<SubProcessTaskEditorProps> = ({ curr
     </>
   );
 };
+
+export default SubProcessTaskEditor;

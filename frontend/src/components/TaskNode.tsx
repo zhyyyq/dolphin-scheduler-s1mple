@@ -25,7 +25,9 @@ register({
   height: 36,
   component: TaskNodeComponent,
   propHooks(metadata: Node.Metadata) {
-    // Always apply the default port configuration, which works with fixed width
+    if (metadata.ports) {
+      return metadata;
+    }
     return {
       ...metadata,
       ports: {

@@ -368,7 +368,7 @@ const WorkflowEditorPage: React.FC = () => {
         shape: 'task-node',
         x: contextMenu.px,
         y: contextMenu.py,
-        data: nodeData,
+        data: { ...nodeData },
       });
 
     } else {

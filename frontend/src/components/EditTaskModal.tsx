@@ -70,11 +70,15 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, onC
       } else if (values.conditions_yaml) {
         try {
           const conditionsData = yaml.load(values.conditions_yaml) as { op: string, groups: any[] };
+          
+          const successTask = allTasks.find(t => task.downstream?.success?.includes(t.name));
+          const failedTask = allTasks.find(t => task.downstream?.failure?.includes(t.name));
+
           finalTask = {
             ...task!,
             name: values.name,
-            success_task: values.success_task,
-            failed_task: values.failed_task,
+            success_task: successTask ? successTask.name : '',
+            failed_task: failedTask ? failedTask.name : '',
             op: conditionsData.op as any,
             groups: conditionsData.groups,
           };
