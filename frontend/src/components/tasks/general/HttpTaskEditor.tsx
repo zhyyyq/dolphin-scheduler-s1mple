@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { Form, Input, Select, Button, Space, FormInstance } from 'antd';
-import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
+import { MinusCircleOutlined, PlusOutlined, CloudServerOutlined } from '@ant-design/icons';
+import { Graph } from '@antv/x6';
+import { Task } from '../../../types';
 
 const { Option } = Select;
 
@@ -9,7 +11,11 @@ interface HttpTaskEditorProps {
   initialValues: any;
 }
 
-const HttpTaskEditor: React.FC<HttpTaskEditorProps> = ({ form, initialValues }) => {
+interface HttpTaskEditorComponent extends React.FC<HttpTaskEditorProps> {
+  taskInfo: any;
+}
+
+const HttpTaskEditor: HttpTaskEditorComponent = ({ form, initialValues }) => {
   useEffect(() => {
     if (initialValues) {
       form.setFieldsValue(initialValues);
@@ -95,6 +101,41 @@ const HttpTaskEditor: React.FC<HttpTaskEditorProps> = ({ form, initialValues }) 
       </Form.Item>
     </>
   );
+};
+
+HttpTaskEditor.taskInfo = {
+  label: 'HTTP',
+  type: 'HTTP',
+  command: 'curl http://example.com',
+  category: 'general',
+  icon: CloudServerOutlined,
+  editor: HttpTaskEditor,
+  createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }) => {
+    const existingNodes = graph.getNodes();
+    let newNodeName = task.label;
+    let counter = 1;
+    while (existingNodes.some(n => n.getData().label === newNodeName)) {
+      newNodeName = `${task.label}_${counter}`;
+      counter++;
+    }
+
+    const nodeData: Partial<Task> = {
+      name: newNodeName,
+      label: newNodeName,
+      task_type: task.type,
+      type: task.type,
+      task_params: (task as any).default_params || {},
+      _display_type: task.type,
+      command: task.command,
+    };
+
+    graph.addNode({
+      shape: 'task-node',
+      x: contextMenu.px,
+      y: contextMenu.py,
+      data: nodeData as Task,
+    });
+  },
 };
 
 export default HttpTaskEditor;

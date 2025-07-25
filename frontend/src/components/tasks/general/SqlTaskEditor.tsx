@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Form, Select, Typography } from 'antd';
+import { Graph } from '@antv/x6';
+import { Task } from '../../../types';
 import api from '../../../api';
-import LocalParamsEditor from '../common/LocalParamsEditor';
+import { DatabaseOutlined } from '@ant-design/icons';
 
 const { TextArea } = Input;
 const { Title } = Typography;
@@ -14,7 +16,11 @@ interface Datasource {
   type: string;  // The type of the datasource (e.g., POSTGRESQL)
 }
 
-const SqlTaskEditor: React.FC = () => {
+interface SqlTaskEditorComponent extends React.FC {
+  taskInfo: any;
+}
+
+const SqlTaskEditor: SqlTaskEditorComponent = () => {
   const [datasources, setDatasources] = useState<Datasource[]>([]);
   const [loading, setLoading] = useState(true);
   const form = Form.useFormInstance();
@@ -109,11 +115,48 @@ const SqlTaskEditor: React.FC = () => {
       <Form.Item label="显示行数" name="displayRows" initialValue={10}>
         <Input type="number" />
       </Form.Item>
-
-      <Title level={5}>自定义参数</Title>
-      <LocalParamsEditor />
     </>
   );
+};
+
+SqlTaskEditor.taskInfo = {
+  label: 'SQL',
+  type: 'SQL',
+  category: 'general',
+  icon: DatabaseOutlined,
+  editor: SqlTaskEditor,
+  default_params: {
+    sqlType: '0',
+    sql: 'SELECT * FROM a',
+    preStatements: '',
+    postStatements: '',
+    displayRows: 10,
+  },
+  createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }) => {
+    const existingNodes = graph.getNodes();
+    let newNodeName = task.label;
+    let counter = 1;
+    while (existingNodes.some(n => n.getData().label === newNodeName)) {
+      newNodeName = `${task.label}_${counter}`;
+      counter++;
+    }
+
+    const nodeData: Partial<Task> = {
+      name: newNodeName,
+      label: newNodeName,
+      task_type: task.type,
+      type: task.type,
+      task_params: (task as any).default_params || {},
+      _display_type: task.type,
+    };
+
+    graph.addNode({
+      shape: 'task-node',
+      x: contextMenu.px,
+      y: contextMenu.py,
+      data: nodeData as Task,
+    });
+  },
 };
 
 export default SqlTaskEditor;

@@ -1,10 +1,17 @@
 import React from 'react';
 import { Form, Input, Select, Typography } from 'antd';
+import { Graph } from '@antv/x6';
+import { Task } from '../../../types';
+import { ProfileOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;
 const { Option } = Select;
 
-const ParamsTaskEditor: React.FC = () => {
+interface ParamsTaskEditorComponent extends React.FC {
+  taskInfo: any;
+}
+
+const ParamsTaskEditor: ParamsTaskEditorComponent = () => {
   return (
     <>
       <Title level={5}>定义输出参数</Title>
@@ -39,6 +46,45 @@ const ParamsTaskEditor: React.FC = () => {
       </Form.Item>
     </>
   );
+};
+
+ParamsTaskEditor.taskInfo = {
+  label: '参数',
+  type: 'PARAMS',
+  command: '',
+  category: 'general',
+  icon: ProfileOutlined,
+  editor: ParamsTaskEditor,
+  createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }) => {
+    const existingNodes = graph.getNodes();
+    let newNodeName = task.label;
+    let counter = 1;
+    while (existingNodes.some(n => n.getData().label === newNodeName)) {
+      newNodeName = `${task.label}_${counter}`;
+      counter++;
+    }
+
+    const nodeData: Task = {
+      name: newNodeName,
+      label: newNodeName,
+      type: 'PARAMS',
+      task_type: 'PARAMS',
+      command: '', // Add empty command to satisfy Task type
+      task_params: {
+        prop: newNodeName,
+        type: 'VARCHAR',
+        value: '',
+      },
+      _display_type: 'PARAMS',
+    };
+
+    graph.addNode({
+      shape: 'task-node',
+      x: contextMenu.px,
+      y: contextMenu.py,
+      data: nodeData,
+    });
+  },
 };
 
 export default ParamsTaskEditor;

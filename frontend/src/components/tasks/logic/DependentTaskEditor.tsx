@@ -1,6 +1,9 @@
 import React, { useEffect } from 'react';
 import { Form, FormInstance, Input } from 'antd';
 import yaml from 'js-yaml';
+import { Graph } from '@antv/x6';
+import { Task } from '../../../types';
+import { NodeIndexOutlined } from '@ant-design/icons';
 
 const { TextArea } = Input;
 
@@ -9,7 +12,11 @@ interface DependentTaskEditorProps {
   initialValues: any;
 }
 
-const DependentTaskEditor: React.FC<DependentTaskEditorProps> = ({ form, initialValues }) => {
+interface DependentTaskEditorComponent extends React.FC<DependentTaskEditorProps> {
+  taskInfo: any;
+}
+
+const DependentTaskEditor: DependentTaskEditorComponent = ({ form, initialValues }) => {
 
   useEffect(() => {
     if (initialValues) {
@@ -40,6 +47,40 @@ const DependentTaskEditor: React.FC<DependentTaskEditorProps> = ({ form, initial
       <TextArea rows={15} placeholder="在此输入 denpendence 的 YAML 结构" />
     </Form.Item>
   );
+};
+
+DependentTaskEditor.taskInfo = {
+  label: '依赖',
+  type: 'DEPENDENT',
+  command: '',
+  category: 'logic',
+  icon: NodeIndexOutlined,
+  editor: DependentTaskEditor,
+  createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }) => {
+    const existingNodes = graph.getNodes();
+    let newNodeName = task.label;
+    let counter = 1;
+    while (existingNodes.some(n => n.getData().label === newNodeName)) {
+      newNodeName = `${task.label}_${counter}`;
+      counter++;
+    }
+
+    const nodeData: Partial<Task> = {
+      name: newNodeName,
+      label: newNodeName,
+      task_type: task.type,
+      type: task.type,
+      task_params: (task as any).default_params || {},
+      _display_type: task.type,
+    };
+
+    graph.addNode({
+      shape: 'task-node',
+      x: contextMenu.px,
+      y: contextMenu.py,
+      data: nodeData as Task,
+    });
+  },
 };
 
 export default DependentTaskEditor;

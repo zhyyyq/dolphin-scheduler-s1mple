@@ -224,68 +224,14 @@ const WorkflowEditorPage: React.FC = () => {
   const handleMenuClick = (e: { key: string }) => {
     if (!graph) return;
 
-    if (e.key === 'ADD_PARAM') {
-      const existingNodes = graph.getNodes();
-      let newNodeName = '参数';
-      let counter = 1;
-      while (existingNodes.some(n => n.getData().label === newNodeName)) {
-        newNodeName = `参数_${counter}`;
-        counter++;
-      }
+    const taskInfo = taskTypes.find(t => t.type === e.key);
+    if (!taskInfo) return;
 
-      const nodeData: Task = {
-        name: newNodeName,
-        label: newNodeName,
-        type: 'PARAMS',
-        task_type: 'PARAMS',
-        command: '', // Add empty command to satisfy Task type
-        task_params: {
-          prop: newNodeName,
-          type: 'VARCHAR',
-          value: '',
-        },
-        _display_type: 'PARAMS',
-      };
-
-      graph.addNode({
-        shape: 'task-node',
-        x: contextMenu.px,
-        y: contextMenu.py,
-        data: nodeData,
-      });
-
-    } else {
-      const task = taskTypes.find(t => t.type === e.key);
-      if (task) {
-        const existingNodes = graph.getNodes();
-        let newNodeName = task.label;
-        let counter = 1;
-        while (existingNodes.some(n => n.getData().label === newNodeName)) {
-          newNodeName = `${task.label}_${counter}`;
-          counter++;
-        }
-
-        const nodeData: Partial<Task> = {
-          name: newNodeName,
-          label: newNodeName,
-          task_type: task.type,
-          type: task.type,
-          task_params: (task as any).default_params || {},
-          _display_type: task.type,
-        };
-
-        if (['SHELL', 'PYTHON', 'HTTP'].includes(task.type)) {
-          nodeData.command = task.command;
-        }
-
-        graph.addNode({
-          shape: 'task-node',
-          x: contextMenu.px,
-          y: contextMenu.py,
-          data: nodeData as Task,
-        });
-      }
+    const EditorComponent = taskInfo.editor as any;
+    if (EditorComponent && typeof EditorComponent.createNode === 'function') {
+      EditorComponent.createNode(graph, taskInfo, contextMenu);
     }
+
     setContextMenu({ ...contextMenu, visible: false });
   };
 

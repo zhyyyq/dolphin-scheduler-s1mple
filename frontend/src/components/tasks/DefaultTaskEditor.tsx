@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { Form, Input, FormInstance } from 'antd';
 import yaml from 'js-yaml';
+import { Graph } from '@antv/x6';
+import { Task } from '../../types';
 
 const { TextArea } = Input;
 
@@ -9,7 +11,11 @@ interface DefaultTaskEditorProps {
   form: FormInstance<any>;
 }
 
-const DefaultTaskEditor: React.FC<DefaultTaskEditorProps> = ({ initialValues, form }) => {
+interface DefaultTaskEditorComponent extends React.FC<DefaultTaskEditorProps> {
+  createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }) => void;
+}
+
+const DefaultTaskEditor: DefaultTaskEditorComponent = ({ initialValues, form }) => {
 
   useEffect(() => {
     // Convert the initial task object to a YAML string, omitting fields
@@ -58,6 +64,36 @@ const DefaultTaskEditor: React.FC<DefaultTaskEditorProps> = ({ initialValues, fo
       />
     </Form.Item>
   );
+};
+
+DefaultTaskEditor.createNode = (graph: Graph, taskInfo: any, contextMenu: { px: number, py: number }) => {
+  const existingNodes = graph.getNodes();
+  let newNodeName = taskInfo.label;
+  let counter = 1;
+  while (existingNodes.some(n => n.getData().label === newNodeName)) {
+    newNodeName = `${taskInfo.label}_${counter}`;
+    counter++;
+  }
+
+  const nodeData: Partial<Task> = {
+    name: newNodeName,
+    label: newNodeName,
+    task_type: taskInfo.type,
+    type: taskInfo.type,
+    task_params: (taskInfo as any).default_params || {},
+    _display_type: taskInfo.type,
+  };
+
+  if (['SHELL', 'PYTHON', 'HTTP'].includes(taskInfo.type)) {
+    nodeData.command = taskInfo.command;
+  }
+
+  graph.addNode({
+    shape: 'task-node',
+    x: contextMenu.px,
+    y: contextMenu.py,
+    data: nodeData as Task,
+  });
 };
 
 export default DefaultTaskEditor;
