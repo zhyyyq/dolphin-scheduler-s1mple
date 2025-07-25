@@ -34,12 +34,24 @@ register({
       ...metadata,
       ports: {
         groups: {
-          top: { position: 'top', attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff', style: { visibility: 'visible' } } } },
-          bottom: { position: 'bottom', attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff', style: { visibility: 'visible' } } } },
+          top: {
+            position: 'top',
+            attrs: {
+              circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff' },
+              text: { fill: '#666', fontSize: 12, 'text-anchor': 'middle', 'y': -10 },
+            },
+          },
+          bottom: {
+            position: 'bottom',
+            attrs: {
+              circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff' },
+              text: { fill: '#666', fontSize: 12, 'text-anchor': 'middle', 'y': 10 },
+            },
+          },
         },
         items: [
-          { id: 'top', group: 'top' },
-          { id: 'bottom', group: 'bottom' },
+          { group: 'top', id: 'in', attrs: { text: { text: 'in' } } },
+          { group: 'bottom', id: 'out', attrs: { text: { text: 'out' } } },
         ],
       },
     };

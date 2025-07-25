@@ -67,37 +67,40 @@ ConditionsTaskEditor.taskInfo = {
       data: nodeData as Task,
       ports: {
         groups: {
-          top: { 
-            position: 'top', 
-            attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff', style: { visibility: 'visible' } } } 
+          top: {
+            position: 'top',
+            attrs: {
+              circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff' },
+              text: { fill: '#666', fontSize: 12, 'text-anchor': 'middle', 'y': -10 },
+            },
           },
-          bottom: { 
-            position: 'bottom', 
-            attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff', style: { visibility: 'visible' } } },
-            label: {
-              position: 'bottom',
+          bottom: {
+            position: 'bottom',
+            attrs: {
+              circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff' },
+              text: { fontSize: 12, 'text-anchor': 'middle', 'y': 10 },
             },
           },
         },
         items: [
-          { group: 'top', id: 'in' },
-          { 
-            group: 'bottom', 
-            id: 'out-success', 
-            args: { x: '25%' }, 
-            attrs: { 
-              label: { text: 'Success' },
-              circle: { fill: '#52c41a' } // Green color for success
-            } 
+          { group: 'top', id: 'in', attrs: { text: { text: 'in' } } },
+          {
+            group: 'bottom',
+            id: 'out-success',
+            args: { x: '25%' },
+            attrs: {
+              circle: { fill: '#52c41a' },
+              text: { text: 'Success', fill: '#52c41a' },
+            },
           },
-          { 
-            group: 'bottom', 
-            id: 'out-failure', 
-            args: { x: '75%' }, 
-            attrs: { 
-              label: { text: 'Failure' },
-              circle: { fill: '#ff4d4f' } // Red color for failure
-            } 
+          {
+            group: 'bottom',
+            id: 'out-failure',
+            args: { x: '75%' },
+            attrs: {
+              circle: { fill: '#ff4d4f' },
+              text: { text: 'Failure', fill: '#ff4d4f' },
+            },
           },
         ],
       },
