@@ -67,6 +67,7 @@ export const generateYamlStr = (
         }
       }
     }
+    const uniqueDeps = Array.from(new Set(deps));
 
     // Get all outgoing parameter connections
     const outgoingEdges = edges.filter(edge => edge.source.cell === node.id);
@@ -106,22 +107,24 @@ export const generateYamlStr = (
         }
       }
       
-      if (!taskPayload.task_params) {
-        taskPayload.task_params = {};
-      }
-      taskPayload.task_params.dependence = {
-        relation: 'AND',
-        dependTaskList: [
-          {
-            relation: 'AND',
-            dependTaskList: [],
-            conditionResult: {
-              successNode: successNode,
-              failedNode: failedNode
+      if (successNode.length > 0 || failedNode.length > 0) {
+        if (!taskPayload.task_params) {
+          taskPayload.task_params = {};
+        }
+        taskPayload.task_params.dependence = {
+          relation: 'AND',
+          dependTaskList: [
+            {
+              relation: 'AND',
+              dependTaskList: [],
+              conditionResult: {
+                successNode: successNode,
+                failedNode: failedNode
+              }
             }
-          }
-        ]
-      };
+          ]
+        };
+      }
     }
 
     if (nodeData.command !== undefined) {
@@ -135,8 +138,8 @@ export const generateYamlStr = (
     }
     
     // Add the deps array to the payload if it's not empty
-    if (deps.length > 0) {
-      taskPayload.deps = deps;
+    if (uniqueDeps.length > 0) {
+      taskPayload.deps = uniqueDeps;
     }
 
     if (Object.keys(taskPayload.task_params).length === 0) {

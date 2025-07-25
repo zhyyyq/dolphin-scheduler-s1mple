@@ -25,6 +25,7 @@ register({
   height: 36,
   component: TaskNodeComponent,
   propHooks(metadata: Node.Metadata) {
+    console.log('TaskNode propHooks', metadata);
     if (metadata.ports) {
       return metadata;
     }

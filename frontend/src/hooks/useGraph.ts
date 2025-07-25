@@ -5,6 +5,7 @@ import { Selection } from '@antv/x6-plugin-selection';
 import dagre from 'dagre';
 import { History } from '@antv/x6-plugin-history';
 import { Task } from '../types';
+import { taskTypes } from '../config/taskTypes';
 
 interface UseGraphProps {
   container: HTMLDivElement | null;
@@ -122,41 +123,68 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     const nodeMap = new Map();
 
     tasks.forEach((task) => {
-      const rawType = task.type || task.task_type;
-      let displayType = rawType;
-      if (rawType === 'SubWorkflow') {
-        displayType = 'SUB_PROCESS';
+      const taskEditor = taskTypes.find((t: any) => t.type === task.task_type);
+
+      if (!taskEditor) {
+        throw new Error(`未找到任务类型 "${task.task_type}" 的编辑器配置。`);
       }
 
-      const node = currentGraph.createNode({
-        shape: 'task-node',
-        data: {
-          ...task,
-          label: task.name,
-          _display_type: displayType,
-        },
-      });
-      currentGraph.addNode(node);
-      nodeMap.set(task.name, node);
+      (taskEditor as any).createNode(currentGraph, { ...task, label: task.name }, { px: 0, py: 0 });
+      const newNode = currentGraph.getNodes().find(n => n.getData().name === task.name);
+      if (newNode) {
+        newNode.setData(task);
+        nodeMap.set(task.name, newNode);
+      }
     });
 
     tasks.forEach(task => {
+      // Edges from deps
       if (task.deps && task.deps.length > 0) {
-        task.deps.forEach((dep: string) => {
+        const uniqueDeps = Array.from(new Set(task.deps));
+        uniqueDeps.forEach((dep: string) => {
           const sourceNode = nodeMap.get(dep);
           const targetNode = nodeMap.get(task.name);
+
           if (sourceNode && targetNode) {
-            currentGraph.addEdge({
+            const sourceTask = sourceNode.getData();
+            const edge: any = {
               shape: 'edge',
-              source: { cell: sourceNode.id, port: 'bottom' },
-              target: { cell: targetNode.id, port: 'top' },
+              source: { cell: sourceNode.id, port: 'out' },
+              target: { cell: targetNode.id, port: 'in' },
               attrs: { line: { stroke: '#8f8f8f', strokeWidth: 1 } },
               zIndex: -1,
-            });
+              router: { name: 'manhattan' },
+              connector: { name: 'rounded' },
+            };
+
+            if (sourceTask.task_type === 'CONDITIONS' || sourceTask.type === 'CONDITIONS') {
+              const { dependence } = sourceTask.task_params as any;
+              let isConditionEdge = false;
+              if (dependence && dependence.dependTaskList && dependence.dependTaskList.length > 0 && dependence.dependTaskList[0].conditionResult) {
+                const { successNode, failedNode } = dependence.dependTaskList[0].conditionResult;
+                if (successNode && successNode.includes(task.name)) {
+                  edge.source.port = 'out-success';
+                  edge.attrs.line.stroke = '#28a745';
+                  edge.attrs.line.strokeWidth = 2;
+                  isConditionEdge = true;
+                } else if (failedNode && failedNode.includes(task.name)) {
+                  edge.source.port = 'out-failure';
+                  edge.attrs.line.stroke = '#dc3545';
+                  edge.attrs.line.strokeWidth = 2;
+                  isConditionEdge = true;
+                }
+              }
+              if (isConditionEdge) {
+                currentGraph.addEdge(edge);
+              }
+            } else {
+              currentGraph.addEdge(edge);
+            }
           }
         });
       }
 
+      // Edges from Switch conditions
       if ((task.task_type === 'Switch' || task.type === 'Switch') && Array.isArray(task.condition)) {
         task.condition.forEach((cond: any) => {
           const sourceNode = nodeMap.get(task.name);
@@ -164,10 +192,12 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
           if (sourceNode && targetNode) {
             currentGraph.addEdge({
               shape: 'edge',
-              source: { cell: sourceNode.id, port: 'bottom' },
-              target: { cell: targetNode.id, port: 'top' },
+              source: { cell: sourceNode.id, port: 'out' },
+              target: { cell: targetNode.id, port: 'in' },
               attrs: { line: { stroke: '#8f8f8f', strokeWidth: 1 } },
               zIndex: -1,
+              router: { name: 'manhattan' },
+              connector: { name: 'rounded' },
             });
           }
         });
