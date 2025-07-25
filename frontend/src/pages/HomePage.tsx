@@ -257,7 +257,31 @@ const HomePage: React.FC = () => {
         isNew: record.releaseState === 'UNSUBMITTED',
       };
 
-      await api.createOrUpdateDsWorkflow(payload);
+      const response = await api.createOrUpdateDsWorkflow(payload);
+      
+      // Step 6: If there is a schedule, create it via a separate API call
+      if (workflow.schedule) {
+        const { projectCode, processDefinitionCode } = response;
+        
+        const schedulePayload = {
+          schedule: JSON.stringify({
+            startTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
+            endTime: '2125-07-25 00:00:00', // A far-future end time
+            crontab: workflow.schedule,
+            timezoneId: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          }),
+          failureStrategy: 'CONTINUE',
+          warningType: 'NONE',
+          processInstancePriority: 'MEDIUM',
+          warningGroupId: 0,
+          workerGroup: 'default',
+          tenantCode: 'default',
+          environmentCode: -1, // Or fetch dynamically if needed
+          processDefinitionCode: processDefinitionCode,
+        };
+        await api.createSchedule(projectCode, schedulePayload);
+      }
+
       message.success('工作流上线/同步成功。');
       fetchWorkflows();
 

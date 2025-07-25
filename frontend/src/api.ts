@@ -84,7 +84,11 @@ const api = {
   },
 
   async createOrUpdateDsWorkflow(payload: Record<string, any>): Promise<any> {
-    return this.post('/api/workflow/ds', payload);
+    return this.post('/api/ds/workflow', payload);
+  },
+
+  async createSchedule(projectCode: number, payload: Record<string, any>): Promise<any> {
+    return this.post(`/api/ds/projects/${projectCode}/schedules`, payload);
   }
 };
 

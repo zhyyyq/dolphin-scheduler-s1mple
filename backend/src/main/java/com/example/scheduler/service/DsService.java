@@ -172,7 +172,7 @@ public class DsService {
         }
     }
 
-    public void createOrUpdateWorkflow(Map<String, Object> payload) throws Exception {
+    public Map<String, Object> createOrUpdateWorkflow(Map<String, Object> payload) throws Exception {
         String workflowName = (String) payload.get("name");
         String projectName = (String) payload.getOrDefault("project", "default");
 
@@ -252,12 +252,13 @@ public class DsService {
         if (responseData.getIntValue("code") != 0) {
             throw new Exception("DS API error (create/update workflow): " + responseData.getString("msg"));
         }
+        
+        JSONObject processDefinition = responseData.getJSONObject("data");
+        long processCode = processDefinition.getLongValue("code");
 
         // 5. Release the workflow to make it online
         String taskDefinitionJson = (String) payload.get("taskDefinitionJson");
         if (taskDefinitionJson != null && !taskDefinitionJson.equals("[]")) {
-            JSONObject processDefinition = responseData.getJSONObject("data");
-            long processCode = processDefinition.getLongValue("code");
             HttpPost releaseRequest = new HttpPost(dsUrl + "/projects/" + projectCode + "/process-definition/" + processCode + "/release");
             releaseRequest.addHeader("token", token);
             List<NameValuePair> releaseParams = new ArrayList<>();
@@ -269,6 +270,34 @@ public class DsService {
             if (releaseData.getIntValue("code") != 0) {
                 throw new Exception("DS API error (release workflow): " + releaseData.getString("msg"));
             }
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("projectCode", projectCode);
+        result.put("processDefinitionCode", processCode);
+        return result;
+    }
+
+    public void createSchedule(long projectCode, Map<String, Object> payload) throws Exception {
+        String url = dsUrl + "/projects/" + projectCode + "/schedules";
+        HttpPost postRequest = new HttpPost(url);
+        postRequest.addHeader("token", token);
+        postRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        List<NameValuePair> params = new ArrayList<>();
+        for (Map.Entry<String, Object> entry : payload.entrySet()) {
+            if (entry.getValue() != null) {
+                params.add(new BasicNameValuePair(entry.getKey(), entry.getValue().toString()));
+            }
+        }
+
+        postRequest.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+        CloseableHttpResponse response = httpClient.execute(postRequest);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject responseData = JSON.parseObject(responseString);
+
+        if (responseData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (create schedule): " + responseData.getString("msg"));
         }
     }
 

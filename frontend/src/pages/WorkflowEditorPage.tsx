@@ -220,9 +220,13 @@ const WorkflowEditorPage: React.FC = () => {
         name: nodeData.name,
         task_type: nodeData.task_type,
         type: nodeData.type,
-        command: nodeData.command,
         task_params: { ...(nodeData.task_params || {}) },
       };
+
+      // The command property is now standardized for all script-based tasks
+      if (nodeData.command !== undefined) {
+        taskPayload.command = nodeData.command;
+      }
       
       delete taskPayload.task_params.localParams; // remove from old location
       
@@ -234,9 +238,6 @@ const WorkflowEditorPage: React.FC = () => {
         taskPayload.deps = deps;
       }
 
-      if (taskPayload.command === undefined) {
-        delete taskPayload.command;
-      }
       if (Object.keys(taskPayload.task_params).length === 0) {
         delete taskPayload.task_params;
       }

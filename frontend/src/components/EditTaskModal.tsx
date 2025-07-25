@@ -35,13 +35,17 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, onC
 
   const handleOk = () => {
     form.validateFields().then(values => {
-      const { name, command, ...other_values } = values;
+      const { name, command, definition, ...other_values } = values;
       const updated_task_params = { ...task?.task_params, ...other_values };
+
+      // For Python tasks, the script comes from the 'definition' field.
+      // We map it to the 'command' property for standardization in the YAML.
+      const final_command = task?.task_type === 'PYTHON' ? definition : command;
 
       let finalTask: Task = {
         ...task!,
         name: name,
-        command: command,
+        command: final_command,
         task_params: updated_task_params,
       };
 

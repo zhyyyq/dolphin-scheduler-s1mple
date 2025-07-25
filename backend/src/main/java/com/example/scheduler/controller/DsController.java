@@ -50,4 +50,23 @@ public class DsController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @PostMapping("/workflow")
+    public ResponseEntity<?> createOrUpdateDsWorkflow(@RequestBody Map<String, Object> payload) {
+        try {
+            return ResponseEntity.ok(dsService.createOrUpdateWorkflow(payload));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/projects/{projectCode}/schedules")
+    public ResponseEntity<?> createSchedule(@PathVariable Long projectCode, @RequestBody Map<String, Object> payload) {
+        try {
+            dsService.createSchedule(projectCode, payload);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 }
