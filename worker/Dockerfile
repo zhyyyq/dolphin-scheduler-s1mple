@@ -1,4 +1,4 @@
-FROM apache/dolphinscheduler-worker:3.3.0-alpha
+FROM apache/dolphinscheduler-worker:3.2.2
 
 # install python
 
