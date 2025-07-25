@@ -170,20 +170,13 @@ const HomePage: React.FC = () => {
           taskParams = {
             localParams: params.localParams || [],
             dependence: {
-              dependTaskList: [{
-                relation: "AND",
-                dependTaskList: [],
-                conditionResult: {
-                  successNode: successNode,
-                  failedNode: failedNode
-                }
-              }]
+              relation: "AND",
+              dependTaskList: []
             },
             conditionResult: {
               successNode: successNode,
               failedNode: failedNode
             },
-            rawScript: '',
           };
         } else {
           // Default for SHELL and other script-based tasks
