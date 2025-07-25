@@ -227,9 +227,8 @@ const WorkflowEditorPage: React.FC = () => {
     const taskInfo = taskTypes.find(t => t.type === e.key);
     if (!taskInfo) return;
 
-    const EditorComponent = taskInfo.editor as any;
-    if (EditorComponent && typeof EditorComponent.createNode === 'function') {
-      EditorComponent.createNode(graph, taskInfo, contextMenu);
+    if (typeof taskInfo.createNode === 'function') {
+      taskInfo.createNode(graph, taskInfo, contextMenu);
     }
 
     setContextMenu({ ...contextMenu, visible: false });
