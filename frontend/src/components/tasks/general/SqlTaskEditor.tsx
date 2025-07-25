@@ -102,16 +102,6 @@ const SqlTaskEditor: SqlTaskEditorComponent = () => {
         <TextArea rows={6} placeholder="输入 SQL 语句或 $FILE{...} 引用" />
       </Form.Item>
       
-      {/* Note: The name is now 'preStatements' and we will handle converting it to an array later */}
-      <Form.Item label="前置 SQL" name="preStatements">
-        <TextArea rows={2} placeholder="多条SQL用分号分隔"/>
-      </Form.Item>
-      
-      {/* Note: The name is now 'postStatements' and we will handle converting it to an array later */}
-      <Form.Item label="后置 SQL" name="postStatements">
-        <TextArea rows={2} placeholder="多条SQL用分号分隔"/>
-      </Form.Item>
-      
       <Form.Item label="显示行数" name="displayRows" initialValue={10}>
         <Input type="number" />
       </Form.Item>
@@ -128,8 +118,6 @@ SqlTaskEditor.taskInfo = {
   default_params: {
     sqlType: '0',
     sql: 'SELECT * FROM a',
-    preStatements: '',
-    postStatements: '',
     displayRows: 10,
   },
   createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }) => {
