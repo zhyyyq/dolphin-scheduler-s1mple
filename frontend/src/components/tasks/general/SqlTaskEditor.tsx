@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Form, Select, Typography } from 'antd';
-import api from '../../api';
-import LocalParamsEditor from './common/LocalParamsEditor';
+import api from '../../../api';
+import LocalParamsEditor from '../common/LocalParamsEditor';
 
 const { TextArea } = Input;
 const { Title } = Typography;
