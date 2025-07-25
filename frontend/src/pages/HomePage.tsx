@@ -162,6 +162,19 @@ const HomePage: React.FC = () => {
           taskParams = {
             ...task.task_params,
           };
+        } else if (task.type === 'CONDITIONS') {
+          const params = task.task_params || {};
+          const dependTaskList = (params.dependTaskList || []).map((item: any) => ({
+            ...item,
+            nextNode: taskNameToCodeMap.get(item.nextNode),
+          }));
+          taskParams = {
+            localParams: params.localParams || [],
+            dependence: JSON.stringify({
+              dependTaskList: dependTaskList,
+            }),
+            rawScript: '', // Conditions tasks don't have a raw script
+          };
         } else {
           // Default for SHELL and other script-based tasks
           const rawScript = task.command || '';

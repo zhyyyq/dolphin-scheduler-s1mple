@@ -25,12 +25,13 @@ register({
   height: 36,
   component: TaskNodeComponent,
   propHooks(metadata: Node.Metadata) {
-    const { ports, ...rest } = metadata;
-    if (ports) {
-      return { ...rest, ports };
+    if (metadata.ports) {
+      return metadata;
     }
+    
+    // Default ports for nodes that don't have them defined
     return {
-      ...rest,
+      ...metadata,
       ports: {
         groups: {
           top: { position: 'top', attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff', style: { visibility: 'visible' } } } },

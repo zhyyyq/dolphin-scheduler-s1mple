@@ -66,10 +66,39 @@ ConditionsTaskEditor.taskInfo = {
       y: contextMenu.py,
       data: nodeData as Task,
       ports: {
+        groups: {
+          top: { 
+            position: 'top', 
+            attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff', style: { visibility: 'visible' } } } 
+          },
+          bottom: { 
+            position: 'bottom', 
+            attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff', style: { visibility: 'visible' } } },
+            label: {
+              position: 'bottom',
+            },
+          },
+        },
         items: [
-          { group: 'in', id: 'in1' },
-          { group: 'out', id: 'out-success', args: { portName: 'success' } },
-          { group: 'out', id: 'out-failure', args: { portName: 'failure' } },
+          { group: 'top', id: 'in' },
+          { 
+            group: 'bottom', 
+            id: 'out-success', 
+            args: { x: '25%' }, 
+            attrs: { 
+              label: { text: 'Success' },
+              circle: { fill: '#52c41a' } // Green color for success
+            } 
+          },
+          { 
+            group: 'bottom', 
+            id: 'out-failure', 
+            args: { x: '75%' }, 
+            attrs: { 
+              label: { text: 'Failure' },
+              circle: { fill: '#ff4d4f' } // Red color for failure
+            } 
+          },
         ],
       },
     });
