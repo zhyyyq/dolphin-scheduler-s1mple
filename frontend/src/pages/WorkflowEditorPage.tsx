@@ -12,6 +12,7 @@ import EditParamNodeModal from '../components/EditParamNodeModal';
 import { ViewYamlModal } from '../components/ViewYamlModal';
 import { WorkflowContextMenu } from '../components/WorkflowContextMenu';
 import { taskTypes } from '../config/taskTypes';
+import { generateYamlStr as generateYaml } from '../utils/yamlUtils';
 
 const WorkflowEditorPage: React.FC = () => {
   const navigate = useNavigate();
@@ -135,126 +136,6 @@ const WorkflowEditorPage: React.FC = () => {
     }
   }, [graph, workflowData, loadGraphData, message]);
 
-  const generateYamlStr = () => {
-    if (!graph) return '';
-
-    const doc = yaml.parseDocument(originalYaml || 'workflow:\n  name: new-workflow\ntasks: []\nparameters: []');
-
-    // --- Workflow Metadata ---
-    doc.setIn(['workflow', 'name'], workflowName);
-    if (isScheduleEnabled) {
-      doc.setIn(['workflow', 'schedule'], workflowSchedule);
-    } else {
-      doc.deleteIn(['workflow', 'schedule']);
-    }
-
-    const { cells } = graph.toJSON();
-    const allGraphNodes = cells.filter(cell => cell.shape === 'task-node');
-    const edges = cells.filter(cell => cell.shape === 'edge');
-    const nodeMap = new Map(allGraphNodes.map(n => [n.id, n.data]));
-
-    // Identify all connected parameter nodes to distinguish them from global ones
-    const connectedParamIds = new Set();
-    edges.forEach(edge => {
-      const sourceNode = nodeMap.get(edge.source.cell);
-      const targetNode = nodeMap.get(edge.target.cell);
-      if (sourceNode?.type === 'PARAMS') connectedParamIds.add(edge.source.cell);
-      if (targetNode?.type === 'PARAMS') connectedParamIds.add(edge.target.cell);
-    });
-
-    const tasks = [];
-    const globalParameters = [];
-
-    for (const node of allGraphNodes) {
-      const nodeData = node.data;
-
-      if (nodeData.type === 'PARAMS') {
-        if (!connectedParamIds.has(node.id)) {
-          // This is a global parameter
-          globalParameters.push({
-            name: nodeData.name,
-            type: nodeData.task_params?.type || 'VARCHAR',
-            value: nodeData.task_params?.value || '',
-          });
-        }
-        continue; // Parameters are processed via their connections to tasks
-      }
-
-      // It's a task node
-      const deps: string[] = [];
-      const localParams: any[] = [];
-
-      // Handle INCOMING connections (Dependencies and IN-parameters)
-      const incomingEdges = edges.filter(edge => edge.target.cell === node.id);
-      for (const edge of incomingEdges) {
-        const sourceNodeData = nodeMap.get(edge.source.cell);
-        if (sourceNodeData) {
-          if (sourceNodeData.type === 'PARAMS') {
-            localParams.push({
-              prop: sourceNodeData.name,
-              direct: 'IN',
-              type: sourceNodeData.task_params?.type || 'VARCHAR',
-              value: sourceNodeData.task_params?.value || '',
-            });
-          } else {
-            deps.push(sourceNodeData.name);
-          }
-        }
-      }
-
-      // Handle OUTGOING connections (OUT-parameters)
-      const outgoingEdges = edges.filter(edge => edge.source.cell === node.id);
-      for (const edge of outgoingEdges) {
-        const targetNodeData = nodeMap.get(edge.target.cell);
-        if (targetNodeData && targetNodeData.type === 'PARAMS') {
-          localParams.push({
-            prop: targetNodeData.name,
-            direct: 'OUT',
-            type: targetNodeData.task_params?.type || 'VARCHAR',
-            value: targetNodeData.task_params?.value || '',
-          });
-        }
-      }
-
-      const taskPayload: any = {
-        name: nodeData.name,
-        task_type: nodeData.task_type,
-        type: nodeData.type,
-        task_params: { ...(nodeData.task_params || {}) },
-      };
-
-      // The command property is now standardized for all script-based tasks
-      if (nodeData.command !== undefined) {
-        taskPayload.command = nodeData.command;
-      }
-      
-      delete taskPayload.task_params.localParams; // remove from old location
-      
-      if (localParams.length > 0) {
-        taskPayload.localParams = localParams; // add to top level
-      }
-      
-      if (deps.length > 0) {
-        taskPayload.deps = deps;
-      }
-
-      if (Object.keys(taskPayload.task_params).length === 0) {
-        delete taskPayload.task_params;
-      }
-
-      tasks.push(taskPayload);
-    }
-
-    doc.set('tasks', tasks);
-    if (globalParameters.length > 0) {
-      doc.set('parameters', globalParameters);
-    } else {
-      doc.delete('parameters');
-    }
-
-    return doc.toString();
-  };
-
   const handleSaveNode = (updatedNode: Task) => {
     if (!graph) return;
     
@@ -280,7 +161,8 @@ const WorkflowEditorPage: React.FC = () => {
   };
 
   const handleShowYaml = () => {
-    const yamlStr = generateYamlStr();
+    if (!graph) return;
+    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, originalYaml);
     setYamlContent(yamlStr);
     setIsYamlModalVisible(true);
   };
@@ -310,8 +192,9 @@ const WorkflowEditorPage: React.FC = () => {
   };
 
   const handleSave = async () => {
-    const yamlStr = generateYamlStr();
-    if (!yamlStr || !graph) {
+    if (!graph) return;
+    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, originalYaml);
+    if (!yamlStr) {
       message.error('画布为空或未初始化。');
       return;
     }
@@ -444,7 +327,7 @@ const WorkflowEditorPage: React.FC = () => {
         } catch (err) {
           message.error('解析或加载导入的 YAML 文件失败。');
         }
-      };generateYamlStr 
+      };
       reader.readAsText(file);
     }
     // Reset file input to allow importing the same file again
