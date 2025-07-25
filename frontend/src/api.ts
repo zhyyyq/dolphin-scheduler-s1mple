@@ -89,6 +89,10 @@ const api = {
 
   async createSchedule(projectCode: number, payload: Record<string, any>): Promise<any> {
     return this.post(`/api/ds/projects/${projectCode}/schedules`, payload);
+  },
+
+  async onlineSchedule(projectCode: number, scheduleId: number): Promise<any> {
+    return this.post(`/api/ds/projects/${projectCode}/schedules/${scheduleId}/online`);
   }
 };
 

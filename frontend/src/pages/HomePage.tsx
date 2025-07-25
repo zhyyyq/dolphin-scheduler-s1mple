@@ -110,7 +110,6 @@ const HomePage: React.FC = () => {
       // 1. Fetch the full YAML content
       const workflowDetail = await api.get<WorkflowDetail>(`/api/workflow/${record.uuid}`);
       const yamlContent = workflowDetail.yaml_content;
-      
       const doc = yaml.parse(yamlContent);
       const workflow = doc.workflow || {};
       let tasks = doc.tasks || [];
@@ -158,6 +157,10 @@ const HomePage: React.FC = () => {
               dependTaskList: dependTaskList,
             }),
             rawScript: '', // Switch tasks don't have a raw script
+          };
+        } else if (task.type === 'HTTP') {
+          taskParams = {
+            ...task.task_params,
           };
         } else {
           // Default for SHELL and other script-based tasks
@@ -279,7 +282,12 @@ const HomePage: React.FC = () => {
           environmentCode: -1, // Or fetch dynamically if needed
           processDefinitionCode: processDefinitionCode,
         };
-        await api.createSchedule(projectCode, schedulePayload);
+        const scheduleResponse = await api.createSchedule(projectCode, schedulePayload);
+        
+        // After creating the schedule, we need to set it to online
+        if (scheduleResponse && scheduleResponse.id) {
+          await api.onlineSchedule(projectCode, scheduleResponse.id);
+        }
       }
 
       message.success('工作流上线/同步成功。');

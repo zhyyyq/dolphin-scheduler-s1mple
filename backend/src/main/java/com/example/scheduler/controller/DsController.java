@@ -63,7 +63,17 @@ public class DsController {
     @PostMapping("/projects/{projectCode}/schedules")
     public ResponseEntity<?> createSchedule(@PathVariable Long projectCode, @RequestBody Map<String, Object> payload) {
         try {
-            dsService.createSchedule(projectCode, payload);
+            // The createSchedule method now returns the created schedule object, which we pass to ok()
+            return ResponseEntity.ok(dsService.createSchedule(projectCode, payload));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/projects/{projectCode}/schedules/{scheduleId}/online")
+    public ResponseEntity<?> onlineSchedule(@PathVariable Long projectCode, @PathVariable int scheduleId) {
+        try {
+            dsService.onlineSchedule(projectCode, scheduleId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());

@@ -278,7 +278,7 @@ public class DsService {
         return result;
     }
 
-    public void createSchedule(long projectCode, Map<String, Object> payload) throws Exception {
+    public Map<String, Object> createSchedule(long projectCode, Map<String, Object> payload) throws Exception {
         String url = dsUrl + "/projects/" + projectCode + "/schedules";
         HttpPost postRequest = new HttpPost(url);
         postRequest.addHeader("token", token);
@@ -298,6 +298,24 @@ public class DsService {
 
         if (responseData.getIntValue("code") != 0) {
             throw new Exception("DS API error (create schedule): " + responseData.getString("msg"));
+        }
+        
+        // Return the created schedule object
+        return responseData.getJSONObject("data").getInnerMap();
+    }
+
+    public void onlineSchedule(long projectCode, int scheduleId) throws Exception {
+        String url = dsUrl + "/projects/" + projectCode + "/schedules/" + scheduleId + "/online";
+        HttpPost postRequest = new HttpPost(url);
+        postRequest.addHeader("token", token);
+        postRequest.addHeader("Content-Type", "application/x-www-form-urlencoded"); // DS API requires this header even for empty body
+
+        CloseableHttpResponse response = httpClient.execute(postRequest);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject responseData = JSON.parseObject(responseString);
+
+        if (responseData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (online schedule): " + responseData.getString("msg"));
         }
     }
 
