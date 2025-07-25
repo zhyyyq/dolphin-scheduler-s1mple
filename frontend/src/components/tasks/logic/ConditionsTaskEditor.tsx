@@ -56,7 +56,22 @@ ConditionsTaskEditor.taskInfo = {
       label: newNodeName,
       task_type: task.type,
       type: task.type,
-      task_params: (task as any).default_params || {},
+      task_params: {
+        ...((task as any).default_params || {}),
+        dependence: {
+          relation: 'AND',
+          dependTaskList: [
+            {
+              relation: 'AND',
+              dependTaskList: [],
+              conditionResult: {
+                successNode: [],
+                failedNode: []
+              }
+            }
+          ]
+        }
+      },
       _display_type: task.type,
     };
 

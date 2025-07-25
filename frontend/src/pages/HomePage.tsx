@@ -112,7 +112,7 @@ const HomePage: React.FC = () => {
       const yamlContent = workflowDetail.yaml_content;
       const doc = yaml.parse(yamlContent);
       const workflow = doc.workflow || {};
-      let tasks = doc.tasks || [];
+      let tasks: Task[] = doc.tasks || [];
       const parameters: Parameter[] = doc.parameters || [];
 
       const paramDefinitions = new Map(parameters.map((p: Parameter) => [p.name, p]));
@@ -164,16 +164,26 @@ const HomePage: React.FC = () => {
           };
         } else if (task.type === 'CONDITIONS') {
           const params = task.task_params || {};
-          const dependTaskList = (params.dependTaskList || []).map((item: any) => ({
-            ...item,
-            nextNode: taskNameToCodeMap.get(item.nextNode),
-          }));
+          const successNode = (params.dependence?.dependTaskList?.[0]?.conditionResult?.successNode || []).map((name: string) => taskNameToCodeMap.get(name));
+          const failedNode = (params.dependence?.dependTaskList?.[0]?.conditionResult?.failedNode || []).map((name: string) => taskNameToCodeMap.get(name));
+
           taskParams = {
             localParams: params.localParams || [],
-            dependence: JSON.stringify({
-              dependTaskList: dependTaskList,
-            }),
-            rawScript: '', // Conditions tasks don't have a raw script
+            dependence: {
+              dependTaskList: [{
+                relation: "AND",
+                dependTaskList: [],
+                conditionResult: {
+                  successNode: successNode,
+                  failedNode: failedNode
+                }
+              }]
+            },
+            conditionResult: {
+              successNode: successNode,
+              failedNode: failedNode
+            },
+            rawScript: '',
           };
         } else {
           // Default for SHELL and other script-based tasks
@@ -228,7 +238,6 @@ const HomePage: React.FC = () => {
 
         const taskDeps = task.deps || [];
         if (taskDeps.length === 0) {
-          // This task has no dependencies, link it to the root (preTaskCode: 0)
           taskRelationJson.push({
             name: '',
             preTaskCode: 0,
@@ -239,18 +248,29 @@ const HomePage: React.FC = () => {
             conditionParams: {}
           });
         } else {
-          // This task has dependencies
           taskDeps.forEach((depName: string) => {
             const preTaskCode = taskNameToCodeMap.get(depName);
-            // IMPORTANT: Only create a relation if the dependency is a real task
             if (preTaskCode) {
+              const depTask = tasks.find(t => t.name === depName);
+              let conditionType = 'NONE';
+
+              if (depTask && depTask.type === 'CONDITIONS') {
+                const successNodes = depTask.task_params?.dependence?.dependTaskList?.[0]?.conditionResult?.successNode || [];
+                const failedNodes = depTask.task_params?.dependence?.dependTaskList?.[0]?.conditionResult?.failedNode || [];
+                if (successNodes.includes(task.name)) {
+                  conditionType = 'SUCCESS';
+                } else if (failedNodes.includes(task.name)) {
+                  conditionType = 'FAILURE';
+                }
+              }
+
               taskRelationJson.push({
                 name: '',
                 preTaskCode: preTaskCode,
                 preTaskVersion: 0,
                 postTaskCode: numericTaskCode,
                 postTaskVersion: 0,
-                conditionType: 'NONE',
+                conditionType: conditionType,
                 conditionParams: {}
               });
             }

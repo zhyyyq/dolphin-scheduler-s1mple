@@ -50,6 +50,7 @@ export const generateYamlStr = (
     const deps: string[] = [];
     const localParams: any[] = [];
 
+    // Get all non-parameter dependencies by iterating incoming edges
     const incomingEdges = edges.filter(edge => edge.target.cell === node.id);
     for (const edge of incomingEdges) {
       const sourceNodeData = nodeMap.get(edge.source.cell);
@@ -67,6 +68,7 @@ export const generateYamlStr = (
       }
     }
 
+    // Get all outgoing parameter connections
     const outgoingEdges = edges.filter(edge => edge.source.cell === node.id);
     for (const edge of outgoingEdges) {
       const targetNodeData = nodeMap.get(edge.target.cell);
@@ -87,6 +89,41 @@ export const generateYamlStr = (
       task_params: { ...(nodeData.task_params || {}) },
     };
 
+    // For CONDITIONS nodes, add the special 'dependence' block
+    if (nodeData.type === 'CONDITIONS') {
+      const successNode: string[] = [];
+      const failedNode: string[] = [];
+      const conditionOutgoingEdges = edges.filter(edge => edge.source.cell === node.id);
+
+      for (const edge of conditionOutgoingEdges) {
+        const targetNode = allGraphNodes.find(n => n.id === edge.target.cell);
+        if (targetNode && targetNode.data.type !== 'PARAMS') {
+          if (edge.source.port === 'out-success') {
+            successNode.push(targetNode.data.name);
+          } else if (edge.source.port === 'out-failure') {
+            failedNode.push(targetNode.data.name);
+          }
+        }
+      }
+      
+      if (!taskPayload.task_params) {
+        taskPayload.task_params = {};
+      }
+      taskPayload.task_params.dependence = {
+        relation: 'AND',
+        dependTaskList: [
+          {
+            relation: 'AND',
+            dependTaskList: [],
+            conditionResult: {
+              successNode: successNode,
+              failedNode: failedNode
+            }
+          }
+        ]
+      };
+    }
+
     if (nodeData.command !== undefined) {
       taskPayload.command = nodeData.command;
     }
@@ -97,6 +134,7 @@ export const generateYamlStr = (
       taskPayload.localParams = localParams;
     }
     
+    // Add the deps array to the payload if it's not empty
     if (deps.length > 0) {
       taskPayload.deps = deps;
     }

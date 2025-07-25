@@ -32,6 +32,8 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
         connectionPoint: 'anchor',
         allowBlank: false,
         allowMulti: 'withPort',
+        allowNode: false,
+        allowEdge: false,
         snap: { radius: 20 },
         createEdge() {
           return this.createEdge({
