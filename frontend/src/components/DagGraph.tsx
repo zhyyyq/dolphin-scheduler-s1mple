@@ -64,30 +64,22 @@ const DagGraph: React.FC<DagGraphProps> = ({ data, onNodeDoubleClick }) => {
       if (task.task_type === 'CONDITIONS') {
         nodeConfig.ports = {
           groups: {
-            in: {
+            top: {
               position: 'top',
-              attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff' } },
+              attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff', style: { visibility: 'visible' } } },
             },
-            out: {
+            bottom: {
               position: 'bottom',
-              attrs: {
-                circle: {
-                  r: 4,
-                  magnet: true,
-                  stroke: '#5F95FF',
-                  strokeWidth: 1,
-                  fill: '#fff',
-                },
-              },
+              attrs: { circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff', style: { visibility: 'visible' } } },
               label: {
                 position: 'bottom',
               }
             },
           },
           items: [
-            { id: 'in', group: 'in' },
-            { id: 'success', group: 'out', args: { dx: -40 }, attrs: { text: { text: 'Success', fill: '#52c41a' } } },
-            { id: 'failure', group: 'out', args: { dx: 40 }, attrs: { text: { text: 'Failure', fill: '#ff4d4f' } } },
+            { id: 'in', group: 'top' },
+            { id: 'success', group: 'bottom', args: { dx: -40 }, attrs: { text: { text: '成功', fill: '#52c41a' } } },
+            { id: 'failure', group: 'bottom', args: { dx: 40 }, attrs: { text: { text: '失败', fill: '#ff4d4f' } } },
           ],
         };
       }
