@@ -1,31 +1,91 @@
-import React from 'react';
-import { Form, Input } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Input, Form, Select } from 'antd';
 import { Graph } from '@antv/x6';
 import { Task } from '../../../types';
+import api from '../../../api';
 import { SettingOutlined } from '@ant-design/icons';
 
 const { TextArea } = Input;
+const { Option } = Select;
+
+interface Datasource {
+  label: string;
+  value: string;
+  id: number;
+  type: string;
+}
 
 interface ProcedureTaskEditorComponent extends React.FC {
   taskInfo: any;
 }
 
 const ProcedureTaskEditor: ProcedureTaskEditorComponent = () => {
+  const [datasources, setDatasources] = useState<Datasource[]>([]);
+  const [loading, setLoading] = useState(true);
+  const form = Form.useFormInstance();
+
+  useEffect(() => {
+    const fetchDatasources = async () => {
+      try {
+        setLoading(true);
+        const data = await api.get<Datasource[]>('/api/ds/datasources');
+        setDatasources(data);
+
+        const currentDatasourceId = form.getFieldValue('datasource');
+        if (!currentDatasourceId && data.length > 0) {
+          form.setFieldsValue({
+            datasource: data[0].id,
+            datasourceType: data[0].type,
+          });
+        } else {
+          const currentDatasourceType = form.getFieldValue('datasourceType');
+          if (currentDatasourceId && !currentDatasourceType) {
+            const matchingDs = data.find(ds => ds.id === currentDatasourceId);
+            if (matchingDs) {
+              form.setFieldsValue({ datasourceType: matchingDs.type });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch datasources", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDatasources();
+  }, [form]);
+
+  const handleDatasourceChange = (value: number, option: any) => {
+    form.setFieldsValue({
+      datasourceType: option.key,
+    });
+  };
+
   return (
     <>
-      <Form.Item
-        label="数据源名称 (Datasource Name)"
-        name="datasource_name"
-        rules={[{ required: true, message: '请输入数据源名称' }]}
-      >
-        <Input />
+      <Form.Item name="datasourceType" noStyle>
+        <Input type="hidden" />
       </Form.Item>
-      <Form.Item
-        label="方法 (Method)"
-        name="method"
-        rules={[{ required: true, message: '请输入方法' }]}
-      >
-        <TextArea rows={4} />
+
+      <Form.Item label="数据源名称" name="datasource" rules={[{ required: true, message: "请选择一个数据源" }]}>
+        <Select
+          showSearch
+          placeholder="选择或搜索数据源"
+          loading={loading}
+          optionFilterProp="label"
+          onChange={handleDatasourceChange}
+        >
+          {datasources.map(ds => (
+            <Option key={ds.type} value={ds.id} label={ds.label}>
+              {ds.label} ({ds.type})
+            </Option>
+          ))}
+        </Select>
+      </Form.Item>
+      
+      <Form.Item label="SQL Statement" name="method" rules={[{ required: true, message: "请输入 SQL 语句" }]}>
+        <TextArea rows={6} placeholder="call procedure_name(${param1}, ${param2})" />
       </Form.Item>
     </>
   );

@@ -4,6 +4,7 @@ import { MinusCircleOutlined, PlusOutlined, CloudServerOutlined } from '@ant-des
 import { Graph } from '@antv/x6';
 import { Task } from '../../../types';
 
+const { TextArea } = Input;
 const { Option } = Select;
 
 interface HttpTaskEditorProps {
@@ -33,7 +34,7 @@ const HttpTaskEditor: HttpTaskEditorComponent = ({ form, initialValues }) => {
       </Form.Item>
       <Form.Item
         label="HTTP 方法"
-        name="http_method"
+        name="httpMethod"
         rules={[{ required: true, message: '请选择 HTTP 方法' }]}
       >
         <Select>
@@ -44,20 +45,32 @@ const HttpTaskEditor: HttpTaskEditorComponent = ({ form, initialValues }) => {
         </Select>
       </Form.Item>
       <Form.Item
-        label="HTTP 检查条件"
-        name="http_check_condition"
+        label="校验条件"
+        name="httpCheckCondition"
+        initialValue="STATUS_CODE_CUSTOM"
       >
-        <Input />
+        <Select>
+          <Option value="STATUS_CODE_CUSTOM">默认响应码200</Option>
+          <Option value="BODY_CONTAINS">Body包含</Option>
+          <Option value="BODY_NOT_CONTAINS">Body不包含</Option>
+        </Select>
       </Form.Item>
+      <Form.Item
+        label="校验内容"
+        name="httpCheckContent"
+      >
+        <TextArea rows={4} placeholder="请填写校验内容" />
+      </Form.Item>
+
       <Form.Item
         label="条件"
         name="condition"
       >
         <Input />
       </Form.Item>
-      
+
       <Form.Item label="HTTP 参数">
-        <Form.List name="http_params">
+        <Form.List name="httpParams">
           {(fields, { add, remove }) => (
             <>
               {fields.map(({ key, name, ...restField }) => (
@@ -82,9 +95,8 @@ const HttpTaskEditor: HttpTaskEditorComponent = ({ form, initialValues }) => {
                     rules={[{ required: true, message: '缺少类型' }]}
                   >
                     <Select placeholder="类型" style={{ width: 120 }}>
-                      <Option value="PARAMETER">PARAMETER</Option>
-                      <Option value="HEADER">HEADER</Option>
-                      <Option value="BODY">BODY</Option>
+                      <Option value="PARAMETER">Parameter</Option>
+                      <Option value="HEADERS">Headers</Option>
                     </Select>
                   </Form.Item>
                   <MinusCircleOutlined onClick={() => remove(name)} />
@@ -99,6 +111,29 @@ const HttpTaskEditor: HttpTaskEditorComponent = ({ form, initialValues }) => {
           )}
         </Form.List>
       </Form.Item>
+
+      <Form.Item
+        label="请求Body"
+        name="httpBody"
+      >
+        <TextArea rows={4} placeholder="请填写http body,如若填写将忽略请求参数中的body类型参数" />
+      </Form.Item>
+
+      <Form.Item
+        label="连接超时 (ms)"
+        name="connectTimeout"
+        initialValue={60000}
+      >
+        <Input type="number" />
+      </Form.Item>
+
+      <Form.Item
+        label="Socket 超时 (ms)"
+        name="socketTimeout"
+        initialValue={60000}
+      >
+        <Input type="number" />
+      </Form.Item>
     </>
   );
 };
@@ -106,10 +141,22 @@ const HttpTaskEditor: HttpTaskEditorComponent = ({ form, initialValues }) => {
 HttpTaskEditor.taskInfo = {
   label: 'HTTP',
   type: 'HTTP',
-  command: 'curl http://example.com',
   category: 'general',
   icon: CloudServerOutlined,
   editor: HttpTaskEditor,
+  default_params: {
+    url: '',
+    httpMethod: 'GET',
+    httpCheckCondition: 'STATUS_CODE_CUSTOM',
+    httpCheckContent: '',
+    condition: '',
+    httpParams: [],
+    httpBody: '',
+    connectTimeout: 60000,
+    socketTimeout: 60000,
+    localParams: [],
+    resourceList: [],
+  },
   createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }) => {
     const existingNodes = graph.getNodes();
     let newNodeName = task.label;
@@ -126,7 +173,6 @@ HttpTaskEditor.taskInfo = {
       type: task.type,
       task_params: (task as any).default_params || {},
       _display_type: task.type,
-      command: task.command,
     };
 
     graph.addNode({
