@@ -71,14 +71,26 @@ ConditionsTaskEditor.taskInfo = {
             position: 'top',
             attrs: {
               circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff' },
-              text: { fill: '#666', fontSize: 12, 'text-anchor': 'middle', 'y': -10 },
+              text: { fill: '#666', fontSize: 12, y: -15 }, // Adjust y for offset
+            },
+            label: {
+              position: {
+                name: 'outside',
+                args: { y: -6, x: 18 },
+              },
             },
           },
           bottom: {
             position: 'bottom',
             attrs: {
               circle: { r: 4, magnet: true, stroke: '#5F95FF', strokeWidth: 1, fill: '#fff' },
-              text: { fontSize: 12, 'text-anchor': 'middle', 'y': 10 },
+              text: { fontSize: 12 },
+            },
+            label: {
+              position: {
+                name: 'outside',
+                args: { y: 6, x: 18 },
+              },
             },
           },
         },
