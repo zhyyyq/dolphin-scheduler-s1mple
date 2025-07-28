@@ -396,6 +396,7 @@ const WorkflowEditorPage: React.FC = () => {
           onSync={handleSyncYamlToGraph}
           yamlContent={yamlContent}
           onYamlContentChange={setYamlContent}
+          originalYaml={originalYaml}
         />
         <WorkflowContextMenu
           visible={contextMenu.visible}
