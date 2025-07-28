@@ -167,15 +167,23 @@ const WorkflowEditorPage: React.FC = () => {
               relations.push({ from: dep, to: task.name });
             }
           }
-          if (task.type === 'SWITCH' && task.task_params?.switch_conditions) {
-            for (const condition of task.task_params.switch_conditions) {
-              if (condition.target_node) {
-                relations.push({ 
-                  from: task.name, 
-                  to: condition.target_node,
-                  label: condition.condition,
+          if (task.type === 'SWITCH' && task.task_params?.switchResult) {
+            const { dependTaskList, nextNode } = task.task_params.switchResult;
+            if (dependTaskList) {
+              for (const item of dependTaskList) {
+                relations.push({
+                  from: task.name,
+                  to: item.nextNode,
+                  label: item.condition,
                 });
               }
+            }
+            if (nextNode) {
+              relations.push({
+                from: task.name,
+                to: nextNode,
+                label: '', // Default branch
+              });
             }
           }
 

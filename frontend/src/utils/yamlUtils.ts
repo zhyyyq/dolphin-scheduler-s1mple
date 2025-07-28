@@ -127,25 +127,33 @@ export const generateYamlStr = (
         };
       }
     } else if (nodeData.type === 'SWITCH') {
-      const switchConditions: { condition: string, target_node: string }[] = [];
+      const dependTaskList: { condition: string, nextNode: string }[] = [];
       const switchOutgoingEdges = edges.filter(edge => edge.source.cell === node.id);
+      let defaultBranchNode = '';
 
       for (const edge of switchOutgoingEdges) {
         const targetNode = allGraphNodes.find(n => n.id === edge.target.cell);
         if (targetNode && targetNode.data.type !== 'PARAMS') {
           const condition = edge.labels?.[0]?.attrs?.label?.text || '';
-          switchConditions.push({
-            condition: condition,
-            target_node: targetNode.data.name,
-          });
+          if (condition) {
+            dependTaskList.push({
+              condition: condition,
+              nextNode: targetNode.data.name,
+            });
+          } else {
+            defaultBranchNode = targetNode.data.name;
+          }
         }
       }
 
-      if (switchConditions.length > 0) {
+      if (dependTaskList.length > 0 || defaultBranchNode) {
         if (!taskPayload.task_params) {
           taskPayload.task_params = {};
         }
-        taskPayload.task_params.switch_conditions = switchConditions;
+        taskPayload.task_params.switchResult = {
+          dependTaskList: dependTaskList,
+          nextNode: defaultBranchNode,
+        };
       }
     }
 
