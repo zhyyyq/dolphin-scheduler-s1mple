@@ -53,7 +53,7 @@ const WorkflowInstanceDetailPage: React.FC = () => {
     fetchInstanceDetail();
   }, [fetchInstanceDetail]);
 
-  const showLog = async (taskInstanceId: number) => {
+  const showLog = useCallback(async (taskInstanceId: number) => {
     setLogVisible(true);
     setLogLoading(true);
     try {
@@ -65,7 +65,11 @@ const WorkflowInstanceDetailPage: React.FC = () => {
     } finally {
       setLogLoading(false);
     }
-  };
+  }, []);
+
+  const handleNodeClick = useCallback((node: any) => {
+    showLog(node.id);
+  }, [showLog]);
 
   const graphData = useMemo(() => {
     if (!instance || !instance.dagData || !instance.dagData.processDefinition) {
@@ -151,8 +155,8 @@ const WorkflowInstanceDetailPage: React.FC = () => {
           </Card>
         </Col>
         <Col span={12}>
-          <Card title="任务图" style={{ height: '500px'}}>
-            <InstanceDagGraph nodes={graphData.nodes} edges={graphData.edges} onNodeClick={(node) => showLog(node.id)} />
+          <Card title="任务图" style={{ height: '500px'}} className='instance-dag-graph'>
+            <InstanceDagGraph nodes={graphData.nodes} edges={graphData.edges} onNodeClick={handleNodeClick} />
           </Card>
         </Col>
         <Col span={12}>

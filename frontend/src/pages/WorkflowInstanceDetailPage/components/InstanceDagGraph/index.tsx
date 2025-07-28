@@ -58,7 +58,9 @@ const InstanceDagGraph: React.FC<InstanceDagGraphProps> = ({ nodes, edges, onNod
       }
     });
     console.log('Graph layout completed:', g);
-    graph.centerContent();
+    setTimeout(() => {
+      graph.centerContent();
+    }, 0);
   };
 
   useEffect(() => {
@@ -68,6 +70,8 @@ const InstanceDagGraph: React.FC<InstanceDagGraphProps> = ({ nodes, edges, onNod
         container: containerRef.current,
         panning: true,
         mousewheel: true,
+        autoResize: true,
+        grid: true,
         background: {
           color: '#F2F7FA',
         },
@@ -132,7 +136,7 @@ const InstanceDagGraph: React.FC<InstanceDagGraphProps> = ({ nodes, edges, onNod
     }
   }, [nodes, edges]);
 
-  return <div ref={containerRef}  />;
+  return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
 };
 
 export default InstanceDagGraph;
