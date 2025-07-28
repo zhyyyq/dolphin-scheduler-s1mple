@@ -117,9 +117,13 @@ export interface ExecutionResult {
 export interface WorkflowInstance {
   id: number;
   name: string;
-  state: 'SUCCESS' | 'FAILURE' | 'RUNNING_EXECUTION' | 'STOP' | 'KILL';
+  state: 'SUCCESS' | 'FAILURE' | 'RUNNING_EXECUTION' | 'STOP' | 'KILL' | string;
   startTime: string;
   endTime: string;
+  duration: string;
+  processDefinition: {
+    projectCode: number;
+  };
 }
 
 export interface DashboardStats {

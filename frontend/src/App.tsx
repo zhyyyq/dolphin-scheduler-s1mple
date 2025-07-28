@@ -10,6 +10,7 @@ import WorkflowEditorPage from './pages/WorkflowEditorPage';
 import WorkflowViewerPage from './pages/WorkflowViewerPage';
 import WorkflowHistoryPage from './pages/WorkflowHistoryPage';
 import WorkflowInstancesPage from './pages/WorkflowInstancesPage';
+import WorkflowInstanceDetailPage from './pages/WorkflowInstanceDetailPage';
 import FileUploadPage from './pages/FileUploadPage';
 
 import './App.css';
@@ -71,6 +72,7 @@ const App: React.FC = () => {
             <Route path="/workflow/:workflow_uuid/history" element={<WorkflowHistoryPage />} />
             <Route path="/project/:projectCode/workflow/:workflowCode" element={<WorkflowViewerPage />} />
             <Route path="/instances" element={<WorkflowInstancesPage />} />
+            <Route path="/instances/:projectCode/:instanceId" element={<WorkflowInstanceDetailPage />} />
             <Route path="/upload" element={<FileUploadPage />} />
           </Routes>
         </Content>

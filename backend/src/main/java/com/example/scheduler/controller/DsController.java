@@ -110,4 +110,24 @@ public class DsController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @GetMapping("/projects/{projectCode}/instances/{instanceId}")
+    public ResponseEntity<?> getWorkflowInstanceDetail(
+            @PathVariable Long projectCode,
+            @PathVariable Integer instanceId) {
+        try {
+            return ResponseEntity.ok(dsService.getWorkflowInstanceDetail(projectCode, instanceId));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/log/{taskInstanceId}")
+    public ResponseEntity<?> getTaskInstanceLog(@PathVariable Integer taskInstanceId) {
+        try {
+            return ResponseEntity.ok(dsService.getTaskInstanceLog(taskInstanceId));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 }

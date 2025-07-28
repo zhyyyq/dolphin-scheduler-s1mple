@@ -607,6 +607,44 @@ public class DsService {
         return data.getJSONObject("data").getInnerMap();
     }
 
+    public Map<String, Object> getWorkflowInstanceDetail(Long projectCode, Integer instanceId) throws Exception {
+        // 1. Get process instance detail
+        HttpGet instanceRequest = new HttpGet(dsUrl + "/projects/" + projectCode + "/process-instances/" + instanceId);
+        instanceRequest.addHeader("token", token);
+        CloseableHttpResponse instanceResponse = httpClient.execute(instanceRequest);
+        String instanceResponseString = EntityUtils.toString(instanceResponse.getEntity());
+        JSONObject instanceData = JSON.parseObject(instanceResponseString);
+        if (instanceData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (process-instance detail): " + instanceData.getString("msg"));
+        }
+        Map<String, Object> result = instanceData.getJSONObject("data").getInnerMap();
+
+        // 2. Get task list for the instance
+        HttpGet tasksRequest = new HttpGet(dsUrl + "/projects/" + projectCode + "/task-instances?processInstanceId=" + instanceId + "&pageNo=1&pageSize=1000");
+        tasksRequest.addHeader("token", token);
+        CloseableHttpResponse tasksResponse = httpClient.execute(tasksRequest);
+        String tasksResponseString = EntityUtils.toString(tasksResponse.getEntity());
+        JSONObject tasksData = JSON.parseObject(tasksResponseString);
+        if (tasksData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (task-instances): " + tasksData.getString("msg"));
+        }
+        result.put("tasks", tasksData.getJSONObject("data").getJSONArray("totalList").toJavaList(Map.class));
+
+        return result;
+    }
+
+    public String getTaskInstanceLog(Integer taskInstanceId) throws Exception {
+        HttpGet logRequest = new HttpGet(dsUrl + "/log/detail?taskInstanceId=" + taskInstanceId + "&skipLineNum=0&limit=10000");
+        logRequest.addHeader("token", token);
+        CloseableHttpResponse logResponse = httpClient.execute(logRequest);
+        String logResponseString = EntityUtils.toString(logResponse.getEntity());
+        JSONObject logData = JSON.parseObject(logResponseString);
+        if (logData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (log detail): " + logData.getString("msg"));
+        }
+        return logData.getString("data");
+    }
+
     private void resolveFilePlaceholdersRecursive(Object object) {
         if (object instanceof Map) {
             Map<String, Object> map = (Map<String, Object>) object;

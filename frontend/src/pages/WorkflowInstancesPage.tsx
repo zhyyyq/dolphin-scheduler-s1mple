@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Table, Spin, Alert, Typography, Tag, Select, Input, Button, Form, Row, Col } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { WorkflowInstance } from '../types';
@@ -9,11 +9,19 @@ const { Title } = Typography;
 const { Option } = Select;
 
 const STATE_MAP: { [key: string]: string } = {
-  SUCCESS: '成功',
-  FAILURE: '失败',
+  SUBMIT_SUCCESS: '提交成功',
   RUNNING_EXECUTION: '运行中',
+  READY_PAUSE: '准备暂停',
+  PAUSE: '暂停',
+  READY_STOP: '准备停止',
   STOP: '停止',
-  KILL: '终止',
+  FAILURE: '失败',
+  SUCCESS: '成功',
+  DELAY_EXECUTION: '延迟执行',
+  SERIAL_WAIT: '串行等待',
+  READY_BLOCK: '准备阻塞',
+  BLOCK: '阻塞',
+  WAIT_TO_RUN: '等待运行',
 };
 
 const WorkflowInstancesPage: React.FC = () => {
@@ -109,7 +117,17 @@ const WorkflowInstancesPage: React.FC = () => {
   };
 
   const columns: ColumnsType<WorkflowInstance> = useMemo(() => [
-    { title: '名称', dataIndex: 'name', key: 'name' },
+    {
+      title: '名称',
+      dataIndex: 'name',
+      key: 'name',
+      render: (text: string, record: WorkflowInstance) => {
+        if (record.processDefinition) {
+          return <Link to={`/instances/${record.processDefinition.projectCode}/${record.id}`}>{text}</Link>;
+        }
+        return text;
+      },
+    },
     {
       title: '状态',
       dataIndex: 'state',
@@ -154,11 +172,19 @@ const WorkflowInstancesPage: React.FC = () => {
           <Col>
             <Form.Item name="state" label="状态">
               <Select style={{ width: 150 }} allowClear>
-                <Option value="SUCCESS">成功</Option>
-                <Option value="FAILURE">失败</Option>
+                <Option value="SUBMIT_SUCCESS">提交成功</Option>
                 <Option value="RUNNING_EXECUTION">运行中</Option>
+                <Option value="READY_PAUSE">准备暂停</Option>
+                <Option value="PAUSE">暂停</Option>
+                <Option value="READY_STOP">准备停止</Option>
                 <Option value="STOP">停止</Option>
-                <Option value="KILL">终止</Option>
+                <Option value="FAILURE">失败</Option>
+                <Option value="SUCCESS">成功</Option>
+                <Option value="DELAY_EXECUTION">延迟执行</Option>
+                <Option value="SERIAL_WAIT">串行等待</Option>
+                <Option value="READY_BLOCK">准备阻塞</Option>
+                <Option value="BLOCK">阻塞</Option>
+                <Option value="WAIT_TO_RUN">等待运行</Option>
               </Select>
             </Form.Item>
           </Col>
