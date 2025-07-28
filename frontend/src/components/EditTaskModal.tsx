@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Input, Form, Switch, Space, Button } from 'antd';
+import { Modal, Input, Form, Switch, Space, Button, InputNumber } from 'antd';
 import { Task } from '../types';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
@@ -157,6 +157,12 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, onC
           <Input />
         </Form.Item>
         {renderTaskEditor()}
+        <Form.Item label="失败重试次数" name="failRetryTimes" initialValue={0}>
+          <InputNumber min={0} style={{ width: '100%' }} addonAfter="次" />
+        </Form.Item>
+        <Form.Item label="失败重试间隔" name="failRetryInterval" initialValue={1}>
+          <InputNumber min={1} style={{ width: '100%' }} addonAfter="分" />
+        </Form.Item>
       </Form>
     </Modal>
   );

@@ -145,6 +145,8 @@ HttpTaskEditor.taskInfo = {
   icon: CloudServerOutlined,
   editor: HttpTaskEditor,
   default_params: {
+    failRetryTimes: 0,
+    failRetryInterval: 1,
     url: '',
     httpMethod: 'GET',
     httpCheckCondition: 'STATUS_CODE_CUSTOM',

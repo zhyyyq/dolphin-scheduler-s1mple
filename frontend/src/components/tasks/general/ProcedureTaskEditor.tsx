@@ -94,6 +94,10 @@ const ProcedureTaskEditor: ProcedureTaskEditorComponent = () => {
 ProcedureTaskEditor.taskInfo = {
   label: '存储过程',
   type: 'PROCEDURE',
+  default_params: {
+    failRetryTimes: 0,
+    failRetryInterval: 1,
+  },
   command: '',
   category: 'general',
   icon: SettingOutlined,

@@ -65,6 +65,8 @@ const createLogicGateNode = (graph: Graph, task: any, contextMenu: { px: number,
     label: newNodeName,
     task_type: task.type,
     type: task.type,
+    failRetryTimes: 0,
+    failRetryInterval: 1,
     task_params: {
       check_interval: 10,
       failure_strategy: 'wait',

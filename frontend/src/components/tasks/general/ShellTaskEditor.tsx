@@ -27,6 +27,10 @@ const ShellTaskEditor: ShellTaskEditorComponent = () => {
 ShellTaskEditor.taskInfo = {
   label: 'Shell',
   type: 'SHELL',
+  default_params: {
+    failRetryTimes: 0,
+    failRetryInterval: 1,
+  },
   command: 'echo "Hello"',
   category: 'general',
   icon: CodeOutlined,

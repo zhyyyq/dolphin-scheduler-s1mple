@@ -86,6 +86,8 @@ export interface Task {
   deps?: string[];
   _display_type?: string;
   downstream?: Record<string, string[]>;
+  failRetryTimes?: number;
+  failRetryInterval?: number;
 }
 
 export interface Relation {

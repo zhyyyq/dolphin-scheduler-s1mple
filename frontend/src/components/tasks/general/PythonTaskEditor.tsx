@@ -29,6 +29,10 @@ const PythonTaskEditor: PythonTaskEditorComponent = () => {
 PythonTaskEditor.taskInfo = {
   label: 'Python',
   type: 'PYTHON',
+  default_params: {
+    failRetryTimes: 0,
+    failRetryInterval: 1,
+  },
   command: 'print("Hello")',
   category: 'general',
   icon: CodeOutlined,

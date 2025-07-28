@@ -116,6 +116,8 @@ SqlTaskEditor.taskInfo = {
   icon: DatabaseOutlined,
   editor: SqlTaskEditor,
   default_params: {
+    failRetryTimes: 0,
+    failRetryInterval: 1,
     sqlType: '0',
     sql: 'SELECT * FROM a',
     displayRows: 10,
