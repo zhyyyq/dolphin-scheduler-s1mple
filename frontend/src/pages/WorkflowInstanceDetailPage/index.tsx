@@ -2,10 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Spin, Alert, Typography, Row, Col, Card, Descriptions, Tag, Modal, Button, Table } from 'antd';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import InstanceDagGraph from '../components/InstanceDagGraph';
-import api from '../api';
+import InstanceDagGraph from './components/InstanceDagGraph';
+import api from '@/api';
+import './index.less';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 const STATE_MAP: { [key: string]: { text: string; color: string; icon: React.ReactNode } } = {
   SUCCESS: { text: '成功', color: 'success', icon: <CheckCircleOutlined /> },
@@ -67,7 +68,9 @@ const WorkflowInstanceDetailPage: React.FC = () => {
   };
 
   const graphData = useMemo(() => {
-    if (!instance) return { nodes: [], edges: [] };
+    if (!instance || !instance.dagData || !instance.dagData.processDefinition) {
+      return { nodes: [], edges: [] };
+    }
     const nodes = instance.tasks.map((task: any) => ({
       id: task.taskCode.toString(),
       label: task.name,
@@ -77,10 +80,13 @@ const WorkflowInstanceDetailPage: React.FC = () => {
         stroke: task.state === 'SUCCESS' ? '#52c41a' : task.state === 'FAILURE' ? '#f5222d' : '#1890ff',
       },
     }));
-    const edges = JSON.parse(instance.processDefinition.locations).map((loc: any) => ({
-      source: loc.preTaskCode.toString(),
-      target: loc.postTaskCode.toString(),
-    }));
+    const relations = instance.dagData.processTaskRelationList || [];
+    const edges = relations
+      .filter((rel: any) => rel.preTaskCode && rel.postTaskCode)
+      .map((rel: any) => ({
+        source: rel.preTaskCode.toString(),
+        target: rel.postTaskCode.toString(),
+      }));
     return { nodes, edges };
   }, [instance]);
 
@@ -135,13 +141,17 @@ const WorkflowInstanceDetailPage: React.FC = () => {
               <Descriptions.Item label="结束时间">{instance.endTime}</Descriptions.Item>
               <Descriptions.Item label="运行时长">{instance.duration}</Descriptions.Item>
               <Descriptions.Item label="工作流定义">
-                <Link to={`/workflow/edit/${instance.processDefinition.code}`}>{instance.processDefinition.name}</Link>
+                {instance.dagData && instance.dagData.processDefinition ? (
+                  <Link to={`/workflow/edit/${instance.dagData.processDefinition.code}`}>{instance.dagData.processDefinition.name}</Link>
+                ) : (
+                  'N/A'
+                )}
               </Descriptions.Item>
             </Descriptions>
           </Card>
         </Col>
         <Col span={12}>
-          <Card title="任务图" style={{ height: '500px' }}>
+          <Card title="任务图" style={{ height: '500px'}}>
             <InstanceDagGraph nodes={graphData.nodes} edges={graphData.edges} onNodeClick={(node) => showLog(node.id)} />
           </Card>
         </Col>

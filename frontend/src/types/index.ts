@@ -115,12 +115,14 @@ export interface ExecutionResult {
 }
 
 export interface WorkflowInstance {
+  projectCode: any;
   id: number;
   name: string;
   state: 'SUCCESS' | 'FAILURE' | 'RUNNING_EXECUTION' | 'STOP' | 'KILL' | string;
   startTime: string;
   endTime: string;
   duration: string;
+  processDefinitionCode: number;
   processDefinition: {
     projectCode: number;
   };

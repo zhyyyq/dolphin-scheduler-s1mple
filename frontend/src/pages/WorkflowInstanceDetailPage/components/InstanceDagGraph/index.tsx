@@ -57,15 +57,15 @@ const InstanceDagGraph: React.FC<InstanceDagGraphProps> = ({ nodes, edges, onNod
         node.position(pos.x, pos.y);
       }
     });
-
+    console.log('Graph layout completed:', g);
     graph.centerContent();
   };
 
   useEffect(() => {
     if (!graphRef.current && containerRef.current) {
+      console.log('Initializing graph in container:', containerRef.current);
       const graph = new Graph({
         container: containerRef.current,
-        autoResize: true,
         panning: true,
         mousewheel: true,
         background: {
@@ -73,7 +73,7 @@ const InstanceDagGraph: React.FC<InstanceDagGraphProps> = ({ nodes, edges, onNod
         },
         interacting: {
           nodeMovable: false,
-        },
+        }
       });
       graphRef.current = graph;
 
@@ -94,6 +94,7 @@ const InstanceDagGraph: React.FC<InstanceDagGraphProps> = ({ nodes, edges, onNod
 
   useEffect(() => {
     if (graphRef.current && nodes && edges) {
+      graphRef.current.clearCells(); // Clear previous graph elements
       const graphNodes = nodes.map(node => ({
         id: node.id,
         shape: 'rect',
@@ -131,7 +132,7 @@ const InstanceDagGraph: React.FC<InstanceDagGraphProps> = ({ nodes, edges, onNod
     }
   }, [nodes, edges]);
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
+  return <div ref={containerRef}  />;
 };
 
 export default InstanceDagGraph;

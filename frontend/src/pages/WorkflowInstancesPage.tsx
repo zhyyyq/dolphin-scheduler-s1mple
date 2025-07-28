@@ -122,8 +122,8 @@ const WorkflowInstancesPage: React.FC = () => {
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: WorkflowInstance) => {
-        if (record.processDefinition) {
-          return <Link to={`/instances/${record.processDefinition.projectCode}/${record.id}`}>{text}</Link>;
+        if (record.processDefinitionCode) {
+          return <Link to={`/instances/${record.projectCode}/${record.id}`}>{text}</Link>;
         }
         return text;
       },
