@@ -23,10 +23,15 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, onC
     if (open && task) {
       // Deep copy the task and its params to prevent shared state issues
       const taskCopy = JSON.parse(JSON.stringify(task));
-      form.setFieldsValue({
+      const formValues = {
         ...taskCopy,
         ...taskCopy.task_params,
-      });
+      };
+      // For Python tasks, the script is stored in 'command', but the editor uses 'definition'.
+      if (task.task_type === 'PYTHON') {
+        formValues.definition = task.command;
+      }
+      form.setFieldsValue(formValues);
     }
   }, [open, task, form]);
 
@@ -38,8 +43,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, onC
     form.validateFields().then(values => {
       const { name, command, definition, ...other_values } = values;
       
-      // Start with the original task_params and overwrite with form values
-      const updated_task_params = { ...(task?.task_params || {}), ...other_values };
+      // Deep copy the original task_params to avoid mutating the shared object
+      const updated_task_params = { ...JSON.parse(JSON.stringify(task?.task_params || {})), ...other_values };
 
       // For Python tasks, the script comes from the 'definition' field.
       // We map it to the 'command' property for standardization in the YAML.
