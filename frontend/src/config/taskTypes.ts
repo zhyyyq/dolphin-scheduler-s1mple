@@ -33,4 +33,5 @@ export const taskTypes = editors.map(editor => editor.taskInfo);
 export const taskCategories = [
   { key: 'general', label: '通用' },
   { key: 'logic', label: '逻辑' },
+  { key: '依赖', label: '依赖' },
 ];

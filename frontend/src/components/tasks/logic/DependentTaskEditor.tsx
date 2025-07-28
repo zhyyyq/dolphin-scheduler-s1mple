@@ -189,7 +189,7 @@ DependentTaskEditor.taskInfo = {
   label: '依赖',
   type: 'DEPENDENT',
   command: '',
-  category: 'logic',
+  category: '依赖',
   icon: NodeIndexOutlined,
   editor: DependentTaskEditor,
   createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }) => {

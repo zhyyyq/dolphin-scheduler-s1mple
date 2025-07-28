@@ -87,7 +87,7 @@ LogicGateTaskEditor.taskInfo = {
   AND: {
     label: '与 (AND)',
     type: 'AND',
-    category: 'logic',
+    category: '依赖',
     icon: NodeIndexOutlined,
     editor: LogicGateTaskEditor,
     createNode: createLogicGateNode,
@@ -95,7 +95,7 @@ LogicGateTaskEditor.taskInfo = {
   OR: {
     label: '或 (OR)',
     type: 'OR',
-    category: 'logic',
+    category: '依赖',
     icon: NodeIndexOutlined,
     editor: LogicGateTaskEditor,
     createNode: createLogicGateNode,
