@@ -214,6 +214,13 @@ const HomePage: React.FC = () => {
                 localParams: params.localParams || [],
                 resourceList: [],
             };
+        } else if (task.type === 'SUB_PROCESS') {
+          const localParams = originalTaskParams.localParams || [];
+          taskParams = {
+            localParams: localParams,
+            resourceList: [],
+            processDefinitionCode: task.task_params?.processDefinitionCode || 0,
+          };
         } else {
           const rawScript = task.command || '';
           const localParams = originalTaskParams.localParams || [];
