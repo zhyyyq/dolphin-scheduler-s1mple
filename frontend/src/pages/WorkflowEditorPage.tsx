@@ -120,8 +120,9 @@ const WorkflowEditorPage: React.FC = () => {
 
         const localParamNodes: any[] = [];
         tasks.forEach((task: any) => {
-          if (task.localParams) {
-            task.localParams.forEach((p: any) => {
+          const params = task.localParams || task.task_params?.localParams;
+          if (params) {
+            params.forEach((p: any) => {
               // Avoid duplicating nodes if they are already defined globally
               if (!globalParamNodes.some((gp: any) => gp.name === p.prop) && !localParamNodes.some((lp: any) => lp.name === p.prop)) {
                 localParamNodes.push({
@@ -150,8 +151,9 @@ const WorkflowEditorPage: React.FC = () => {
               relations.push({ from: dep, to: task.name });
             }
           }
-          if (task.localParams) {
-            for (const param of task.localParams) {
+          const params = task.localParams || task.task_params?.localParams;
+          if (params) {
+            for (const param of params) {
               if (param.direct === 'IN') {
                 relations.push({ from: param.prop, to: task.name });
               } else { // OUT
@@ -220,8 +222,9 @@ const WorkflowEditorPage: React.FC = () => {
 
       const localParamNodes: any[] = [];
       tasks.forEach((task: any) => {
-        if (task.localParams) {
-          task.localParams.forEach((p: any) => {
+        const params = task.localParams || task.task_params?.localParams;
+        if (params) {
+          params.forEach((p: any) => {
             if (!globalParamNodes.some((gp: any) => gp.name === p.prop) && !localParamNodes.some((lp: any) => lp.name === p.prop)) {
               localParamNodes.push({
                 name: p.prop,
@@ -248,8 +251,9 @@ const WorkflowEditorPage: React.FC = () => {
             relations.push({ from: dep, to: task.name });
           }
         }
-        if (task.localParams) {
-          for (const param of task.localParams) {
+        const params = task.localParams || task.task_params?.localParams;
+        if (params) {
+          for (const param of params) {
             if (param.direct === 'IN') {
               relations.push({ from: param.prop, to: task.name });
             } else { // OUT
