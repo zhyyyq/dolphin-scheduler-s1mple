@@ -152,6 +152,35 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
         </Form.List>
       )}
 
+      <Form.Item
+        label="检查间隔"
+        name={['denpendence', 'check_interval']}
+        initialValue={10}
+      >
+        <InputNumber min={1} addonAfter="秒" style={{ width: '100%' }} />
+      </Form.Item>
+
+      <Form.Item
+        label="依赖失败策略"
+        name={['denpendence', 'failure_strategy']}
+        initialValue="wait"
+      >
+        <Radio.Group>
+          <Radio value="fail">失败</Radio>
+          <Radio value="wait">等待</Radio>
+        </Radio.Group>
+      </Form.Item>
+
+      {denpendence?.failure_strategy === 'wait' && (
+        <Form.Item
+          label="依赖失败等待时间"
+          name={['denpendence', 'failure_waiting_time']}
+          initialValue={30}
+          rules={[{ required: true, message: '请输入等待时间' }]}
+        >
+          <InputNumber min={1} addonAfter="分" style={{ width: '100%' }} />
+        </Form.Item>
+      )}
     </div>
   );
 };
@@ -182,6 +211,9 @@ DependentTaskEditor.taskInfo = {
           type: 'workflow',
           date_unit: 'day',
           date_value: 'today',
+          check_interval: 10,
+          failure_strategy: 'wait',
+          failure_waiting_time: 30,
         },
       },
       _display_type: task.type,

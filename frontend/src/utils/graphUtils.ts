@@ -130,8 +130,45 @@ export const compileGraph = (graph: Graph) => {
     }
   }
 
-  // Final cleanup
-  const tasks = currentNodes.map(node => node.getData());
+  // Final cleanup: transform any remaining standalone DEPENDENT nodes
+  const tasks = currentNodes.map(node => {
+    const taskData = node.getData();
+    if (taskData.type === 'DEPENDENT' && !taskData.task_params.denpendence.dependTaskList) {
+      // This is a standalone, un-compiled DEPENDENT node. Compile it now.
+      const dep = taskData.task_params.denpendence;
+      const dependItem = {
+        dependentType: 'DEPENDENT_ON_WORKFLOW',
+        projectCode: dep.project,
+        definitionCode: dep.workflow,
+        depTaskCode: 0,
+        cycle: dep.date_unit,
+        dateValue: dep.date_value,
+        parameterPassing: !!dep.pass_params,
+      };
+      
+      const compiledDependence = {
+        relation: 'AND', // Default for a single dependency
+        dependTaskList: [{
+          relation: 'AND',
+          dependItemList: [dependItem]
+        }],
+        // Use the node's own config since it's standalone
+        failurePolicy: dep.failure_strategy === 'fail' ? 'DEPENDENT_FAILURE_FAILURE' : 'DEPENDENT_FAILURE_WAITING',
+        failureWaitingTime: dep.failure_waiting_time || 30,
+        checkInterval: dep.check_interval || 10,
+      };
+
+      return {
+        ...taskData,
+        task_params: {
+          ...taskData.task_params,
+          denpendence: compiledDependence,
+        }
+      };
+    }
+    return taskData;
+  });
+
   const taskRelations = currentEdges.map(edge => {
     const sourceNode = currentNodes.find(n => n.id === edge.getSourceCellId());
     const targetNode = currentNodes.find(n => n.id === edge.getTargetCellId());
