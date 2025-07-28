@@ -1,51 +1,25 @@
 import React from 'react';
-import { Form, Input, Button, Space } from 'antd';
-import { MinusCircleOutlined, PlusOutlined, ForkOutlined } from '@ant-design/icons';
+import { ForkOutlined } from '@ant-design/icons';
 import { Task } from '../../../types';
 import { Graph } from '@antv/x6';
+import { Alert } from 'antd';
 
 interface SwitchTaskEditorProps {
   initialValues: Task;
-  allTasks: Task[]; // Expect a list of all tasks in the workflow
 }
 
 interface SwitchTaskEditorComponent extends React.FC<SwitchTaskEditorProps> {
   taskInfo: any;
 }
 
-const SwitchTaskEditor: SwitchTaskEditorComponent = ({ initialValues, allTasks }) => {
+const SwitchTaskEditor: SwitchTaskEditorComponent = ({ initialValues }) => {
   return (
-    <Form.List name="switch_conditions">
-      {(fields, { add, remove }) => (
-        <>
-          {fields.map(({ key, name, ...restField }) => (
-            <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-              <Form.Item
-                {...restField}
-                name={[name, 'condition']}
-                rules={[{ required: true, message: '请输入条件' }]}
-                style={{ width: '450px' }}
-              >
-                <Input placeholder="Condition (e.g., ${status} == 'done')" />
-              </Form.Item>
-              <Form.Item
-                {...restField}
-                name={[name, 'target_node']}
-                style={{ display: 'none' }}
-              >
-                <Input />
-              </Form.Item>
-              <MinusCircleOutlined onClick={() => remove(name)} />
-            </Space>
-          ))}
-          <Form.Item>
-            <Button type="dashed" onClick={() => add({ condition: '', target_node: '' })} block icon={<PlusOutlined />}>
-              添加Case
-            </Button>
-          </Form.Item>
-        </>
-      )}
-    </Form.List>
+    <Alert
+      message="分支逻辑配置"
+      description="请通过在画布上连接 Switch 节点到其他节点来创建分支，然后双击连线来编辑分支的 Case 条件。条件为空的连线将作为 Default 分支。"
+      type="info"
+      showIcon
+    />
   );
 };
 

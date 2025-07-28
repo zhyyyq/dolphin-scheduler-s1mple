@@ -10,10 +10,11 @@ import { taskTypes } from '../config/taskTypes';
 interface UseGraphProps {
   container: HTMLDivElement | null;
   onNodeDoubleClick?: (node: any) => void;
+  onEdgeDoubleClick?: (edge: any) => void;
   onBlankContextMenu: (e: any, x: number, y: number) => void;
 }
 
-export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: UseGraphProps) => {
+export const useGraph = ({ container, onNodeDoubleClick, onEdgeDoubleClick, onBlankContextMenu }: UseGraphProps) => {
   const [graph, setGraph] = useState<Graph | null>(null);
   const graphRef = useRef<Graph | null>(null);
 
@@ -45,6 +46,9 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
               },
             },
             zIndex: -1,
+            label: {
+              text: '',
+            },
           });
         },
       },
@@ -116,6 +120,9 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     if (onNodeDoubleClick) {
       graphInstance.on('node:dblclick', ({ node }) => onNodeDoubleClick(node));
     }
+    if (onEdgeDoubleClick) {
+      graphInstance.on('edge:dblclick', ({ edge }) => onEdgeDoubleClick(edge));
+    }
     graphInstance.on('blank:contextmenu', ({ e, x, y }) => onBlankContextMenu(e, x, y));
     graphInstance.on('node:contextmenu', ({ e }) => e.preventDefault());
     graphInstance.on('edge:contextmenu', ({ e }) => e.preventDefault());
@@ -148,11 +155,11 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     return () => {
       graphInstance.dispose();
     };
-  }, [container, onNodeDoubleClick, onBlankContextMenu]);
+  }, [container, onNodeDoubleClick, onEdgeDoubleClick, onBlankContextMenu]);
 
   const loadGraphData = useCallback((
     nodes: (Task & { label?: string })[],
-    relations: { from: string; to: string; sourcePort?: string; targetPort?: string }[] = [],
+    relations: { from: string; to: string; sourcePort?: string; targetPort?: string; label?: string }[] = [],
     locations: { taskCode: string, x: number, y: number }[] | null = null
   ) => {
     const currentGraph = graphRef.current;
@@ -188,7 +195,7 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     });
 
     // Create all edges based on relations
-    relations.forEach(({ from, to, sourcePort: relSourcePort, targetPort: relTargetPort }) => {
+    relations.forEach(({ from, to, sourcePort: relSourcePort, targetPort: relTargetPort, label }) => {
       const sourceNode = nodeMap.get(from);
       const targetNode = nodeMap.get(to);
 
@@ -214,6 +221,9 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
           zIndex: -1,
           router: { name: 'manhattan' },
           connector: { name: 'rounded' },
+          label: {
+            text: label || '',
+          },
         });
       }
     });

@@ -9,6 +9,7 @@ import { useGraph } from '../hooks/useGraph';
 import { WorkflowToolbar } from '../components/WorkflowToolbar';
 import EditTaskModal from '../components/EditTaskModal';
 import EditParamNodeModal from '../components/EditParamNodeModal';
+import EditEdgeLabelModal from '../components/EditEdgeLabelModal';
 import { ViewYamlModal } from '../components/ViewYamlModal';
 import { WorkflowContextMenu } from '../components/WorkflowContextMenu';
 import { taskTypes } from '../config/taskTypes';
@@ -30,6 +31,7 @@ const WorkflowEditorPage: React.FC = () => {
   const [yamlContent, setYamlContent] = useState('');
   const [currentTaskNode, setCurrentTaskNode] = useState<any>(null);
   const [currentParamNode, setCurrentParamNode] = useState<any>(null);
+  const [currentEdge, setCurrentEdge] = useState<any>(null);
   const [allTasksForModal, setAllTasksForModal] = useState<Task[]>([]);
   const [nodeName, setNodeName] = useState('');
   const [nodeCommand, setNodeCommand] = useState('');
@@ -45,9 +47,17 @@ const WorkflowEditorPage: React.FC = () => {
     setContextMenu({ visible: true, x: e.clientX, y: e.clientY, px: x, py: y });
   }, []);
 
+  const handleEdgeDoubleClick = useCallback((edge: any) => {
+    const sourceNode = edge.getSourceNode();
+    if (sourceNode && sourceNode.getData().type === 'SWITCH') {
+      setCurrentEdge(edge);
+    }
+  }, []);
+
   const { graph, loadGraphData, autoLayout } = useGraph({
     container: container,
     onBlankContextMenu: handleBlankContextMenu,
+    onEdgeDoubleClick: handleEdgeDoubleClick,
   });
 
   useEffect(() => {
@@ -144,7 +154,7 @@ const WorkflowEditorPage: React.FC = () => {
         const allNodes = [...tasks, ...globalParamNodes, ...localParamNodes];
         
         const locations = workflowData.locations ? JSON.parse(workflowData.locations) : null;
-        const relations: { from: string, to: string, sourcePort?: string, targetPort?: string }[] = [];
+        const relations: { from: string, to: string, sourcePort?: string, targetPort?: string, label?: string }[] = [];
         const conditionTasks = new Set(tasks.filter((t: any) => t.type === 'CONDITIONS').map((t: any) => t.name));
 
         for (const task of tasks) {
@@ -155,6 +165,17 @@ const WorkflowEditorPage: React.FC = () => {
                 continue;
               }
               relations.push({ from: dep, to: task.name });
+            }
+          }
+          if (task.type === 'SWITCH' && task.task_params?.switch_conditions) {
+            for (const condition of task.task_params.switch_conditions) {
+              if (condition.target_node) {
+                relations.push({ 
+                  from: task.name, 
+                  to: condition.target_node,
+                  label: condition.condition,
+                });
+              }
             }
           }
 
@@ -207,6 +228,21 @@ const WorkflowEditorPage: React.FC = () => {
     
     setCurrentTaskNode(null);
     setCurrentParamNode(null);
+  };
+
+  const handleSaveEdgeLabel = (edge: any, newLabel: string) => {
+    edge.setLabelAt(0, {
+      attrs: {
+        label: {
+          text: newLabel,
+        },
+      },
+    });
+    setCurrentEdge(null);
+  };
+
+  const handleCancelEditEdgeLabel = () => {
+    setCurrentEdge(null);
   };
 
   const handleCancelEdit = () => {
@@ -402,6 +438,7 @@ const WorkflowEditorPage: React.FC = () => {
           open={!!currentTaskNode}
           task={currentTaskNode}
           allTasks={allTasksForModal}
+          graph={graph}
           onCancel={handleCancelEdit}
           onSave={handleSaveNode}
         />
@@ -410,6 +447,12 @@ const WorkflowEditorPage: React.FC = () => {
           node={currentParamNode}
           onCancel={handleCancelEdit}
           onSave={handleSaveNode}
+        />
+        <EditEdgeLabelModal
+          open={!!currentEdge}
+          edge={currentEdge}
+          onCancel={handleCancelEditEdgeLabel}
+          onSave={handleSaveEdgeLabel}
         />
         <ViewYamlModal
           isModalVisible={isYamlModalVisible}

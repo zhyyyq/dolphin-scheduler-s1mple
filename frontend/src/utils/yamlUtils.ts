@@ -126,6 +126,27 @@ export const generateYamlStr = (
           ]
         };
       }
+    } else if (nodeData.type === 'SWITCH') {
+      const switchConditions: { condition: string, target_node: string }[] = [];
+      const switchOutgoingEdges = edges.filter(edge => edge.source.cell === node.id);
+
+      for (const edge of switchOutgoingEdges) {
+        const targetNode = allGraphNodes.find(n => n.id === edge.target.cell);
+        if (targetNode && targetNode.data.type !== 'PARAMS') {
+          const condition = edge.labels?.[0]?.attrs?.label?.text || '';
+          switchConditions.push({
+            condition: condition,
+            target_node: targetNode.data.name,
+          });
+        }
+      }
+
+      if (switchConditions.length > 0) {
+        if (!taskPayload.task_params) {
+          taskPayload.task_params = {};
+        }
+        taskPayload.task_params.switch_conditions = switchConditions;
+      }
     }
 
     if (nodeData.command !== undefined) {
