@@ -62,7 +62,7 @@ export const generateYamlStr = (
             type: sourceNodeData.task_params?.type || 'VARCHAR',
             value: sourceNodeData.task_params?.value || '',
           });
-        } else if (sourceNodeData.type !== 'CONDITIONS') {
+        } else if (sourceNodeData.type !== 'CONDITIONS' && sourceNodeData.type !== 'SWITCH') {
           deps.push(sourceNodeData.name);
         }
       }
@@ -83,13 +83,16 @@ export const generateYamlStr = (
       }
     }
 
-    const { localParams: oldLocalParams, ...restTaskParams } = nodeData.task_params || {};
+    const { localParams: oldLocalParams, switchResult: oldSwitchResult, ...restTaskParams } = nodeData.task_params || {};
     const taskPayload: any = {
       name: nodeData.name,
       task_type: nodeData.task_type,
       type: nodeData.type,
       task_params: { ...restTaskParams },
     };
+    if (oldSwitchResult) {
+      taskPayload.task_params.switchResult = oldSwitchResult;
+    }
 
     if (oldLocalParams) {
       taskPayload.task_params.localParams = oldLocalParams;
@@ -158,6 +161,9 @@ export const generateYamlStr = (
           dependTaskList: dependTaskList,
           nextNode: defaultBranchNode,
         };
+      } else if (taskPayload.task_params.switchResult) {
+        // Keep existing switchResult if no new edges are found
+        // This can happen if the graph is not fully connected yet
       }
     }
 

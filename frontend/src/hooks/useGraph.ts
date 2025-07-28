@@ -6,6 +6,7 @@ import dagre from 'dagre';
 import { History } from '@antv/x6-plugin-history';
 import { Task } from '../types';
 import { taskTypes } from '../config/taskTypes';
+import { debug } from 'console';
 
 interface UseGraphProps {
   container: HTMLDivElement | null;
@@ -164,7 +165,10 @@ export const useGraph = ({ container, onNodeDoubleClick, onEdgeDoubleClick, onBl
   ) => {
     const currentGraph = graphRef.current;
     if (!currentGraph) return;
-
+    console.log('Loading graph data');
+    console.log('Nodes:', nodes);
+    console.log('Relations:', relations);
+    console.log('Locations:', locations);
     currentGraph.clearCells();
     const nodeMap = new Map();
 
@@ -178,12 +182,7 @@ export const useGraph = ({ container, onNodeDoubleClick, onEdgeDoubleClick, onBl
 
       const position = locations?.find(l => l.taskCode === nodeData.name) || { x: 0, y: 0 };
       
-      // createNode should return the created node or handle its creation internally
-      const createdNode = (taskEditor as any).createNode(currentGraph, { ...nodeData, label: nodeData.name }, { px: position.x, py: position.y });
-      
-      // If createNode doesn't return the node, we need to find it.
-      // This assumes names are unique for now.
-      const newNode = currentGraph.getNodes().find(n => n.getData().name === nodeData.name && !nodeMap.has(nodeData.name));
+      const newNode = (taskEditor as any).createNode(currentGraph, { ...nodeData, label: nodeData.name }, { px: position.x, py: position.y });
 
       if (newNode) {
         newNode.setData(nodeData);
@@ -212,7 +211,6 @@ export const useGraph = ({ container, onNodeDoubleClick, onEdgeDoubleClick, onBl
         if (targetData.type === 'PARAMS') {
           targetPort = 'in';
         }
-
         currentGraph.addEdge({
           shape: 'edge',
           source: { cell: sourceNode.id, port: sourcePort },
@@ -221,9 +219,13 @@ export const useGraph = ({ container, onNodeDoubleClick, onEdgeDoubleClick, onBl
           zIndex: -1,
           router: { name: 'manhattan' },
           connector: { name: 'rounded' },
-          label: {
-            text: label || '',
-          },
+          labels: label ? [{
+            attrs: {
+              label: {
+                text: label,
+              },
+            },
+          }] : [],
         });
       }
     });

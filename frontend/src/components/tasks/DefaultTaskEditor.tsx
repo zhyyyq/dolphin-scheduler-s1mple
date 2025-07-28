@@ -88,7 +88,7 @@ DefaultTaskEditor.createNode = (graph: Graph, taskInfo: any, contextMenu: { px: 
     nodeData.command = taskInfo.command;
   }
 
-  graph.addNode({
+  return graph.addNode({
     shape: 'task-node',
     x: contextMenu.px,
     y: contextMenu.py,

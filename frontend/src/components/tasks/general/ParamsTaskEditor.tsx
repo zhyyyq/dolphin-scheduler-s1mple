@@ -78,7 +78,7 @@ ParamsTaskEditor.taskInfo = {
       _display_type: 'PARAMS',
     };
 
-    graph.addNode({
+    return graph.addNode({
       shape: 'task-node',
       x: contextMenu.px,
       y: contextMenu.py,

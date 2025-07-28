@@ -171,11 +171,13 @@ const WorkflowEditorPage: React.FC = () => {
             const { dependTaskList, nextNode } = task.task_params.switchResult;
             if (dependTaskList) {
               for (const item of dependTaskList) {
-                relations.push({
-                  from: task.name,
-                  to: item.nextNode,
-                  label: item.condition,
-                });
+                if (item.nextNode) {
+                  relations.push({
+                    from: task.name,
+                    to: item.nextNode,
+                    label: item.condition,
+                  });
+                }
               }
             }
             if (nextNode) {
@@ -308,12 +310,33 @@ const WorkflowEditorPage: React.FC = () => {
       });
 
       const allNodes = [...tasks, ...globalParamNodes, ...localParamNodes];
-      const relations: { from: string, to: string }[] = [];
+      const relations: { from: string, to: string, label?: string }[] = [];
 
       for (const task of tasks) {
         if (task.deps) {
           for (const dep of task.deps) {
             relations.push({ from: dep, to: task.name });
+          }
+        }
+        if (task.type === 'SWITCH' && task.task_params?.switchResult) {
+          const { dependTaskList, nextNode } = task.task_params.switchResult;
+          if (dependTaskList) {
+            for (const item of dependTaskList) {
+              if (item.nextNode) {
+                relations.push({
+                  from: task.name,
+                  to: item.nextNode,
+                  label: item.condition,
+                });
+              }
+            }
+          }
+          if (nextNode) {
+            relations.push({
+              from: task.name,
+              to: nextNode,
+              label: '', // Default branch
+            });
           }
         }
         const params = task.localParams || task.task_params?.localParams;

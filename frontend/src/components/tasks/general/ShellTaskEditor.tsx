@@ -54,7 +54,7 @@ ShellTaskEditor.taskInfo = {
       command: task.command,
     };
 
-    graph.addNode({
+    return graph.addNode({
       shape: 'task-node',
       x: contextMenu.px,
       y: contextMenu.py,

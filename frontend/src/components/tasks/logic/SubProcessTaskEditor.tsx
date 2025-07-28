@@ -61,7 +61,7 @@ SubProcessTaskEditor.taskInfo = {
       _display_type: task.type,
     };
 
-    graph.addNode({
+    return graph.addNode({
       shape: 'task-node',
       x: contextMenu.px,
       y: contextMenu.py,

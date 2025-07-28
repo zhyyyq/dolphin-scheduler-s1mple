@@ -180,10 +180,10 @@ const HomePage: React.FC = () => {
           
           taskParams = {
             localParams: originalTaskParams.localParams || [],
-            switchResult: JSON.stringify({
+            switchResult: {
               dependTaskList: dependTaskList,
               nextNode: nextNode,
-            }),
+            },
             rawScript: '',
           };
         } else if (task.type === 'HTTP') {
@@ -272,7 +272,7 @@ const HomePage: React.FC = () => {
             const preTaskCode = taskNameToCodeMap.get(depName);
             if (preTaskCode) {
               const depTask = tasks.find(t => t.name === depName);
-              if (!depTask || depTask.type !== 'CONDITIONS') {
+              if (depTask && depTask.type !== 'CONDITIONS' && depTask.type !== 'SWITCH') {
                 taskRelationJson.push({
                   name: '',
                   preTaskCode: preTaskCode,
@@ -285,6 +285,46 @@ const HomePage: React.FC = () => {
               }
             }
           });
+        }
+
+        if (task.type === 'SWITCH') {
+          const preTaskCode = taskNameToCodeMap.get(task.name);
+          if (!preTaskCode) return;
+
+          const originalTask = originalTasks.find((t: any) => t.name === task.name);
+          const switchResult = originalTask?.task_params?.switchResult;
+          if (switchResult) {
+            if (switchResult.dependTaskList) {
+              for (const item of switchResult.dependTaskList) {
+                const postTaskCode = taskNameToCodeMap.get(item.nextNode);
+                if (postTaskCode) {
+                  taskRelationJson.push({
+                    name: '',
+                    preTaskCode: preTaskCode,
+                    preTaskVersion: 0,
+                    postTaskCode: postTaskCode,
+                    postTaskVersion: 0,
+                    conditionType: 'NONE',
+                    conditionParams: {}
+                  });
+                }
+              }
+            }
+            if (switchResult.nextNode) {
+              const postTaskCode = taskNameToCodeMap.get(switchResult.nextNode);
+              if (postTaskCode) {
+                taskRelationJson.push({
+                  name: '',
+                  preTaskCode: preTaskCode,
+                  preTaskVersion: 0,
+                  postTaskCode: postTaskCode,
+                  postTaskVersion: 0,
+                  conditionType: 'NONE',
+                  conditionParams: {}
+                });
+              }
+            }
+          }
         }
 
         if (task.type === 'CONDITIONS') {
@@ -343,7 +383,6 @@ const HomePage: React.FC = () => {
       }
       
       // 6. Assemble payload
-      console.log('taskDefinitionJson:', taskDefinitionJson);
       const payload = {
         uuid: record.uuid,
         name: workflow.name || record.name,
