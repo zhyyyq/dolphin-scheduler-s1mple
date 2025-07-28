@@ -383,12 +383,19 @@ const HomePage: React.FC = () => {
       }
       
       // 6. Assemble payload
+      const globalParams = (doc.parameters || []).map((p: any) => ({
+        prop: p.name,
+        value: p.value,
+        direct: 'IN',
+        type: p.type,
+      }));
+
       const payload = {
         uuid: record.uuid,
         name: workflow.name || record.name,
         project: workflow.project || 'default',
         description: workflow.description || '',
-        globalParams: '[]',
+        globalParams: JSON.stringify(globalParams),
         timeout: workflow.timeout || 0,
         executionType: workflow.executionType || 'PARALLEL',
         taskDefinitionJson: JSON.stringify(taskDefinitionJson),
