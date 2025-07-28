@@ -275,6 +275,38 @@ public class DsService {
         Map<String, Object> result = new HashMap<>();
         result.put("projectCode", projectCode);
         result.put("processDefinitionCode", processCode);
+
+        // 6. Handle schedule if present
+        if (payload.containsKey("schedule")) {
+            // First, delete any existing schedule for this workflow
+            deleteScheduleByProcessCode(projectCode, processCode);
+
+            Object scheduleObj = payload.get("schedule");
+            if (scheduleObj != null) {
+                Map<String, Object> schedulePayload = new HashMap<>();
+                if (scheduleObj instanceof Map) {
+                    schedulePayload.put("schedule", JSON.toJSONString(scheduleObj));
+                } else {
+                    schedulePayload.put("schedule", scheduleObj.toString());
+                }
+                schedulePayload.put("processDefinitionCode", processCode);
+                // Add other necessary schedule parameters from payload or defaults
+                schedulePayload.put("failureStrategy", payload.getOrDefault("failureStrategy", "CONTINUE"));
+                schedulePayload.put("warningType", payload.getOrDefault("warningType", "NONE"));
+                schedulePayload.put("processInstancePriority", payload.getOrDefault("processInstancePriority", "MEDIUM"));
+                schedulePayload.put("warningGroupId", payload.getOrDefault("warningGroupId", 0));
+                schedulePayload.put("workerGroup", payload.getOrDefault("workerGroup", "default"));
+                schedulePayload.put("tenantCode", payload.getOrDefault("tenantCode", "default"));
+                schedulePayload.put("environmentCode", payload.getOrDefault("environmentCode", -1));
+
+                Map<String, Object> createdSchedule = createSchedule(projectCode, schedulePayload);
+                if (createdSchedule != null && createdSchedule.containsKey("id")) {
+                    int scheduleId = ((Number) createdSchedule.get("id")).intValue();
+                    onlineSchedule(projectCode, scheduleId);
+                }
+            }
+        }
+
         return result;
     }
 
@@ -316,6 +348,63 @@ public class DsService {
 
         if (responseData.getIntValue("code") != 0) {
             throw new Exception("DS API error (online schedule): " + responseData.getString("msg"));
+        }
+    }
+
+    public void offlineSchedule(long projectCode, int scheduleId) throws Exception {
+        String url = dsUrl + "/projects/" + projectCode + "/schedules/" + scheduleId + "/offline";
+        HttpPost postRequest = new HttpPost(url);
+        postRequest.addHeader("token", token);
+        postRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
+        CloseableHttpResponse response = httpClient.execute(postRequest);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject responseData = JSON.parseObject(responseString);
+        if (responseData.getIntValue("code") != 0) {
+            // It might already be offline, so just log a warning
+            logger.warn("DS API error (offline schedule): " + responseData.getString("msg"));
+        }
+    }
+
+    public void deleteSchedule(long projectCode, int scheduleId) throws Exception {
+        String url = dsUrl + "/projects/" + projectCode + "/schedules/" + scheduleId;
+        HttpDelete deleteRequest = new HttpDelete(url);
+        deleteRequest.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(deleteRequest);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject responseData = JSON.parseObject(responseString);
+        if (responseData.getIntValue("code") != 0) {
+            logger.warn("DS API error (delete schedule): " + responseData.getString("msg"));
+        }
+    }
+
+    private void deleteScheduleByProcessCode(long projectCode, long processCode) throws Exception {
+        // 1. Find the schedule by processDefinitionCode
+        String url = dsUrl + "/projects/" + projectCode + "/schedules?processDefinitionCode=" + processCode + "&pageNo=1&pageSize=10";
+        HttpGet getRequest = new HttpGet(url);
+        getRequest.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(getRequest);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject responseData = JSON.parseObject(responseString);
+
+        if (responseData.getIntValue("code") != 0) {
+            logger.warn("Could not list schedules for process code {}: {}", processCode, responseData.getString("msg"));
+            return;
+        }
+
+        JSONArray schedules = responseData.getJSONObject("data").getJSONArray("totalList");
+        if (schedules.size() > 0) {
+            // Assuming one process has only one schedule
+            JSONObject schedule = schedules.getJSONObject(0);
+            int scheduleId = schedule.getIntValue("id");
+            String releaseState = schedule.getString("releaseState");
+
+            // 2. Offline the schedule if it's online
+            if ("ONLINE".equals(releaseState)) {
+                offlineSchedule(projectCode, scheduleId);
+            }
+
+            // 3. Delete the schedule
+            deleteSchedule(projectCode, scheduleId);
         }
     }
 

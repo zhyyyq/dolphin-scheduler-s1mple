@@ -182,6 +182,11 @@ public class WorkflowService {
                 combinedWf.put("local_status", localWf.get("local_status"));
                 combinedWf.put("uuid", localWf.get("uuid"));
                 combinedWf.put("isLocal", true);
+
+                String localStatus = (String) localWf.get("local_status");
+                if ("ahead".equals(localStatus)) {
+                    combinedWf.put("releaseState", "MODIFIED");
+                }
             } else if (dsWf != null) {
                 combinedWf.putAll(dsWf);
                 combinedWf.put("isLocal", false);
@@ -250,15 +255,15 @@ public class WorkflowService {
         workflowRepository.save(workflow);
     }
 
-    public void createOrUpdateDsWorkflow(Map<String, Object> payload) throws Exception {
+    public Map<String, Object> createOrUpdateDsWorkflow(Map<String, Object> payload) throws Exception {
         // First, call the DS service to create or update the workflow
-        dsService.createOrUpdateWorkflow(payload);
+        Map<String, Object> dsResult = dsService.createOrUpdateWorkflow(payload);
 
         // If successful, update the local database with the online version (commit hash)
         String workflowUuid = (String) payload.get("uuid");
         if (workflowUuid == null || workflowUuid.isEmpty()) {
             // If no UUID, we can't update the local record. This might happen for DS-native workflows.
-            return;
+            return dsResult;
         }
 
         Workflow workflow = workflowRepository.findById(workflowUuid)
@@ -269,6 +274,8 @@ public class WorkflowService {
 
         workflow.setOnlineVersion(latestCommit);
         workflowRepository.save(workflow);
+
+        return dsResult;
     }
 
     public void deleteWorkflow(String workflowUuid, Long projectCode, Long workflowCode) throws Exception, GitAPIException {

@@ -30,11 +30,9 @@ interface ActionButtonsProps {
 const ActionButtons: React.FC<ActionButtonsProps> = ({ record, onDelete, onSubmit, onExecute, onOnline }) => {
   const workflowUuid = record.uuid;
 
-  const isAhead = record.releaseState === 'ONLINE' && record.local_status === 'ahead';
-
   return (
     <Space size="middle">
-      {isAhead ? (
+      {record.releaseState === 'MODIFIED' ? (
         <Button type="primary" onClick={() => onOnline(record)}>同步</Button>
       ) : record.releaseState === 'ONLINE' ? (
         <Button type="primary" onClick={() => onExecute(record)}>立即执行</Button>
@@ -83,12 +81,12 @@ const HomePage: React.FC = () => {
 
   const handleDelete = useCallback(async (record: Workflow) => {
     try {
-      const params: { project_code?: number; workflow_code?: number } = {};
+      const params: { projectCode?: number; workflowCode?: number } = {};
       // Only add DS-related codes if they exist and are valid.
       // `record.code` for local files is a string filename, so we must not send it.
       if (record.projectCode && typeof record.code === 'number') {
-        params.project_code = record.projectCode;
-        params.workflow_code = record.code;
+        params.projectCode = record.projectCode;
+        params.workflowCode = record.code;
       }
 
       await api.delete(`/api/workflow/${record.uuid}`, params);
@@ -272,7 +270,20 @@ const HomePage: React.FC = () => {
       });
 
       // 5. Assemble payload and send to new API endpoint
-      const payload = {
+      const payload: {
+        uuid: string;
+        name: any;
+        project: any;
+        description: any;
+        globalParams: string;
+        timeout: any;
+        executionType: any;
+        taskDefinitionJson: string;
+        taskRelationJson: string;
+        locations: string;
+        isNew: boolean;
+        schedule?: any;
+      } = {
         uuid: record.uuid, // Add UUID to the payload
         name: workflow.name || record.name,
         project: workflow.project || 'default',
@@ -286,35 +297,16 @@ const HomePage: React.FC = () => {
         isNew: record.releaseState === 'UNSUBMITTED',
       };
 
-      const response = await api.createOrUpdateDsWorkflow(payload);
-      
-      // Step 6: If there is a schedule, create it via a separate API call
       if (workflow.schedule) {
-        const { projectCode, processDefinitionCode } = response;
-        
-        const schedulePayload = {
-          schedule: JSON.stringify({
-            startTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
-            endTime: '2125-07-25 00:00:00', // A far-future end time
-            crontab: workflow.schedule,
-            timezoneId: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          }),
-          failureStrategy: 'CONTINUE',
-          warningType: 'NONE',
-          processInstancePriority: 'MEDIUM',
-          warningGroupId: 0,
-          workerGroup: 'default',
-          tenantCode: 'default',
-          environmentCode: -1, // Or fetch dynamically if needed
-          processDefinitionCode: processDefinitionCode,
+        payload.schedule = {
+          startTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
+          endTime: '2125-07-25 00:00:00', // A far-future end time
+          crontab: workflow.schedule,
+          timezoneId: Intl.DateTimeFormat().resolvedOptions().timeZone,
         };
-        const scheduleResponse = await api.createSchedule(projectCode, schedulePayload);
-        
-        // After creating the schedule, we need to set it to online
-        if (scheduleResponse && scheduleResponse.id) {
-          await api.onlineSchedule(projectCode, scheduleResponse.id);
-        }
       }
+
+      await api.createOrUpdateDsWorkflow(payload);
 
       message.success('工作流上线/同步成功。');
       fetchWorkflows();
@@ -350,11 +342,8 @@ const HomePage: React.FC = () => {
       dataIndex: 'releaseState',
       key: 'releaseState',
       render: (state: Workflow['releaseState'], record: Workflow) => {
-        if (state === 'ONLINE' && record.local_status === 'modified') {
-          return <Tag color="processing">待更新</Tag>;
-        }
-        if (state === 'ONLINE' && record.local_status === 'ahead') {
-          return <Tag color="processing">本地领先</Tag>;
+        if (state === 'MODIFIED') {
+          return <Tag color="processing">待同步</Tag>;
         }
 
         let color = 'default';

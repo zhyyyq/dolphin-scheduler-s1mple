@@ -4,7 +4,7 @@ export interface Workflow {
   name: string;
   projectCode: number;
   projectName: string;
-  releaseState: 'ONLINE' | 'OFFLINE' | 'UNSUBMITTED';
+  releaseState: 'ONLINE' | 'OFFLINE' | 'UNSUBMITTED' | 'MODIFIED';
   updateTime: string | number;
   isLocal?: boolean;
   schedule_text?: string;
