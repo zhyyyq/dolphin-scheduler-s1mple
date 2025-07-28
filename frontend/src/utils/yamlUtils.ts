@@ -42,6 +42,7 @@ export const generateYamlStr = (
           name: nodeData.name,
           type: nodeData.task_params?.type || 'VARCHAR',
           value: nodeData.task_params?.value || '',
+          direction: nodeData.task_params?.direction || 'IN',
         });
       }
       continue;

@@ -386,7 +386,7 @@ const HomePage: React.FC = () => {
       const globalParams = (doc.parameters || []).map((p: any) => ({
         prop: p.name,
         value: p.value,
-        direct: 'IN',
+        direct: p.direction,
         type: p.type,
       }));
 

@@ -125,6 +125,7 @@ const WorkflowEditorPage: React.FC = () => {
             prop: p.name,
             type: p.type,
             value: p.value,
+            direction: p.direction,
           },
         }));
 
@@ -144,6 +145,7 @@ const WorkflowEditorPage: React.FC = () => {
                     prop: p.prop,
                     type: p.type,
                     value: p.value,
+                    direction:p.direction,
                   },
                 });
               }
@@ -284,6 +286,7 @@ const WorkflowEditorPage: React.FC = () => {
           prop: p.name,
           type: p.type,
           value: p.value,
+          direction: p.direction,
         },
       }));
 
@@ -302,6 +305,7 @@ const WorkflowEditorPage: React.FC = () => {
                   prop: p.prop,
                   type: p.type,
                   value: p.value,
+                  direction: p.direction,
                 },
               });
             }
@@ -476,6 +480,7 @@ const WorkflowEditorPage: React.FC = () => {
         <EditParamNodeModal
           open={!!currentParamNode}
           node={currentParamNode}
+          graph={graph}
           onCancel={handleCancelEdit}
           onSave={handleSaveNode}
         />

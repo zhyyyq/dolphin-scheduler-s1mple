@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, Typography } from 'antd';
 import { Graph } from '@antv/x6';
 import { Task } from '../../../types';
@@ -7,14 +7,52 @@ import { ProfileOutlined } from '@ant-design/icons';
 const { Title } = Typography;
 const { Option } = Select;
 
-interface ParamsTaskEditorComponent extends React.FC {
+interface ParamsTaskEditorProps {
+  form: any;
+  graph: Graph;
+  initialValues: Task;
+}
+
+interface ParamsTaskEditorComponent extends React.FC<ParamsTaskEditorProps> {
   taskInfo: any;
 }
 
-const ParamsTaskEditor: ParamsTaskEditorComponent = () => {
+const ParamsTaskEditor: ParamsTaskEditorComponent = ({ form, graph, initialValues }) => {
+  const [direction, setDirection] = useState(initialValues.task_params?.direction || 'OUT');
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    if (graph && initialValues) {
+      const edges = graph.getConnectedEdges(initialValues.name);
+      setIsConnected(edges && edges.length > 0);
+    }
+  }, [graph, initialValues]);
+
+  useEffect(() => {
+    const currentDirection = form.getFieldValue('direction');
+    if (currentDirection) {
+      setDirection(currentDirection);
+    }
+  }, [form]);
+
+  const handleDirectionChange = (value: string) => {
+    setDirection(value);
+    form.setFieldsValue({ direction: value });
+  };
+
   return (
     <>
-      <Title level={5}>定义输出参数</Title>
+      <Title level={5}>{direction === 'IN' ? '定义输入参数' : '定义输出参数'}</Title>
+      <Form.Item
+        label="方向"
+        name="direction"
+        initialValue={direction}
+      >
+        <Select onChange={handleDirectionChange} disabled={isConnected}>
+          <Option value="IN">IN</Option>
+          <Option value="OUT">OUT</Option>
+        </Select>
+      </Form.Item>
       <Form.Item
         label="参数名"
         name="prop"
@@ -73,6 +111,7 @@ ParamsTaskEditor.taskInfo = {
       task_params: {
         prop: newNodeName,
         type: 'VARCHAR',
+        direction: 'IN',
         value: '',
       },
       _display_type: 'PARAMS',
