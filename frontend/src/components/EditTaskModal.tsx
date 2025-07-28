@@ -85,7 +85,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, gra
 
   const handleOk = () => {
     form.validateFields().then(values => {
-      const { name, command, definition, ...other_values } = values;
+      const { name, command, definition, failRetryTimes, failRetryInterval, ...other_values } = values;
       
       // Deep copy the original task_params to avoid mutating the shared object
       const updated_task_params = { ...JSON.parse(JSON.stringify(task?.task_params || {})), ...other_values };
@@ -98,6 +98,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, gra
         ...task!,
         name: name,
         command: final_command,
+        failRetryTimes: failRetryTimes,
+        failRetryInterval: failRetryInterval,
         task_params: updated_task_params,
       };
 

@@ -3,13 +3,17 @@ export interface Workflow {
   code: any; // Can be number from DS or string from local file
   name: string;
   projectCode: number;
-  projectName: string;
+  projectName:string;
   releaseState: 'ONLINE' | 'OFFLINE' | 'UNSUBMITTED' | 'MODIFIED';
   updateTime: string | number;
   isLocal?: boolean;
   schedule_text?: string;
   schedule_human_readable?: string;
   local_status?: 'new' | 'modified' | 'synced' | 'ahead' | 'behind' | 'diverged' | 'unknown';
+  schedule?: {
+    id: number;
+    [key: string]: any;
+  };
 }
 
 export interface Parameter {

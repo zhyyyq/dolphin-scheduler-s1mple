@@ -84,13 +84,26 @@ export const generateYamlStr = (
       }
     }
 
-    const { localParams: oldLocalParams, switchResult: oldSwitchResult, ...restTaskParams } = nodeData.task_params || {};
     const taskPayload: any = {
       name: nodeData.name,
       task_type: nodeData.task_type,
       type: nodeData.type,
-      task_params: { ...restTaskParams },
     };
+
+    // Selectively add properties from nodeData if they exist
+    if (nodeData.failRetryTimes !== undefined) {
+      taskPayload.failRetryTimes = nodeData.failRetryTimes;
+    }
+    if (nodeData.failRetryInterval !== undefined) {
+      taskPayload.failRetryInterval = nodeData.failRetryInterval;
+    }
+    if (nodeData.command !== undefined) {
+      taskPayload.command = nodeData.command;
+    }
+
+    const { localParams: oldLocalParams, switchResult: oldSwitchResult, ...restTaskParams } = nodeData.task_params || {};
+    taskPayload.task_params = { ...restTaskParams };
+
     if (oldSwitchResult) {
       taskPayload.task_params.switchResult = oldSwitchResult;
     }
@@ -168,10 +181,17 @@ export const generateYamlStr = (
       }
     }
 
-    if (nodeData.command !== undefined) {
-      taskPayload.command = nodeData.command;
+    if (taskPayload.command !== undefined && taskPayload.type === 'SUB_PROCESS') {
+      delete taskPayload.command;
     }
     
+    // For script-based tasks, ensure command is in task_params.rawScript
+    if (['SHELL', 'PYTHON'].includes(taskPayload.type)) {
+      if (taskPayload.command) {
+        taskPayload.task_params.rawScript = taskPayload.command;
+        delete taskPayload.command;
+      }
+    }
     
     if (localParams.length > 0) {
       if (!taskPayload.task_params) {
@@ -183,6 +203,14 @@ export const generateYamlStr = (
     // Add the deps array to the payload if it's not empty
     if (uniqueDeps.length > 0) {
       taskPayload.deps = uniqueDeps;
+    }
+
+    // Ensure retry times and interval are strings
+    if (taskPayload.failRetryTimes !== undefined) {
+      taskPayload.failRetryTimes = String(taskPayload.failRetryTimes);
+    }
+    if (taskPayload.failRetryInterval !== undefined) {
+      taskPayload.failRetryInterval = String(taskPayload.failRetryInterval);
     }
 
     // Clean up empty task_params only if it's truly empty

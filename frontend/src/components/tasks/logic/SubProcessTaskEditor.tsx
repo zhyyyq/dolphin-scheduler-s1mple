@@ -1,38 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { Input } from 'antd';
+import { Select, Form } from 'antd';
 import { Node, Graph } from '@antv/x6';
 import { Task } from '../../../types';
 import { PartitionOutlined } from '@ant-design/icons';
+import api from '../../../api';
+
+const { Option } = Select;
 
 interface SubProcessTaskEditorProps {
-  currentNode: Node;
+  form: any;
+  initialValues: Task;
 }
 
 interface SubProcessTaskEditorComponent extends React.FC<SubProcessTaskEditorProps> {
   taskInfo: any;
 }
 
-const SubProcessTaskEditor: SubProcessTaskEditorComponent = ({ currentNode }) => {
-  const [workflowName, setWorkflowName] = useState(currentNode.getData()?.workflow_name || '');
+const SubProcessTaskEditor: SubProcessTaskEditorComponent = ({ form, initialValues }) => {
+  const [workflows, setWorkflows] = useState<any[]>([]);
 
   useEffect(() => {
-    setWorkflowName(currentNode.getData()?.workflow_name || '');
-  }, [currentNode]);
-
-  const handleWorkflowNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value;
-    setWorkflowName(newName);
-    currentNode.setData({ ...currentNode.getData(), workflow_name: newName });
-  };
+    const fetchWorkflows = async () => {
+      try {
+        const response = await api.get<any[]>('/api/ds/workflows');
+        setWorkflows(response);
+      } catch (error) {
+        console.error("Failed to fetch workflows", error);
+      }
+    };
+    fetchWorkflows();
+  }, []);
 
   return (
-    <>
-      <p>工作流名称:</p>
-      <Input
-        value={workflowName}
-        onChange={handleWorkflowNameChange}
-      />
-    </>
+    <Form.Item
+      label="子节点"
+      name="processDefinitionCode"
+      rules={[{ required: true, message: '请选择一个子流程' }]}
+    >
+      <Select
+        showSearch
+        placeholder="选择一个工作流"
+        optionFilterProp="children"
+        filterOption={(input, option) =>
+          (option?.children as unknown as string).toLowerCase().includes(input.toLowerCase())
+        }
+      >
+        {workflows.map(wf => (
+          <Option key={wf.code} value={wf.code}>
+            {`${wf.projectName} / ${wf.name}`}
+          </Option>
+        ))}
+      </Select>
+    </Form.Item>
   );
 };
 
@@ -57,7 +76,9 @@ SubProcessTaskEditor.taskInfo = {
       label: newNodeName,
       task_type: task.type,
       type: task.type,
-      task_params: (task as any).default_params || {},
+      task_params: {
+        processDefinitionCode: '',
+      },
       _display_type: task.type,
     };
 
