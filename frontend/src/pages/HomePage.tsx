@@ -149,9 +149,10 @@ const HomePage: React.FC = () => {
       // 4. Build taskDefinitionJson from the COMPILED tasks
       const taskDefinitionJson = tasks.map((task: Task) => {
         const taskCode = taskNameToCodeMap.get(task.name);
-        
         const originalTask = originalTasks.find((t: any) => t.name === task.name);
         const originalTaskParams = originalTask?.task_params || {};
+        const failRetryTimes = originalTaskParams?.failRetryTimes ?? 0;
+        const failRetryInterval = originalTaskParams?.failRetryInterval ?? 1;
 
         let taskParams: Record<string, any>;
         let taskType = (task.type || 'SHELL').toUpperCase();
@@ -229,8 +230,8 @@ const HomePage: React.FC = () => {
           description: task.description || '',
           taskType: taskType,
           taskParams: taskParams,
-          failRetryTimes: 0,
-          failRetryInterval: 1,
+          failRetryTimes: failRetryTimes,
+          failRetryInterval: failRetryInterval,
           timeoutFlag: 'CLOSE',
           timeoutNotifyStrategy: '',
           timeout: 0,
@@ -342,6 +343,7 @@ const HomePage: React.FC = () => {
       }
       
       // 6. Assemble payload
+      console.log('taskDefinitionJson:', taskDefinitionJson);
       const payload = {
         uuid: record.uuid,
         name: workflow.name || record.name,
