@@ -79,12 +79,19 @@ export const compileGraph = (graph: Graph) => {
       const complexDependTaskLists = complexUpstreamNodes.flatMap(n => n.getData().task_params.denpendence.dependTaskList);
       newDependTaskList = newDependTaskList.concat(complexDependTaskLists);
 
+      // Aggregate localParams from all upstream nodes
+      const aggregatedLocalParams = upstreamNodes.flatMap(n => n.getData().task_params?.localParams || []);
+      const uniqueLocalParams = aggregatedLocalParams.filter((param, index, self) =>
+        index === self.findIndex((p) => p.prop === param.prop)
+      );
+
       const newNodeData: Partial<Task> = {
         name: `dependent_group_${logicNode.id}`,
         label: `依赖组 (${logicRelation})`,
         task_type: 'DEPENDENT',
         type: 'DEPENDENT',
         task_params: {
+          localParams: uniqueLocalParams,
           denpendence: {
             relation: logicRelation,
             dependTaskList: newDependTaskList,

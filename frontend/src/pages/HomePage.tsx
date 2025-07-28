@@ -210,7 +210,7 @@ const HomePage: React.FC = () => {
             const params = { ...originalTaskParams, ...(task.task_params || {}) };
             taskParams = {
                 dependence: params.denpendence, // Correctly pass the object
-                localParams: originalTaskParams.localParams || [],
+                localParams: params.localParams || [],
                 resourceList: [],
             };
         } else {
