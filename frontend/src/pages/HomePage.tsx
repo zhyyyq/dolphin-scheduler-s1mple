@@ -150,11 +150,14 @@ const HomePage: React.FC = () => {
       const taskDefinitionJson = tasks.map((task: Task) => {
         const taskCode = taskNameToCodeMap.get(task.name);
         
+        const originalTask = originalTasks.find((t: any) => t.name === task.name);
+        const originalTaskParams = originalTask?.task_params || {};
+
         let taskParams: Record<string, any>;
         let taskType = (task.type || 'SHELL').toUpperCase();
 
         if (task.type === 'SQL') {
-          const params = task.task_params || {};
+          const params = { ...originalTaskParams, ...(task.task_params || {}) };
           taskParams = {
             type: params.datasourceType,
             datasource: params.datasource,
@@ -163,33 +166,37 @@ const HomePage: React.FC = () => {
             preStatements: params.preStatements ? (params.preStatements as string).split(';').filter((s: string) => s.trim() !== '') : [],
             postStatements: params.postStatements ? (params.postStatements as string).split(';').filter((s: string) => s.trim() !== '') : [],
             displayRows: params.displayRows,
-            localParams: params.localParams || [],
+            localParams: originalTaskParams.localParams || [],
             resourceList: [],
           };
         } else if (task.type === 'SWITCH') {
-          const params = task.task_params || {};
-          const dependTaskList = (params.dependTaskList || []).map((item: any) => ({
+          const params = { ...originalTaskParams, ...(task.task_params || {}) };
+          const dependTaskList = (params.switchResult?.dependTaskList || []).map((item: any) => ({
             ...item,
             nextNode: taskNameToCodeMap.get(item.nextNode),
           }));
+          const nextNode = params.switchResult?.nextNode ? taskNameToCodeMap.get(params.switchResult.nextNode) : undefined;
+          
           taskParams = {
-            localParams: params.localParams || [],
+            localParams: originalTaskParams.localParams || [],
             switchResult: JSON.stringify({
               dependTaskList: dependTaskList,
+              nextNode: nextNode,
             }),
             rawScript: '',
           };
         } else if (task.type === 'HTTP') {
           taskParams = {
-            ...task.task_params,
+            ...originalTaskParams,
+            ...(task.task_params || {}),
           };
         } else if (task.type === 'CONDITIONS') {
-          const params = task.task_params || {};
+          const params = { ...originalTaskParams, ...(task.task_params || {}) };
           const successNode = (params.dependence?.dependTaskList?.[0]?.conditionResult?.successNode || []).map((name: string) => taskNameToCodeMap.get(name));
           const failedNode = (params.dependence?.dependTaskList?.[0]?.conditionResult?.failedNode || []).map((name: string) => taskNameToCodeMap.get(name));
 
           taskParams = {
-            localParams: params.localParams || [],
+            localParams: originalTaskParams.localParams || [],
             dependence: {
               relation: "AND",
               dependTaskList: []
@@ -200,15 +207,15 @@ const HomePage: React.FC = () => {
             },
           };
         } else if (task.type === 'DEPENDENT') {
-            const params = task.task_params || {};
+            const params = { ...originalTaskParams, ...(task.task_params || {}) };
             taskParams = {
                 dependence: params.denpendence, // Correctly pass the object
-                localParams: [],
+                localParams: originalTaskParams.localParams || [],
                 resourceList: [],
             };
         } else {
           const rawScript = task.command || '';
-          const localParams = task.task_params?.localParams || [];
+          const localParams = originalTaskParams.localParams || [];
           taskParams = {
             rawScript: rawScript,
             localParams: localParams,
