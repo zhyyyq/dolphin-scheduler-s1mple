@@ -97,4 +97,17 @@ public class DsController {
             return ResponseEntity.status(500).body(e.getMessage());
         }
     }
+
+    @GetMapping("/projects/{projectCode}/instances")
+    public ResponseEntity<?> getWorkflowInstances(
+            @PathVariable Long projectCode,
+            @RequestParam(required = false) String stateType,
+            @RequestParam(defaultValue = "1") int pageNo,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        try {
+            return ResponseEntity.ok(dsService.getWorkflowInstances(projectCode, stateType, pageNo, pageSize));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 }

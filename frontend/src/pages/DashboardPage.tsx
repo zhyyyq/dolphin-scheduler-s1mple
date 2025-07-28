@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Row, Col, Card, Statistic, Spin, Alert, Table, Tag, App as AntApp } from 'antd';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
@@ -26,16 +27,18 @@ interface StatCardProps {
   value: number;
   color: string;
   icon: React.ReactNode;
+  onClick?: () => void;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon }) => (
-  <Card>
+const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon, onClick }) => (
+  <Card onClick={onClick} hoverable>
     <Statistic title={title} value={value} valueStyle={{ color }} prefix={icon} />
   </Card>
 );
 
 const DashboardPage: React.FC = () => {
   const { message } = AntApp.useApp();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,16 +105,34 @@ const DashboardPage: React.FC = () => {
     <div style={{ padding: '24px', background: '#f0f2f5' }}>
       <Row gutter={[16, 16]}>
         <Col span={6}>
-          <StatCard title="成功" value={stats.success} color={COLORS.success} icon={<CheckCircleOutlined />} />
+          <StatCard
+            title="成功"
+            value={stats.success}
+            color={COLORS.success}
+            icon={<CheckCircleOutlined />}
+            onClick={() => navigate('/instances?state=SUCCESS')}
+          />
         </Col>
         <Col span={6}>
-          <StatCard title="失败" value={stats.failure} color={COLORS.failure} icon={<CloseCircleOutlined />} />
+          <StatCard
+            title="失败"
+            value={stats.failure}
+            color={COLORS.failure}
+            icon={<CloseCircleOutlined />}
+            onClick={() => navigate('/instances?state=FAILURE')}
+          />
         </Col>
         <Col span={6}>
-          <StatCard title="运行中" value={stats.running} color={COLORS.running} icon={<SyncOutlined spin />} />
+          <StatCard
+            title="运行中"
+            value={stats.running}
+            color={COLORS.running}
+            icon={<SyncOutlined spin />}
+            onClick={() => navigate('/instances?state=RUNNING_EXECUTION')}
+          />
         </Col>
         <Col span={6}>
-          <Card>
+          <Card onClick={() => navigate('/instances')} hoverable>
             <Statistic title="总计" value={stats.total} />
           </Card>
         </Col>

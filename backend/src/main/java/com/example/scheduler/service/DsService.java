@@ -586,6 +586,27 @@ public class DsService {
         return stats;
     }
 
+    public Map<String, Object> getWorkflowInstances(Long projectCode, String state, int pageNo, int pageSize) throws Exception {
+        URIBuilder builder = new URIBuilder(dsUrl + "/projects/" + projectCode + "/process-instances");
+        builder.setParameter("pageNo", String.valueOf(pageNo));
+        builder.setParameter("pageSize", String.valueOf(pageSize));
+        if (state != null && !state.isEmpty()) {
+            builder.setParameter("stateType", state);
+        }
+
+        HttpGet request = new HttpGet(builder.build());
+        request.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject data = JSON.parseObject(responseString);
+
+        if (data.getIntValue("code") != 0) {
+            throw new Exception("DS API error (process-instances): " + data.getString("msg"));
+        }
+
+        return data.getJSONObject("data").getInnerMap();
+    }
+
     private void resolveFilePlaceholdersRecursive(Object object) {
         if (object instanceof Map) {
             Map<String, Object> map = (Map<String, Object>) object;
