@@ -73,6 +73,46 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     graphInstance.bindKey('ctrl+z', () => graphInstance.undo());
     graphInstance.bindKey('ctrl+y', () => graphInstance.redo());
 
+    let copiedNodeData: any = null;
+    let copiedNodePosition: { x: number, y: number } | null = null;
+
+    graphInstance.bindKey('ctrl+c', () => {
+      const selectedNodes = graphInstance.getSelectedCells().filter(cell => cell.isNode());
+      if (selectedNodes.length > 0) {
+        const node = selectedNodes[0];
+        copiedNodeData = JSON.parse(JSON.stringify(node.getData()));
+        copiedNodePosition = node.position();
+      }
+    });
+
+    graphInstance.bindKey('ctrl+v', () => {
+      if (copiedNodeData && copiedNodePosition) {
+        const newNodeData = { ...copiedNodeData };
+        
+        const allNodes = graphInstance.getNodes();
+        let newName = newNodeData.label;
+        let counter = 1;
+        while (allNodes.some(n => n.getData().label === newName)) {
+          const match = newName.match(/^(.*)_(\d+)$/);
+          if (match) {
+            newName = `${match[1]}_${parseInt(match[2], 10) + 1}`;
+          } else {
+            newName = `${newNodeData.label}_${counter}`;
+          }
+          counter++;
+        }
+        newNodeData.name = newName;
+        newNodeData.label = newName;
+
+        graphInstance.addNode({
+          shape: 'task-node',
+          x: copiedNodePosition.x + 40,
+          y: copiedNodePosition.y + 40,
+          data: newNodeData,
+        });
+      }
+    });
+
     if (onNodeDoubleClick) {
       graphInstance.on('node:dblclick', ({ node }) => onNodeDoubleClick(node));
     }

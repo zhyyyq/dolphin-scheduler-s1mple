@@ -45,7 +45,7 @@ ShellTaskEditor.taskInfo = {
       label: newNodeName,
       task_type: task.type,
       type: task.type,
-      task_params: (task as any).default_params || {},
+      task_params: JSON.parse(JSON.stringify((task as any).default_params || {})),
       _display_type: task.type,
       command: task.command,
     };

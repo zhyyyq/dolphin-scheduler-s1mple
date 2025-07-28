@@ -21,10 +21,11 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, onC
     // Reset the switch when a new task is opened
     setUseDefaultEditor(false);
     if (open && task) {
-      // Set form values from both top-level task properties and task_params
+      // Deep copy the task and its params to prevent shared state issues
+      const taskCopy = JSON.parse(JSON.stringify(task));
       form.setFieldsValue({
-        ...task,
-        ...task.task_params,
+        ...taskCopy,
+        ...taskCopy.task_params,
       });
     }
   }, [open, task, form]);
