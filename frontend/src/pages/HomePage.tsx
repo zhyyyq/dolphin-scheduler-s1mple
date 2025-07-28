@@ -255,36 +255,69 @@ const HomePage: React.FC = () => {
         }
       });
 
-      taskRelations.forEach(rel => {
-        const preTaskCode = taskNameToCodeMap.get(rel.source_task);
-        const postTaskCode = taskNameToCodeMap.get(rel.target_task);
-        if (preTaskCode && postTaskCode) {
-          const depTask = tasks.find(t => t.name === rel.source_task);
-          let conditionType = 'NONE';
+      tasks.forEach((task: Task) => {
+        const postTaskCode = taskNameToCodeMap.get(task.name);
+        if (!postTaskCode) return;
 
-          if (depTask && depTask.type === 'CONDITIONS') {
-            const successNodes = depTask.task_params?.dependence?.dependTaskList?.[0]?.conditionResult?.successNode || [];
-            const failedNodes = depTask.task_params?.dependence?.dependTaskList?.[0]?.conditionResult?.failedNode || [];
-            if (successNodes.includes(rel.target_task)) {
-              conditionType = 'SUCCESS';
-            } else if (failedNodes.includes(rel.target_task)) {
-              conditionType = 'FAILURE';
+        if (task.deps) {
+          task.deps.forEach((depName: string) => {
+            const preTaskCode = taskNameToCodeMap.get(depName);
+            if (preTaskCode) {
+              const depTask = tasks.find(t => t.name === depName);
+              if (!depTask || depTask.type !== 'CONDITIONS') {
+                taskRelationJson.push({
+                  name: '',
+                  preTaskCode: preTaskCode,
+                  preTaskVersion: 0,
+                  postTaskCode: postTaskCode,
+                  postTaskVersion: 0,
+                  conditionType: 'NONE',
+                  conditionParams: {}
+                });
+              }
+            }
+          });
+        }
+
+        if (task.type === 'CONDITIONS') {
+          const preTaskCode = taskNameToCodeMap.get(task.name);
+          if (!preTaskCode) return;
+
+          const successNodes = task.task_params?.dependence?.dependTaskList?.[0]?.conditionResult?.successNode || [];
+          for (const nodeName of successNodes) {
+            const postTaskCode = taskNameToCodeMap.get(nodeName);
+            if (postTaskCode) {
+              taskRelationJson.push({
+                name: '',
+                preTaskCode: preTaskCode,
+                preTaskVersion: 0,
+                postTaskCode: postTaskCode,
+                postTaskVersion: 0,
+                conditionType: 'SUCCESS',
+                conditionParams: {}
+              });
             }
           }
 
-          taskRelationJson.push({
-            name: '',
-            preTaskCode: preTaskCode,
-            preTaskVersion: 0,
-            postTaskCode: postTaskCode,
-            postTaskVersion: 0,
-            conditionType: conditionType,
-            conditionParams: {}
-          });
+          const failedNodes = task.task_params?.dependence?.dependTaskList?.[0]?.conditionResult?.failedNode || [];
+          for (const nodeName of failedNodes) {
+            const postTaskCode = taskNameToCodeMap.get(nodeName);
+            if (postTaskCode) {
+              taskRelationJson.push({
+                name: '',
+                preTaskCode: preTaskCode,
+                preTaskVersion: 0,
+                postTaskCode: postTaskCode,
+                postTaskVersion: 0,
+                conditionType: 'FAILURE',
+                conditionParams: {}
+              });
+            }
+          }
         }
       });
 
-      const targetNodes = new Set(taskRelations.map(r => r.target_task));
+      const targetNodes = new Set(taskRelationJson.map(r => r.postTaskCode));
       const rootTasks = tasks.filter(t => !targetNodes.has(t.name));
       for (const rootTask of rootTasks) {
         const numericTaskCode = taskNameToCodeMap.get(rootTask.name);
