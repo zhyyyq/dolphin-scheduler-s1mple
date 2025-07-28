@@ -208,7 +208,7 @@ const HomePage: React.FC = () => {
             };
         } else {
           const rawScript = task.command || '';
-          const localParams = task.localParams || [];
+          const localParams = task.task_params?.localParams || [];
           taskParams = {
             rawScript: rawScript,
             localParams: localParams,

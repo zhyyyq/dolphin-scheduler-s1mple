@@ -91,6 +91,10 @@ export const generateYamlStr = (
       task_params: { ...restTaskParams },
     };
 
+    if (oldLocalParams) {
+      taskPayload.task_params.localParams = oldLocalParams;
+    }
+
     // For CONDITIONS nodes, add the special 'dependence' block
     if (nodeData.type === 'CONDITIONS') {
       const successNode: string[] = [];

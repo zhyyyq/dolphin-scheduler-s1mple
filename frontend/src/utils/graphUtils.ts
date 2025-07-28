@@ -133,6 +133,8 @@ export const compileGraph = (graph: Graph) => {
   // Final cleanup: transform any remaining standalone DEPENDENT nodes
   const tasks = currentNodes.map(node => {
     const taskData = node.getData();
+    const localParams = taskData.task_params?.localParams;
+
     if (taskData.type === 'DEPENDENT' && !taskData.task_params.denpendence.dependTaskList) {
       // This is a standalone, un-compiled DEPENDENT node. Compile it now.
       const dep = taskData.task_params.denpendence;
@@ -158,13 +160,17 @@ export const compileGraph = (graph: Graph) => {
         checkInterval: dep.check_interval || 10,
       };
 
-      return {
+      const finalTaskData = {
         ...taskData,
         task_params: {
           ...taskData.task_params,
           denpendence: compiledDependence,
         }
       };
+      if (localParams) {
+        finalTaskData.task_params.localParams = localParams;
+      }
+      return finalTaskData;
     }
     return taskData;
   });
