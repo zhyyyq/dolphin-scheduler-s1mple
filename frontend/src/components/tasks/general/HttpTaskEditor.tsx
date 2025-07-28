@@ -47,12 +47,13 @@ const HttpTaskEditor: HttpTaskEditorComponent = ({ form, initialValues }) => {
       <Form.Item
         label="校验条件"
         name="httpCheckCondition"
-        initialValue="STATUS_CODE_CUSTOM"
+        initialValue="STATUS_CODE_DEFAULT"
       >
         <Select>
-          <Option value="STATUS_CODE_CUSTOM">默认响应码200</Option>
-          <Option value="BODY_CONTAINS">Body包含</Option>
-          <Option value="BODY_NOT_CONTAINS">Body不包含</Option>
+          <Option value="STATUS_CODE_DEFAULT">默认响应码200</Option>
+          <Option value="STATUS_CODE_CUSTOM">自定义响应码</Option>
+          <Option value="BODY_CONTAINS">内容包含</Option>
+          <Option value="BODY_NOT_CONTAINS">内容不包含</Option>
         </Select>
       </Form.Item>
       <Form.Item
