@@ -58,48 +58,65 @@ public class DsService {
         return data.getJSONObject("data").getJSONArray("totalList").getJSONObject(0).getString("code");
     }
 
+    public List<Map<String, Object>> getProjects() throws Exception {
+        HttpGet request = new HttpGet(dsUrl + "/projects?pageNo=1&pageSize=1000");
+        request.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject data = JSON.parseObject(responseString);
+
+        if (data.getIntValue("code") != 0) {
+            throw new Exception("DS API error (getProjects): " + data.getString("msg"));
+        }
+
+        JSONArray projectList = data.getJSONObject("data").getJSONArray("totalList");
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (int i = 0; i < projectList.size(); i++) {
+            result.add(projectList.getJSONObject(i).getInnerMap());
+        }
+        return result;
+    }
+
+    public List<Map<String, Object>> getWorkflowsByProject(Long projectCode) throws Exception {
+        HttpGet request = new HttpGet(dsUrl + "/projects/" + projectCode + "/process-definition?pageNo=1&pageSize=1000");
+        request.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject data = JSON.parseObject(responseString);
+
+        if (data.getIntValue("code") != 0) {
+            throw new Exception("DS API error (getWorkflowsByProject): " + data.getString("msg"));
+        }
+
+        JSONArray workflowList = data.getJSONObject("data").getJSONArray("totalList");
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (int i = 0; i < workflowList.size(); i++) {
+            result.add(workflowList.getJSONObject(i).getInnerMap());
+        }
+        return result;
+    }
+
     public List<Map<String, Object>> getWorkflows() throws Exception {
         List<Map<String, Object>> allWorkflows = new ArrayList<>();
 
         // 1. Get all projects
-        HttpGet projectsRequest = new HttpGet(dsUrl + "/projects?pageNo=1&pageSize=100");
-        projectsRequest.addHeader("token", token);
-        CloseableHttpResponse projectsResponse = httpClient.execute(projectsRequest);
-        String projectsResponseString = EntityUtils.toString(projectsResponse.getEntity());
-        JSONObject projectsData = JSON.parseObject(projectsResponseString);
-
-        if (projectsData.getIntValue("code") != 0) {
-            throw new Exception("DS API error (projects): " + projectsData.getString("msg"));
-        }
-
-        JSONArray projectList = projectsData.getJSONObject("data").getJSONArray("totalList");
+        List<Map<String, Object>> projectList = getProjects();
 
         // 2. For each project, get its workflows
-        for (int i = 0; i < projectList.size(); i++) {
-            JSONObject project = projectList.getJSONObject(i);
-            long projectCode = project.getLongValue("code");
-            HttpGet workflowsRequest = new HttpGet(dsUrl + "/projects/" + projectCode + "/process-definition?pageNo=1&pageSize=100");
-            workflowsRequest.addHeader("token", token);
-            CloseableHttpResponse workflowsResponse = httpClient.execute(workflowsRequest);
-            String workflowsResponseString = EntityUtils.toString(workflowsResponse.getEntity());
-            JSONObject workflowsData = JSON.parseObject(workflowsResponseString);
-
-            if (workflowsData.getIntValue("code") != 0) {
-                logger.warn("Failed to get workflows for project {}: {}", projectCode, workflowsData.getString("msg"));
-                continue;
-            }
-
-            JSONArray projectWorkflows = workflowsData.getJSONObject("data").getJSONArray("totalList");
-            for (int j = 0; j < projectWorkflows.size(); j++) {
-                JSONObject wf = projectWorkflows.getJSONObject(j);
-                wf.put("projectName", project.getString("name"));
-                long workflowCode = wf.getLongValue("code");
-                wf.put("uuid", "ds-" + projectCode + "-" + workflowCode);
-                
-                Map<String, Object> wfMap = wf.getInnerMap();
-                wfMap.put("code", String.valueOf(workflowCode));
-                wfMap.put("projectCode", String.valueOf(projectCode));
-                allWorkflows.add(wfMap);
+        for (Map<String, Object> project : projectList) {
+            long projectCode = ((Number) project.get("code")).longValue();
+            try {
+                List<Map<String, Object>> projectWorkflows = getWorkflowsByProject(projectCode);
+                for (Map<String, Object> wf : projectWorkflows) {
+                    wf.put("projectName", project.get("name"));
+                    long workflowCode = ((Number) wf.get("code")).longValue();
+                    wf.put("uuid", "ds-" + projectCode + "-" + workflowCode);
+                    wf.put("code", String.valueOf(workflowCode));
+                    wf.put("projectCode", String.valueOf(projectCode));
+                    allWorkflows.add(wf);
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to get workflows for project {}: {}", projectCode, e.getMessage());
             }
         }
 

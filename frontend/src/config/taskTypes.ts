@@ -7,7 +7,11 @@ import ParamsTaskEditor from '../components/tasks/general/ParamsTaskEditor';
 import ConditionsTaskEditor from '../components/tasks/logic/ConditionsTaskEditor';
 import SwitchTaskEditor from '../components/tasks/logic/SwitchTaskEditor';
 import DependentTaskEditor from '../components/tasks/logic/DependentTaskEditor';
+import LogicGateTaskEditor from '../components/tasks/logic/LogicGateTaskEditor';
 import SubWorkflowTaskEditor from '../components/tasks/logic/SubProcessTaskEditor';
+
+const AndTask = { taskInfo: LogicGateTaskEditor.taskInfo.AND };
+const OrTask = { taskInfo: LogicGateTaskEditor.taskInfo.OR };
 
 const editors = [
   ShellTaskEditor,
@@ -20,6 +24,8 @@ const editors = [
   SwitchTaskEditor,
   DependentTaskEditor,
   SubWorkflowTaskEditor,
+  AndTask,
+  OrTask,
 ];
 
 export const taskTypes = editors.map(editor => editor.taskInfo);

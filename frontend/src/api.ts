@@ -93,6 +93,14 @@ const api = {
 
   async onlineSchedule(projectCode: number, scheduleId: number): Promise<any> {
     return this.post(`/api/ds/projects/${projectCode}/schedules/${scheduleId}/online`);
+  },
+
+  async getProjects(): Promise<any[]> {
+    return this.get('/api/ds/projects');
+  },
+
+  async getWorkflows(projectCode: string): Promise<any[]> {
+    return this.get(`/api/ds/projects/${projectCode}/workflows`);
   }
 };
 

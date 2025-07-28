@@ -5,11 +5,14 @@ import {
 } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
+import { Graph, Node as X6Node } from '@antv/x6';
 import { Workflow, WorkflowDetail, Task } from '../types';
 import api from '../api';
 import yaml from 'yaml';
 import RestoreWorkflowModal from '../components/RestoreWorkflowModal';
 import BackfillModal from '../components/BackfillModal';
+import { compileGraph } from '../utils/graphUtils';
+import '../components/TaskNode'; // Register custom node
 
 const { Title } = Typography;
 
@@ -82,8 +85,6 @@ const HomePage: React.FC = () => {
   const handleDelete = useCallback(async (record: Workflow) => {
     try {
       const params: { projectCode?: number; workflowCode?: number } = {};
-      // Only add DS-related codes if they exist and are valid.
-      // `record.code` for local files is a string filename, so we must not send it.
       if (record.projectCode && typeof record.code === 'number') {
         params.projectCode = record.projectCode;
         params.workflowCode = record.code;
@@ -105,17 +106,39 @@ const HomePage: React.FC = () => {
 
   const handleOnline = useCallback(async (record: Workflow) => {
     try {
-      // 1. Fetch the full YAML content
+      // 1. Fetch the full YAML content and workflow details
       const workflowDetail = await api.get<WorkflowDetail>(`/api/workflow/${record.uuid}`);
       const yamlContent = workflowDetail.yaml_content;
       const doc = yaml.parse(yamlContent);
       const workflow = doc.workflow || {};
-      let tasks: Task[] = doc.tasks || [];
-      const parameters: Parameter[] = doc.parameters || [];
+      
+      // Create a temporary graph instance to compile the workflow
+      const tempGraph = new Graph({ container: document.createElement('div') });
+      const originalTasks = doc.tasks || [];
+      const relations: { from: string, to: string }[] = [];
+      for (const task of originalTasks) {
+        if (task.deps) {
+          for (const dep of task.deps) {
+            relations.push({ from: dep, to: task.name });
+          }
+        }
+      }
+      const nodes = originalTasks.map((task: any) => tempGraph.createNode({ shape: 'task-node', id: task.name, data: task }));
+      const edges = relations.map(rel => {
+        const sourceNode = nodes.find((n: X6Node) => n.getData().name === rel.from);
+        const targetNode = nodes.find((n: X6Node) => n.getData().name === rel.to);
+        if (sourceNode && targetNode) {
+          return tempGraph.createEdge({ source: sourceNode.id, target: targetNode.id });
+        }
+        return null;
+      }).filter(Boolean);
+      
+      tempGraph.resetCells([...nodes, ...edges as any]);
 
-      const paramDefinitions = new Map(parameters.map((p: Parameter) => [p.name, p]));
+      // 2. COMPILE the graph
+      const { tasks, taskRelations } = compileGraph(tempGraph);
 
-      // 2. Generate task codes
+      // 3. Generate task codes
       const taskNameToCodeMap = new Map<string, number>();
       const baseCode = Date.now();
       tasks.forEach((task: Task, index: number) => {
@@ -123,7 +146,7 @@ const HomePage: React.FC = () => {
         taskNameToCodeMap.set(task.name, taskCode);
       });
 
-      // 3. Build taskDefinitionJson
+      // 4. Build taskDefinitionJson from the COMPILED tasks
       const taskDefinitionJson = tasks.map((task: Task) => {
         const taskCode = taskNameToCodeMap.get(task.name);
         
@@ -133,7 +156,7 @@ const HomePage: React.FC = () => {
         if (task.type === 'SQL') {
           const params = task.task_params || {};
           taskParams = {
-            type: params.datasourceType, // Read from the renamed field
+            type: params.datasourceType,
             datasource: params.datasource,
             sql: params.sql,
             sqlType: params.sqlType,
@@ -154,7 +177,7 @@ const HomePage: React.FC = () => {
             switchResult: JSON.stringify({
               dependTaskList: dependTaskList,
             }),
-            rawScript: '', // Switch tasks don't have a raw script
+            rawScript: '',
           };
         } else if (task.type === 'HTTP') {
           taskParams = {
@@ -176,17 +199,20 @@ const HomePage: React.FC = () => {
               failedNode: failedNode
             },
           };
+        } else if (task.type === 'DEPENDENT') {
+            const params = task.task_params || {};
+            taskParams = {
+                dependence: params.denpendence, // Correctly pass the object
+                localParams: [],
+                resourceList: [],
+            };
         } else {
-          // Default for SHELL and other script-based tasks
           const rawScript = task.command || '';
-          
-          // New logic: localParams are now defined directly in the task from the new editor
           const localParams = task.localParams || [];
-
           taskParams = {
             rawScript: rawScript,
             localParams: localParams,
-            resourceList: [], // Ensure resourceList is present
+            resourceList: [],
           };
         }
 
@@ -213,7 +239,7 @@ const HomePage: React.FC = () => {
         };
       });
 
-      // 4. Build taskRelationJson and locations
+      // 5. Build taskRelationJson and locations from COMPILED relations
       const taskRelationJson: any[] = [];
       const originalLocations = workflowDetail.locations ? JSON.parse(workflowDetail.locations) : [];
       const originalLocationsMap = new Map(originalLocations.map((l: any) => [l.taskCode, { x: l.x, y: l.y }]));
@@ -221,14 +247,48 @@ const HomePage: React.FC = () => {
 
       tasks.forEach((task: Task, i: number) => {
         const numericTaskCode = taskNameToCodeMap.get(task.name);
-        
         const pos = originalLocationsMap.get(task.name);
         const x = pos ? (pos as any).x : 150 + i * 200;
         const y = pos ? (pos as any).y : 150;
-        payloadLocations.push({ taskCode: numericTaskCode, x, y });
+        if (numericTaskCode) {
+          payloadLocations.push({ taskCode: numericTaskCode, x, y });
+        }
+      });
 
-        const taskDeps = task.deps || [];
-        if (taskDeps.length === 0) {
+      taskRelations.forEach(rel => {
+        const preTaskCode = taskNameToCodeMap.get(rel.source_task);
+        const postTaskCode = taskNameToCodeMap.get(rel.target_task);
+        if (preTaskCode && postTaskCode) {
+          const depTask = tasks.find(t => t.name === rel.source_task);
+          let conditionType = 'NONE';
+
+          if (depTask && depTask.type === 'CONDITIONS') {
+            const successNodes = depTask.task_params?.dependence?.dependTaskList?.[0]?.conditionResult?.successNode || [];
+            const failedNodes = depTask.task_params?.dependence?.dependTaskList?.[0]?.conditionResult?.failedNode || [];
+            if (successNodes.includes(rel.target_task)) {
+              conditionType = 'SUCCESS';
+            } else if (failedNodes.includes(rel.target_task)) {
+              conditionType = 'FAILURE';
+            }
+          }
+
+          taskRelationJson.push({
+            name: '',
+            preTaskCode: preTaskCode,
+            preTaskVersion: 0,
+            postTaskCode: postTaskCode,
+            postTaskVersion: 0,
+            conditionType: conditionType,
+            conditionParams: {}
+          });
+        }
+      });
+
+      const targetNodes = new Set(taskRelations.map(r => r.target_task));
+      const rootTasks = tasks.filter(t => !targetNodes.has(t.name));
+      for (const rootTask of rootTasks) {
+        const numericTaskCode = taskNameToCodeMap.get(rootTask.name);
+        if (numericTaskCode && !taskRelationJson.some(r => r.postTaskCode === numericTaskCode)) {
           taskRelationJson.push({
             name: '',
             preTaskCode: 0,
@@ -238,69 +298,29 @@ const HomePage: React.FC = () => {
             conditionType: 'NONE',
             conditionParams: {}
           });
-        } else {
-          taskDeps.forEach((depName: string) => {
-            const preTaskCode = taskNameToCodeMap.get(depName);
-            if (preTaskCode) {
-              const depTask = tasks.find(t => t.name === depName);
-              let conditionType = 'NONE';
-
-              if (depTask && depTask.type === 'CONDITIONS') {
-                const successNodes = depTask.task_params?.dependence?.dependTaskList?.[0]?.conditionResult?.successNode || [];
-                const failedNodes = depTask.task_params?.dependence?.dependTaskList?.[0]?.conditionResult?.failedNode || [];
-                if (successNodes.includes(task.name)) {
-                  conditionType = 'SUCCESS';
-                } else if (failedNodes.includes(task.name)) {
-                  conditionType = 'FAILURE';
-                }
-              }
-
-              taskRelationJson.push({
-                name: '',
-                preTaskCode: preTaskCode,
-                preTaskVersion: 0,
-                postTaskCode: numericTaskCode,
-                postTaskVersion: 0,
-                conditionType: conditionType,
-                conditionParams: {}
-              });
-            }
-          });
         }
-      });
-
-      // 5. Assemble payload and send to new API endpoint
-      const payload: {
-        uuid: string;
-        name: any;
-        project: any;
-        description: any;
-        globalParams: string;
-        timeout: any;
-        executionType: any;
-        taskDefinitionJson: string;
-        taskRelationJson: string;
-        locations: string;
-        isNew: boolean;
-        schedule?: any;
-      } = {
-        uuid: record.uuid, // Add UUID to the payload
+      }
+      
+      // 6. Assemble payload
+      const payload = {
+        uuid: record.uuid,
         name: workflow.name || record.name,
         project: workflow.project || 'default',
         description: workflow.description || '',
-        globalParams: workflow.globalParams ? JSON.stringify(workflow.globalParams) : '[]',
+        globalParams: '[]',
         timeout: workflow.timeout || 0,
         executionType: workflow.executionType || 'PARALLEL',
         taskDefinitionJson: JSON.stringify(taskDefinitionJson),
         taskRelationJson: JSON.stringify(taskRelationJson),
         locations: JSON.stringify(payloadLocations),
         isNew: record.releaseState === 'UNSUBMITTED',
+        schedule: undefined as any,
       };
 
       if (workflow.schedule) {
         payload.schedule = {
           startTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
-          endTime: '2125-07-25 00:00:00', // A far-future end time
+          endTime: '2125-07-25 00:00:00',
           crontab: workflow.schedule,
           timezoneId: Intl.DateTimeFormat().resolvedOptions().timeZone,
         };
@@ -369,7 +389,6 @@ const HomePage: React.FC = () => {
         if (typeof time === 'number') {
           return new Date(time * 1000).toLocaleString();
         }
-        // Assuming it's a date string from DS
         return new Date(time).toLocaleString();
       },
     },
@@ -378,7 +397,7 @@ const HomePage: React.FC = () => {
       key: 'actions',
       render: (_, record) => <ActionButtons record={record} onDelete={handleDelete} onSubmit={handleSubmit} onExecute={handleExecute} onOnline={handleOnline} />,
     },
-  ], [handleDelete]);
+  ], [handleDelete, handleSubmit, handleExecute, handleOnline]);
 
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><Spin size="large" /></div>;

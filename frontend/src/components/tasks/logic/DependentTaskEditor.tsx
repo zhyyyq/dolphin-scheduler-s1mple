@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
-import { Form, FormInstance, Input } from 'antd';
-import yaml from 'js-yaml';
+import React, { useState, useEffect } from 'react';
+import { Form, FormInstance, Input, Select, Switch, Radio, Button, Space, InputNumber, Card } from 'antd';
+import { PlusOutlined, DeleteOutlined, NodeIndexOutlined } from '@ant-design/icons';
 import { Graph } from '@antv/x6';
 import { Task } from '../../../types';
-import { NodeIndexOutlined } from '@ant-design/icons';
+import api from '../../../api';
 
-const { TextArea } = Input;
+const { Option } = Select;
 
 interface DependentTaskEditorProps {
   form: FormInstance<any>;
@@ -16,36 +16,143 @@ interface DependentTaskEditorComponent extends React.FC<DependentTaskEditorProps
   taskInfo: any;
 }
 
-const DependentTaskEditor: DependentTaskEditorComponent = ({ form, initialValues }) => {
+const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
+  const denpendence = Form.useWatch('denpendence', form);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [workflows, setWorkflows] = useState<any[]>([]);
+  const [isLoadingWorkflows, setIsLoadingWorkflows] = useState(false);
 
   useEffect(() => {
-    if (initialValues) {
-      const { denpendence } = initialValues;
-      // If denpendence is null or undefined, dump an empty object to avoid 'null' string
-      const yamlText = yaml.dump(denpendence || {});
-      form.setFieldsValue({ denpendence_yaml: yamlText });
+    api.getProjects().then(data => {
+      setProjects(data || []);
+    });
+  }, []);
+
+  // Pre-fill workflows when editing an existing node
+  useEffect(() => {
+    const initialProject = form.getFieldValue(['denpendence', 'project']);
+    if (initialProject) {
+      setIsLoadingWorkflows(true);
+      api.getWorkflows(initialProject).then(data => {
+        setWorkflows(data || []);
+      }).finally(() => {
+        setIsLoadingWorkflows(false);
+      });
     }
-  }, [initialValues, form]);
+  }, [projects, form]);
+
+  const handleProjectChange = (projectCode: string) => {
+    // Reset workflow when project changes
+    form.setFieldValue(['denpendence', 'workflow'], undefined);
+    
+    setIsLoadingWorkflows(true);
+    api.getWorkflows(projectCode).then(data => {
+      setWorkflows(data || []);
+    }).finally(() => {
+      setIsLoadingWorkflows(false);
+    });
+  };
 
   return (
-    <Form.Item
-      label="依赖逻辑 (YAML)"
-      name="denpendence_yaml"
-      rules={[
-        { required: true, message: '请输入依赖逻辑' },
-        {
-          validator: async (_, value) => {
-            try {
-              yaml.load(value);
-            } catch (e) {
-              throw new Error('YAML 格式无效');
-            }
-          },
-        },
-      ]}
-    >
-      <TextArea rows={15} placeholder="在此输入 denpendence 的 YAML 结构" />
-    </Form.Item>
+    <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: 16 }}>
+      <Form.Item
+        label="依赖类型"
+        name={['denpendence', 'type']}
+        initialValue="workflow"
+        rules={[{ required: true }]}
+      >
+        <Select>
+          <Option value="workflow">依赖于工作流</Option>
+        </Select>
+      </Form.Item>
+
+      <Form.Item
+        label="项目名称"
+        name={['denpendence', 'project']}
+        rules={[{ required: true, message: '请选择项目' }]}
+      >
+        <Select
+          showSearch
+          placeholder="请选择项目"
+          onChange={handleProjectChange}
+          filterOption={(input, option) =>
+            (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+          }
+        >
+          {projects.map(p => <Option key={p.code} value={p.code}>{p.name}</Option>)}
+        </Select>
+      </Form.Item>
+
+      <Form.Item
+        label="工作流名称"
+        name={['denpendence', 'workflow']}
+        rules={[{ required: true, message: '请选择工作流' }]}
+      >
+        <Select
+          showSearch
+          placeholder="请先选择项目"
+          loading={isLoadingWorkflows}
+          disabled={!denpendence?.project}
+          filterOption={(input, option) =>
+            (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+          }
+        >
+          {workflows.map(w => <Option key={w.code} value={w.code}>{w.name}</Option>)}
+        </Select>
+      </Form.Item>
+
+      <Form.Item label="时间周期">
+        <Space>
+          <Form.Item name={['denpendence', 'date_unit']} noStyle initialValue="day">
+            <Select style={{ width: 120 }}>
+              <Option value="month">月</Option>
+              <Option value="week">周</Option>
+              <Option value="day">日</Option>
+              <Option value="hour">时</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name={['denpendence', 'date_value']} noStyle initialValue="today">
+            <Select style={{ width: 120 }}>
+              <Option value="today">今天</Option>
+              <Option value="yesterday">昨天</Option>
+              <Option value="before_2_days">前两天</Option>
+              <Option value="before_3_days">前三天</Option>
+              <Option value="before_7_days">前七天</Option>
+            </Select>
+          </Form.Item>
+        </Space>
+      </Form.Item>
+
+      <Form.Item label="参数传递" valuePropName="checked" name={['denpendence', 'pass_params']}>
+        <Switch />
+      </Form.Item>
+
+      {denpendence?.pass_params && (
+        <Form.List name={['denpendence', 'param_mappings']}>
+          {(paramFields, { add: addParam, remove: removeParam }) => (
+            <div style={{ paddingLeft: 24 }}>
+              {paramFields.map(paramField => (
+                <Space key={paramField.key} align="baseline">
+                  <Form.Item name={[paramField.name, 'source']} rules={[{ required: true, message: '必填' }]}>
+                    <Input placeholder="上游参数" />
+                  </Form.Item>
+                  <Form.Item name={[paramField.name, 'target']} rules={[{ required: true, message: '必填' }]}>
+                    <Input placeholder="当前节点参数" />
+                  </Form.Item>
+                  <DeleteOutlined onClick={() => removeParam(paramField.name)} />
+                </Space>
+              ))}
+              <Form.Item>
+                <Button type="dashed" onClick={() => addParam()} block icon={<PlusOutlined />}>
+                  添加参数传递
+                </Button>
+              </Form.Item>
+            </div>
+          )}
+        </Form.List>
+      )}
+
+    </div>
   );
 };
 
@@ -70,7 +177,13 @@ DependentTaskEditor.taskInfo = {
       label: newNodeName,
       task_type: task.type,
       type: task.type,
-      task_params: (task as any).default_params || {},
+      task_params: {
+        denpendence: {
+          type: 'workflow',
+          date_unit: 'day',
+          date_value: 'today',
+        },
+      },
       _display_type: task.type,
     };
 

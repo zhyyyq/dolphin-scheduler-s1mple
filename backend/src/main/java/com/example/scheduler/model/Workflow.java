@@ -2,6 +2,7 @@ package com.example.scheduler.model;
 
 import lombok.Data;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -18,5 +19,6 @@ public class Workflow {
 
     private String onlineVersion;
 
+    @Column(columnDefinition = "TEXT")
     private String locations;
 }

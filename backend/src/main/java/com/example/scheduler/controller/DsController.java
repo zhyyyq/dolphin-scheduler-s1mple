@@ -32,6 +32,24 @@ public class DsController {
         }
     }
 
+    @GetMapping("/projects")
+    public ResponseEntity<?> getProjects() {
+        try {
+            return ResponseEntity.ok(dsService.getProjects());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/projects/{projectCode}/workflows")
+    public ResponseEntity<?> getWorkflowsByProject(@PathVariable Long projectCode) {
+        try {
+            return ResponseEntity.ok(dsService.getWorkflowsByProject(projectCode));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
+
     @DeleteMapping("/project/{projectCode}/workflow/{workflowCode}")
     public ResponseEntity<?> deleteDsWorkflow(@PathVariable Long projectCode, @PathVariable Long workflowCode) {
         try {
