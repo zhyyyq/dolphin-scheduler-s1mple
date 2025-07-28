@@ -232,7 +232,7 @@ const HomePage: React.FC = () => {
             resourceList: [],
           };
         } else {
-          const rawScript = task.command || '';
+          const rawScript = task.command || task.task_params?.rawScript || '';
           const localParams = originalTaskParams.localParams || [];
           taskParams = {
             rawScript: rawScript,
