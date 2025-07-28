@@ -6,7 +6,7 @@ import HttpTaskEditor from '../components/tasks/general/HttpTaskEditor';
 import ParamsTaskEditor from '../components/tasks/general/ParamsTaskEditor';
 import ConditionsTaskEditor from '../components/tasks/logic/ConditionsTaskEditor';
 import SwitchTaskEditor from '../components/tasks/logic/SwitchTaskEditor';
-import DependentTaskEditor from '../components/tasks/logic/DependentTaskEditor';
+import DependentTaskEditor from '../components/tasks/dependent/DependentTaskEditor';
 import LogicGateTaskEditor from '../components/tasks/logic/LogicGateTaskEditor';
 import SubWorkflowTaskEditor from '../components/tasks/logic/SubProcessTaskEditor';
 
