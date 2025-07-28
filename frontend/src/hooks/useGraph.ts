@@ -111,124 +111,104 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
   }, [container, onNodeDoubleClick, onBlankContextMenu]);
 
   const loadGraphData = useCallback((
-    tasks: Task[], 
+    nodes: (Task & { label?: string })[],
     relations: { from: string; to: string }[] = [],
-    // locations is captured but not used for rendering, per user request.
     locations: { taskCode: string, x: number, y: number }[] | null = null
   ) => {
     const currentGraph = graphRef.current;
     if (!currentGraph) return;
 
-    currentGraph.clearCells(); // Clear previous data before loading new
+    currentGraph.clearCells();
     const nodeMap = new Map();
 
-    tasks.forEach((task) => {
-      const taskEditor = taskTypes.find((t: any) => t.type === task.task_type);
-
+    // Create all nodes
+    nodes.forEach((nodeData) => {
+      const taskEditor = taskTypes.find((t) => t.type === nodeData.task_type);
       if (!taskEditor) {
-        throw new Error(`未找到任务类型 "${task.task_type}" 的编辑器配置。`);
+        console.error(`未找到任务类型 "${nodeData.task_type}" 的编辑器配置。`);
+        return;
       }
 
-      (taskEditor as any).createNode(currentGraph, { ...task, label: task.name }, { px: 0, py: 0 });
-      const newNode = currentGraph.getNodes().find(n => n.getData().name === task.name);
+      const position = locations?.find(l => l.taskCode === nodeData.name) || { x: 0, y: 0 };
+      
+      // createNode should return the created node or handle its creation internally
+      const createdNode = (taskEditor as any).createNode(currentGraph, { ...nodeData, label: nodeData.name }, { px: position.x, py: position.y });
+      
+      // If createNode doesn't return the node, we need to find it.
+      // This assumes names are unique for now.
+      const newNode = currentGraph.getNodes().find(n => n.getData().name === nodeData.name && !nodeMap.has(nodeData.name));
+
       if (newNode) {
-        newNode.setData(task);
-        nodeMap.set(task.name, newNode);
+        newNode.setData(nodeData);
+        if (locations) {
+          newNode.position(position.x, position.y);
+        }
+        nodeMap.set(nodeData.name, newNode);
       }
     });
 
-    tasks.forEach(task => {
-      // Edges from deps
-      if (task.deps && task.deps.length > 0) {
-        const uniqueDeps = Array.from(new Set(task.deps));
-        uniqueDeps.forEach((dep: string) => {
-          const sourceNode = nodeMap.get(dep);
-          const targetNode = nodeMap.get(task.name);
+    // Create all edges based on relations
+    relations.forEach(({ from, to }) => {
+      const sourceNode = nodeMap.get(from);
+      const targetNode = nodeMap.get(to);
 
-          if (sourceNode && targetNode) {
-            const sourceTask = sourceNode.getData();
-            const edge: any = {
-              shape: 'edge',
-              source: { cell: sourceNode.id, port: 'out' },
-              target: { cell: targetNode.id, port: 'in' },
-              attrs: { line: { stroke: '#8f8f8f', strokeWidth: 1 } },
-              zIndex: -1,
-              router: { name: 'manhattan' },
-              connector: { name: 'rounded' },
-            };
+      if (sourceNode && targetNode) {
+        const sourceData = sourceNode.getData();
+        const targetData = targetNode.getData();
 
-            if (sourceTask.task_type === 'CONDITIONS' || sourceTask.type === 'CONDITIONS') {
-              const { dependence } = sourceTask.task_params as any;
-              let isConditionEdge = false;
-              if (dependence && dependence.dependTaskList && dependence.dependTaskList.length > 0 && dependence.dependTaskList[0].conditionResult) {
-                const { successNode, failedNode } = dependence.dependTaskList[0].conditionResult;
-                if (successNode && successNode.includes(task.name)) {
-                  edge.source.port = 'out-success';
-                  edge.attrs.line.stroke = '#28a745';
-                  edge.attrs.line.strokeWidth = 2;
-                  isConditionEdge = true;
-                } else if (failedNode && failedNode.includes(task.name)) {
-                  edge.source.port = 'out-failure';
-                  edge.attrs.line.stroke = '#dc3545';
-                  edge.attrs.line.strokeWidth = 2;
-                  isConditionEdge = true;
-                }
-              }
-              if (isConditionEdge) {
-                currentGraph.addEdge(edge);
-              }
-            } else {
-              currentGraph.addEdge(edge);
-            }
-          }
-        });
-      }
+        let sourcePort = 'out';
+        let targetPort = 'in';
 
-      // Edges from Switch conditions
-      if ((task.task_type === 'Switch' || task.type === 'Switch') && Array.isArray(task.condition)) {
-        task.condition.forEach((cond: any) => {
-          const sourceNode = nodeMap.get(task.name);
-          const targetNode = nodeMap.get(cond.task);
-          if (sourceNode && targetNode) {
-            currentGraph.addEdge({
-              shape: 'edge',
-              source: { cell: sourceNode.id, port: 'out' },
-              target: { cell: targetNode.id, port: 'in' },
-              attrs: { line: { stroke: '#8f8f8f', strokeWidth: 1 } },
-              zIndex: -1,
-              router: { name: 'manhattan' },
-              connector: { name: 'rounded' },
-            });
-          }
+        if (sourceData.type === 'PARAMS') {
+          sourcePort = 'out';
+        }
+        if (targetData.type === 'PARAMS') {
+          targetPort = 'in';
+        }
+
+        currentGraph.addEdge({
+          shape: 'edge',
+          source: { cell: sourceNode.id, port: sourcePort },
+          target: { cell: targetNode.id, port: targetPort },
+          attrs: { line: { stroke: '#8f8f8f', strokeWidth: 1 } },
+          zIndex: -1,
+          router: { name: 'manhattan' },
+          connector: { name: 'rounded' },
         });
       }
     });
 
-    const nodes = currentGraph.getNodes();
-    const edges = currentGraph.getEdges();
+    const graphNodes = currentGraph.getNodes();
+    const graphEdges = currentGraph.getEdges();
     const g = new dagre.graphlib.Graph();
     g.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 80 });
     g.setDefaultEdgeLabel(() => ({}));
 
     const width = 180;
     const height = 36;
-    nodes.forEach((node) => {
-      g.setNode(node.id, { width, height });
+    graphNodes.forEach((node) => {
+      if (node.id) {
+        g.setNode(node.id, { width, height });
+      }
     });
 
-    edges.forEach((edge) => {
-      const source = edge.getSource() as any;
-      const target = edge.getTarget() as any;
-      if (source && target && source.cell && target.cell) {
-        g.setEdge(source.cell, target.cell);
+    graphEdges.forEach((edge) => {
+      const source = edge.getSource();
+      const target = edge.getTarget();
+      if (source && 'cell' in source && target && 'cell' in target) {
+        const sourceId = source.cell;
+        const targetId = target.cell;
+        if (typeof sourceId === 'string' && typeof targetId === 'string') {
+          g.setEdge(sourceId, targetId);
+        }
       }
     });
 
     dagre.layout(g);
 
-    g.nodes().forEach((id) => {
-      const node = currentGraph.getCellById(id) as any;
-      if (node) {
+    g.nodes().forEach((id: string) => {
+      const node = currentGraph.getCellById(id);
+      if (node && node.isNode()) {
         const pos = g.node(id);
         node.position(pos.x, pos.y);
       }
@@ -241,31 +221,37 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     const currentGraph = graphRef.current;
     if (!currentGraph) return;
 
-    const nodes = currentGraph.getNodes();
-    const edges = currentGraph.getEdges();
+    const graphNodes = currentGraph.getNodes();
+    const graphEdges = currentGraph.getEdges();
     const g = new dagre.graphlib.Graph();
     g.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 80 });
     g.setDefaultEdgeLabel(() => ({}));
 
     const width = 180;
     const height = 36;
-    nodes.forEach((node) => {
-      g.setNode(node.id, { width, height });
+    graphNodes.forEach((node) => {
+      if (node.id) {
+        g.setNode(node.id, { width, height });
+      }
     });
 
-    edges.forEach((edge) => {
-      const source = edge.getSource() as any;
-      const target = edge.getTarget() as any;
-      if (source && target && source.cell && target.cell) {
-        g.setEdge(source.cell, target.cell);
+    graphEdges.forEach((edge) => {
+      const source = edge.getSource();
+      const target = edge.getTarget();
+      if (source && 'cell' in source && target && 'cell' in target) {
+        const sourceId = source.cell;
+        const targetId = target.cell;
+        if (typeof sourceId === 'string' && typeof targetId === 'string') {
+          g.setEdge(sourceId, targetId);
+        }
       }
     });
 
     dagre.layout(g);
 
-    g.nodes().forEach((id) => {
-      const node = currentGraph.getCellById(id) as any;
-      if (node) {
+    g.nodes().forEach((id: string) => {
+      const node = currentGraph.getCellById(id);
+      if (node && node.isNode()) {
         const pos = g.node(id);
         node.position(pos.x, pos.y);
       }

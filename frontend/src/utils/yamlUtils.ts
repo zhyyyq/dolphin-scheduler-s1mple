@@ -83,11 +83,12 @@ export const generateYamlStr = (
       }
     }
 
+    const { localParams: oldLocalParams, ...restTaskParams } = nodeData.task_params || {};
     const taskPayload: any = {
       name: nodeData.name,
       task_type: nodeData.task_type,
       type: nodeData.type,
-      task_params: { ...(nodeData.task_params || {}) },
+      task_params: { ...restTaskParams },
     };
 
     // For CONDITIONS nodes, add the special 'dependence' block
@@ -131,10 +132,12 @@ export const generateYamlStr = (
       taskPayload.command = nodeData.command;
     }
     
-    delete taskPayload.task_params.localParams;
     
     if (localParams.length > 0) {
-      taskPayload.localParams = localParams;
+      if (!taskPayload.task_params) {
+        taskPayload.task_params = {};
+      }
+      taskPayload.task_params.localParams = localParams;
     }
     
     // Add the deps array to the payload if it's not empty
@@ -142,7 +145,8 @@ export const generateYamlStr = (
       taskPayload.deps = uniqueDeps;
     }
 
-    if (Object.keys(taskPayload.task_params).length === 0) {
+    // Clean up empty task_params only if it's truly empty
+    if (taskPayload.task_params && Object.keys(taskPayload.task_params).length === 0) {
       delete taskPayload.task_params;
     }
 

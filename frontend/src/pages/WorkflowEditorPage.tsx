@@ -106,7 +106,7 @@ const WorkflowEditorPage: React.FC = () => {
         const tasks = (doc.get('tasks') as any)?.toJSON() || [];
         const parameters = (doc.get('parameters') as any)?.toJSON() || [];
 
-        const paramNodes = parameters.map((p: any) => ({
+        const globalParamNodes = parameters.map((p: any) => ({
           name: p.name,
           label: p.name,
           type: 'PARAMS',
@@ -118,14 +118,45 @@ const WorkflowEditorPage: React.FC = () => {
           },
         }));
 
-        const allNodes = [...tasks, ...paramNodes];
+        const localParamNodes: any[] = [];
+        tasks.forEach((task: any) => {
+          if (task.localParams) {
+            task.localParams.forEach((p: any) => {
+              // Avoid duplicating nodes if they are already defined globally
+              if (!globalParamNodes.some((gp: any) => gp.name === p.prop) && !localParamNodes.some((lp: any) => lp.name === p.prop)) {
+                localParamNodes.push({
+                  name: p.prop,
+                  label: p.prop,
+                  type: 'PARAMS',
+                  task_type: 'PARAMS',
+                  task_params: {
+                    prop: p.prop,
+                    type: p.type,
+                    value: p.value,
+                  },
+                });
+              }
+            });
+          }
+        });
+
+        const allNodes = [...tasks, ...globalParamNodes, ...localParamNodes];
         
         const locations = workflowData.locations ? JSON.parse(workflowData.locations) : null;
         const relations: { from: string, to: string }[] = [];
-        for (const task of tasks) { // Only iterate over real tasks for deps
+        for (const task of tasks) {
           if (task.deps) {
             for (const dep of task.deps) {
               relations.push({ from: dep, to: task.name });
+            }
+          }
+          if (task.localParams) {
+            for (const param of task.localParams) {
+              if (param.direct === 'IN') {
+                relations.push({ from: param.prop, to: task.name });
+              } else { // OUT
+                relations.push({ from: task.name, to: param.prop });
+              }
             }
           }
         }
@@ -172,17 +203,64 @@ const WorkflowEditorPage: React.FC = () => {
     try {
       const doc = yaml.parseDocument(yamlContent);
       const workflowNameFromYaml = doc.getIn(['workflow', 'name']) as string || 'my-workflow';
-      const tasks = (doc.get('tasks') as any).toJSON();
+      const tasks = (doc.get('tasks') as any)?.toJSON() || [];
+      const parameters = (doc.get('parameters') as any)?.toJSON() || [];
+
+      const globalParamNodes = parameters.map((p: any) => ({
+        name: p.name,
+        label: p.name,
+        type: 'PARAMS',
+        task_type: 'PARAMS',
+        task_params: {
+          prop: p.name,
+          type: p.type,
+          value: p.value,
+        },
+      }));
+
+      const localParamNodes: any[] = [];
+      tasks.forEach((task: any) => {
+        if (task.localParams) {
+          task.localParams.forEach((p: any) => {
+            if (!globalParamNodes.some((gp: any) => gp.name === p.prop) && !localParamNodes.some((lp: any) => lp.name === p.prop)) {
+              localParamNodes.push({
+                name: p.prop,
+                label: p.prop,
+                type: 'PARAMS',
+                task_type: 'PARAMS',
+                task_params: {
+                  prop: p.prop,
+                  type: p.type,
+                  value: p.value,
+                },
+              });
+            }
+          });
+        }
+      });
+
+      const allNodes = [...tasks, ...globalParamNodes, ...localParamNodes];
       const relations: { from: string, to: string }[] = [];
+
       for (const task of tasks) {
         if (task.deps) {
           for (const dep of task.deps) {
             relations.push({ from: dep, to: task.name });
           }
         }
+        if (task.localParams) {
+          for (const param of task.localParams) {
+            if (param.direct === 'IN') {
+              relations.push({ from: param.prop, to: task.name });
+            } else { // OUT
+              relations.push({ from: task.name, to: param.prop });
+            }
+          }
+        }
       }
+
       graph.clearCells();
-      loadGraphData(tasks, relations);
+      loadGraphData(allNodes, relations);
       setWorkflowName(workflowNameFromYaml);
       message.success('从 YAML 更新画布成功！');
       setIsYamlModalVisible(false);
