@@ -1,10 +1,8 @@
 import React from 'react';
-import { Form, Input, Select, Button, Space } from 'antd';
+import { Form, Input, Button, Space } from 'antd';
 import { MinusCircleOutlined, PlusOutlined, ForkOutlined } from '@ant-design/icons';
 import { Task } from '../../../types';
 import { Graph } from '@antv/x6';
-
-const { Option } = Select;
 
 interface SwitchTaskEditorProps {
   initialValues: Task;
@@ -16,11 +14,8 @@ interface SwitchTaskEditorComponent extends React.FC<SwitchTaskEditorProps> {
 }
 
 const SwitchTaskEditor: SwitchTaskEditorComponent = ({ initialValues, allTasks }) => {
-  // Filter out the current switch task itself from the list of possible next nodes
-  const availableNodes = allTasks.filter((task: Task) => task.name !== initialValues.name);
-
   return (
-    <Form.List name="dependTaskList">
+    <Form.List name="switch_conditions">
       {(fields, { add, remove }) => (
         <>
           {fields.map(({ key, name, ...restField }) => (
@@ -29,29 +24,23 @@ const SwitchTaskEditor: SwitchTaskEditorComponent = ({ initialValues, allTasks }
                 {...restField}
                 name={[name, 'condition']}
                 rules={[{ required: true, message: '请输入条件' }]}
-                style={{ width: '300px' }}
+                style={{ width: '450px' }}
               >
                 <Input placeholder="Condition (e.g., ${status} == 'done')" />
               </Form.Item>
               <Form.Item
                 {...restField}
-                name={[name, 'nextNode']}
-                rules={[{ required: true, message: '请选择下一个节点' }]}
+                name={[name, 'target_node']}
+                style={{ display: 'none' }}
               >
-                <Select placeholder="选择下一个节点" style={{ width: '200px' }}>
-                  {availableNodes.map((task: Task) => (
-                    <Option key={task.name} value={task.name}>
-                      {task.name}
-                    </Option>
-                  ))}
-                </Select>
+                <Input />
               </Form.Item>
               <MinusCircleOutlined onClick={() => remove(name)} />
             </Space>
           ))}
           <Form.Item>
-            <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-              添加分支条件
+            <Button type="dashed" onClick={() => add({ condition: '', target_node: '' })} block icon={<PlusOutlined />}>
+              添加Case
             </Button>
           </Form.Item>
         </>

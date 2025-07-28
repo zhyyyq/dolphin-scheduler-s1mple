@@ -4,36 +4,80 @@ import { Task } from '../types';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
 import { taskTypes } from '../config/taskTypes';
+import { Graph } from '@antv/x6';
 
 interface EditTaskModalProps {
   open: boolean;
   task: Task | null;
   allTasks: Task[];
+  graph: Graph | null;
   onCancel: () => void;
   onSave: (updated_task: Task) => void;
 }
 
-const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, onCancel, onSave }) => {
+const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, graph, onCancel, onSave }) => {
   const [form] = Form.useForm();
   const [useDefaultEditor, setUseDefaultEditor] = useState(false);
 
   useEffect(() => {
-    // Reset the switch when a new task is opened
     setUseDefaultEditor(false);
     if (open && task) {
-      // Deep copy the task and its params to prevent shared state issues
       const taskCopy = JSON.parse(JSON.stringify(task));
       const formValues = {
         ...taskCopy,
         ...taskCopy.task_params,
       };
-      // For Python tasks, the script is stored in 'command', but the editor uses 'definition'.
       if (task.task_type === 'PYTHON') {
         formValues.definition = task.command;
+      }
+      if (task.task_type === 'SWITCH' && !formValues.switch_conditions) {
+        formValues.switch_conditions = [];
       }
       form.setFieldsValue(formValues);
     }
   }, [open, task, form]);
+
+  useEffect(() => {
+    if (!graph || !open || !task || task.task_type !== 'SWITCH') return;
+
+    const updateSwitchConditions = () => {
+      const outgoingEdges = graph.getOutgoingEdges(task.name);
+      if (outgoingEdges) {
+        const newConditions = outgoingEdges.map((edge, index) => {
+          const targetNode = edge.getTargetNode();
+          const existingCondition = form.getFieldValue('switch_conditions')?.[index] || {};
+          return {
+            ...existingCondition,
+            target_node: targetNode?.id,
+          };
+        });
+        form.setFieldsValue({ switch_conditions: newConditions });
+      }
+    };
+
+    const handleEdgeConnected = ({ edge }: { edge: any }) => {
+      if (edge.getSourceNode()?.id === task.name) {
+        updateSwitchConditions();
+      }
+    };
+
+    const handleEdgeRemoved = ({ edge }: { edge: any }) => {
+      if (edge.getSourceNode()?.id === task.name) {
+        updateSwitchConditions();
+      }
+    };
+
+    graph.on('edge:connected', handleEdgeConnected);
+    graph.on('edge:removed', handleEdgeRemoved);
+
+    // Initial update
+    updateSwitchConditions();
+
+    return () => {
+      graph.off('edge:connected', handleEdgeConnected);
+      graph.off('edge:removed', handleEdgeRemoved);
+    };
+  }, [graph, open, task, form]);
 
   if (!task) {
     return null;
@@ -120,9 +164,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, onC
 
     if (taskConfig && taskConfig.editor) {
       const EditorComponent = taskConfig.editor as React.FC<any>;
-      // Pass form and initialValues to all editors.
-      // Editors that don't need them will simply ignore them.
-      return <EditorComponent form={form} initialValues={task} allTasks={allTasks} />;
+      return <EditorComponent form={form} initialValues={task} allTasks={allTasks} graph={graph} />;
     }
 
     return <DefaultTaskEditor initialValues={task} form={form} />;
