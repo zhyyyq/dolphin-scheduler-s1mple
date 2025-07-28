@@ -144,13 +144,34 @@ const WorkflowEditorPage: React.FC = () => {
         const allNodes = [...tasks, ...globalParamNodes, ...localParamNodes];
         
         const locations = workflowData.locations ? JSON.parse(workflowData.locations) : null;
-        const relations: { from: string, to: string }[] = [];
+        const relations: { from: string, to: string, sourcePort?: string, targetPort?: string }[] = [];
+        const conditionTasks = new Set(tasks.filter((t: any) => t.type === 'CONDITIONS').map((t: any) => t.name));
+
         for (const task of tasks) {
           if (task.deps) {
             for (const dep of task.deps) {
+              // If the dependency is a condition, it will be handled by the condition's success/failed nodes
+              if (conditionTasks.has(dep)) {
+                continue;
+              }
               relations.push({ from: dep, to: task.name });
             }
           }
+
+          if (task.type === 'CONDITIONS' && task.task_params?.dependence?.dependTaskList?.[0]?.conditionResult) {
+            const { successNode, failedNode } = task.task_params.dependence.dependTaskList[0].conditionResult;
+            if (successNode) {
+              for (const nodeName of successNode) {
+                relations.push({ from: task.name, to: nodeName, sourcePort: 'out-success', targetPort: 'in' });
+              }
+            }
+            if (failedNode) {
+              for (const nodeName of failedNode) {
+                relations.push({ from: task.name, to: nodeName, sourcePort: 'out-failure', targetPort: 'in' });
+              }
+            }
+          }
+
           const params = task.localParams || task.task_params?.localParams;
           if (params) {
             for (const param of params) {

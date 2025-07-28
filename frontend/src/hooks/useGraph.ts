@@ -152,7 +152,7 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
 
   const loadGraphData = useCallback((
     nodes: (Task & { label?: string })[],
-    relations: { from: string; to: string }[] = [],
+    relations: { from: string; to: string; sourcePort?: string; targetPort?: string }[] = [],
     locations: { taskCode: string, x: number, y: number }[] | null = null
   ) => {
     const currentGraph = graphRef.current;
@@ -188,7 +188,7 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
     });
 
     // Create all edges based on relations
-    relations.forEach(({ from, to }) => {
+    relations.forEach(({ from, to, sourcePort: relSourcePort, targetPort: relTargetPort }) => {
       const sourceNode = nodeMap.get(from);
       const targetNode = nodeMap.get(to);
 
@@ -196,8 +196,8 @@ export const useGraph = ({ container, onNodeDoubleClick, onBlankContextMenu }: U
         const sourceData = sourceNode.getData();
         const targetData = targetNode.getData();
 
-        let sourcePort = 'out';
-        let targetPort = 'in';
+        let sourcePort = relSourcePort || 'out';
+        let targetPort = relTargetPort || 'in';
 
         if (sourceData.type === 'PARAMS') {
           sourcePort = 'out';
