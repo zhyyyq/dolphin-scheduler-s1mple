@@ -4,24 +4,6 @@ import { Diff, parseDiff } from 'react-diff-view';
 import 'react-diff-view/style/index.css';
 import * as diff from 'diff';
 
-interface Change {
-  type: 'add' | 'del' | 'normal';
-  content: string;
-  isInsert?: boolean;
-  isDelete?: boolean;
-  isNormal?: boolean;
-}
-
-interface Hunk {
-  content: string;
-  changes: Change[];
-  oldStart: number;
-  oldLines: number;
-  newStart: number;
-  newLines: number;
-  isNormal?: boolean;
-}
-
 interface ViewYamlModalProps {
   isModalVisible: boolean;
   onCancel: () => void;
@@ -48,48 +30,23 @@ export const ViewYamlModal: React.FC<ViewYamlModalProps> = ({
       return <div>无变更</div>;
     }
 
-    const diffResult = diff.diffLines(originalYaml, yamlContent);
-    const hunks: Hunk[] = [];
-    let currentHunk: Hunk | null = null;
+    const patch = diff.createPatch('workflow.yaml', originalYaml, yamlContent, '', '', { context: 3 });
+    
+    // react-diff-view's parseDiff expects a full git diff format.
+    // We prepend a git diff header to the patch created by the diff library.
+    const gitDiff = `diff --git a/workflow.yaml b/workflow.yaml\nindex 0000000..0000000 100644\n${patch}`;
 
-    diffResult.forEach((part, i) => {
-      const lines = part.value.split('\n');
-      if (part.added || part.removed) {
-        if (!currentHunk) {
-          currentHunk = {
-            content: `@@ -1,1 +1,1 @@`,
-            changes: [],
-            oldStart: 1,
-            oldLines: 1,
-            newStart: 1,
-            newLines: 1,
-          };
-        }
-        lines.forEach(line => {
-          if (line) {
-            currentHunk.changes.push({
-              type: part.added ? 'add' : 'del',
-              content: (part.added ? '+' : '-') + line,
-              isInsert: part.added,
-              isDelete: part.removed,
-            });
-          }
-        });
-      } else {
-        if (currentHunk) {
-          hunks.push(currentHunk);
-          currentHunk = null;
-        }
-      }
-    });
+    const files = parseDiff(gitDiff);
 
-    if (currentHunk) {
-      hunks.push(currentHunk);
+    if (!files || files.length === 0 || files[0].hunks.length === 0) {
+      return <div>无变更</div>;
     }
+
+    const file = files[0];
 
     return (
       <div style={{ maxHeight: '60vh', overflowY: 'auto', border: '1px solid #d9d9d9', borderRadius: '2px' }}>
-        <Diff viewType="split" diffType="modify" hunks={hunks} />
+        <Diff viewType="split" diffType={file.type} hunks={file.hunks} />
       </div>
     );
   };
