@@ -206,6 +206,8 @@ DependentTaskEditor.taskInfo = {
       label: newNodeName,
       task_type: task.type,
       type: task.type,
+      failRetryTimes: 0,
+      failRetryInterval: 1,
       task_params: {
         denpendence: {
           type: 'workflow',
