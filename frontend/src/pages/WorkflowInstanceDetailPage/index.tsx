@@ -58,7 +58,8 @@ const WorkflowInstanceDetailPage: React.FC = () => {
     setLogLoading(true);
     try {
       const logData = await api.get<string>(`/api/ds/log/${taskInstanceId}`);
-      setLogContent(logData);
+      const formattedLog = logData.replace(/\\r\\n/g, '\n');
+      setLogContent(formattedLog);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setLogContent(`无法加载日志: ${errorMessage}`);
@@ -183,7 +184,7 @@ const WorkflowInstanceDetailPage: React.FC = () => {
         width="80%"
       >
         <Spin spinning={logLoading}>
-          <pre style={{ background: '#f5f5f5', padding: '10px', maxHeight: '60vh', overflow: 'auto' }}>
+          <pre style={{ background: '#f5f5f5', padding: '10px', maxHeight: '60vh', overflow: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
             <code>{logContent}</code>
           </pre>
         </Spin>
