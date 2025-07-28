@@ -208,18 +208,28 @@ const HomePage: React.FC = () => {
             },
           };
         } else if (task.type === 'DEPENDENT') {
-            const params = { ...originalTaskParams, ...(task.task_params || {}) };
-            taskParams = {
-                dependence: params.denpendence, // Correctly pass the object
-                localParams: params.localParams || [],
-                resourceList: [],
-            };
+          const params = { ...originalTaskParams, ...(task.task_params || {}) };
+          taskParams = {
+            dependence: params.denpendence, // Correctly pass the object
+            localParams: params.localParams || [],
+            resourceList: [],
+          };
         } else if (task.type === 'SUB_PROCESS') {
           const localParams = originalTaskParams.localParams || [];
           taskParams = {
             localParams: localParams,
             resourceList: [],
             processDefinitionCode: task.task_params?.processDefinitionCode || 0,
+          };
+        } else if (task.type === 'PROCEDURE') { 
+          const params = { ...originalTaskParams, ...(task.task_params || {}) };
+          const localParams = originalTaskParams.localParams || [];
+          taskParams = {
+            type: params.datasourceType,
+            datasource: params.datasource,
+            method: params.method,
+            localParams,
+            resourceList: [],
           };
         } else {
           const rawScript = task.command || '';
