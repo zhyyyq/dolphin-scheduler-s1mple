@@ -18,6 +18,10 @@ public class ProjectController {
 
     @PostMapping
     public void createProject(@RequestBody Map<String, String> payload) throws Exception {
-        dsService.findOrCreateProject(payload.get("name"));
+        dsService.createProject(
+            payload.get("name"),
+            payload.get("description"),
+            payload.get("owner")
+        );
     }
 }

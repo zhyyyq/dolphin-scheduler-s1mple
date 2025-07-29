@@ -202,6 +202,30 @@ public class DsService {
         }
     }
 
+    public long findOrCreateProject(String projectName) throws Exception {
+        // List all projects and find by name, as search API can be unreliable
+        HttpGet projectsRequest = new HttpGet(dsUrl + "/projects?pageNo=1&pageSize=1000");
+        projectsRequest.addHeader("token", token);
+        CloseableHttpResponse projectsResponse = httpClient.execute(projectsRequest);
+        String projectsResponseString = EntityUtils.toString(projectsResponse.getEntity());
+        JSONObject projectsData = JSON.parseObject(projectsResponseString);
+
+        if (projectsData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (listing projects): " + projectsData.getString("msg"));
+        }
+
+        JSONArray projectList = projectsData.getJSONObject("data").getJSONArray("totalList");
+        for (int i = 0; i < projectList.size(); i++) {
+            JSONObject project = projectList.getJSONObject(i);
+            if (projectName.equals(project.getString("name"))) {
+                return project.getLongValue("code");
+            }
+        }
+
+        // If not found, create it with default values
+        return createProject(projectName, "Default description", "admin");
+    }
+
     public Map<String, Object> createOrUpdateWorkflow(Map<String, Object> payload) throws Exception {
         String workflowName = (String) payload.get("name");
         String projectName = (String) payload.getOrDefault("project", "default");
@@ -438,33 +462,14 @@ public class DsService {
         }
     }
 
-    public long findOrCreateProject(String projectName) throws Exception {
-        // List all projects and find by name, as search API can be unreliable
-        HttpGet projectsRequest = new HttpGet(dsUrl + "/projects?pageNo=1&pageSize=1000");
-        projectsRequest.addHeader("token", token);
-        CloseableHttpResponse projectsResponse = httpClient.execute(projectsRequest);
-        String projectsResponseString = EntityUtils.toString(projectsResponse.getEntity());
-        JSONObject projectsData = JSON.parseObject(projectsResponseString);
-
-        if (projectsData.getIntValue("code") != 0) {
-            throw new Exception("DS API error (listing projects): " + projectsData.getString("msg"));
-        }
-
-        JSONArray projectList = projectsData.getJSONObject("data").getJSONArray("totalList");
-        for (int i = 0; i < projectList.size(); i++) {
-            JSONObject project = projectList.getJSONObject(i);
-            if (projectName.equals(project.getString("name"))) {
-                return project.getLongValue("code");
-            }
-        }
-
-        // If not found, create it
+    public long createProject(String projectName, String description, String userName) throws Exception {
         HttpPost createRequest = new HttpPost(dsUrl + "/projects");
         createRequest.addHeader("token", token);
         createRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
         List<NameValuePair> params = new ArrayList<>();
         params.add(new BasicNameValuePair("projectName", projectName));
-        params.add(new BasicNameValuePair("description", ""));
+        params.add(new BasicNameValuePair("description", description));
+        params.add(new BasicNameValuePair("userName", userName));
         createRequest.setEntity(new UrlEncodedFormEntity(params));
         
         CloseableHttpResponse createResponse = httpClient.execute(createRequest);
