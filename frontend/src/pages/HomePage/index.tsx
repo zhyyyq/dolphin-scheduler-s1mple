@@ -185,7 +185,7 @@ const HomePage: React.FC = () => {
             ))}
           </Select>
           <Button onClick={() => dispatch(setIsRestoreModalOpen(true))}>恢复工作流</Button>
-          <Link to="/workflow/edit">
+          <Link to={`/workflow/edit${selectedProject && selectedProject !== 'all' ? `?project=${selectedProject}` : ''}`}>
             <Button type="primary">新建工作流</Button>
           </Link>
         </Space>
