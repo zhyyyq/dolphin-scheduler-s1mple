@@ -50,7 +50,7 @@ export const WorkflowToolbar: React.FC = () => {
     try {
       await dispatch(saveWorkflow()).unwrap();
       message.success('工作流保存成功！');
-      navigate('/');
+      navigate('/workflows');
     } catch (error: any) {
       message.error(`保存工作流时出错: ${error.message}`);
     }

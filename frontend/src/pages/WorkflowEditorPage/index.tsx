@@ -17,7 +17,7 @@ import {
   fetchDiyFunctions,
   fetchWorkflow,
   setWorkflowData,
-  // initialState,
+  clearWorkflow,
 } from '../../store/slices/workflowEditorSlice';
 import { WorkflowDetail } from '../../types';
 
@@ -39,6 +39,7 @@ const WorkflowEditorPage: React.FC = () => {
     if (workflow_uuid) {
       dispatch(fetchWorkflow(workflow_uuid)).unwrap().catch(() => message.error('加载工作流数据失败。'));
     } else {
+      dispatch(clearWorkflow());
       const searchParams = new URLSearchParams(location.search);
       const projectName = searchParams.get('projectName');
       const projectCode = searchParams.get('projectCode');

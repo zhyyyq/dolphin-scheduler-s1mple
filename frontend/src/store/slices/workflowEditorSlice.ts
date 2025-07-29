@@ -105,6 +105,18 @@ export const workflowEditorSlice = createSlice({
     setGraph: (state, action: PayloadAction<any | null>) => {
       state.graph = action.payload;
     },
+    clearWorkflow: (state) => {
+      state.workflowUuid = null;
+      state.workflowData = null;
+      state.originalYaml = '';
+      state.workflowName = 'my-workflow';
+      state.workflowSchedule = '0 0 * * *';
+      state.isScheduleEnabled = true;
+      state.scheduleTimeRange = [dayjs().toISOString(), dayjs().add(100, 'year').toISOString()];
+      if (state.graph) {
+        state.graph.clearCells();
+      }
+    },
   },
 });
 
@@ -610,6 +622,7 @@ export const {
   setWorkflowData,
   setOriginalYaml,
   setGraph,
+  clearWorkflow,
 } = workflowEditorSlice.actions;
 
 export default workflowEditorSlice.reducer;

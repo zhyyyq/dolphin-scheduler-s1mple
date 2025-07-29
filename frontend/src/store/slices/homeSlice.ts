@@ -468,10 +468,15 @@ export const onlineWorkflow = createAsyncThunk(
       };
 
       if (workflow.schedule) {
+        const cronParts = String(workflow.schedule).split(' ');
+        let dsCron = workflow.schedule;
+        if (cronParts.length === 5) {
+          dsCron = `0 ${workflow.schedule} ?`;
+        }
         payload.schedule = {
           startTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
           endTime: '2125-07-25 00:00:00',
-          crontab: workflow.schedule,
+          crontab: dsCron,
           timezoneId: Intl.DateTimeFormat().resolvedOptions().timeZone,
         };
       }
