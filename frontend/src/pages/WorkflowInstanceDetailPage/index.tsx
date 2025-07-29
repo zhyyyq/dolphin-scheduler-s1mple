@@ -60,7 +60,7 @@ const WorkflowInstanceDetailPage: React.FC = () => {
         try {
           const workflows = await api.get<any[]>('/api/workflow/combined');
           const processDefinitionCode = instance.dagData.processDefinition.code;
-          const matchedWorkflow = workflows.find(wf => wf.code === processDefinitionCode);
+          const matchedWorkflow = workflows.find(wf => String(wf.code) === String(processDefinitionCode));
           if (matchedWorkflow) {
             setWorkflowUuid(matchedWorkflow.uuid);
           }
