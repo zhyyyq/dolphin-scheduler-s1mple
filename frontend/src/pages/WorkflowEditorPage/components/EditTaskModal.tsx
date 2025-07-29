@@ -1,21 +1,24 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Modal, Input, Form, Switch, Space, Button, InputNumber } from 'antd';
 import { Task } from '../../../types';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
 import { taskTypes } from '../../../config/taskTypes';
 import { Graph } from '@antv/x6';
+import { RootState, AppDispatch } from '../../../store';
+import { setCurrentTaskNode, saveNode } from '../../../store/slices/workflowEditorSlice';
 
-interface EditTaskModalProps {
-  open: boolean;
-  task: Task | null;
-  allTasks: Task[];
-  graph: Graph | null;
-  onCancel: () => void;
-  onSave: (updated_task: Task) => void;
-}
-
-const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, graph, onCancel, onSave }) => {
+const EditTaskModal: React.FC = () => {
+  const dispatch: AppDispatch = useDispatch();
+  const {
+    currentTaskNode: task,
+    allTasksForModal: allTasks,
+    graph,
+  } = useSelector((state: RootState) => state.workflowEditor);
+  const open = !!task;
+  const onCancel = () => dispatch(setCurrentTaskNode(null));
+  const onSave = (updated_task: Task) => dispatch(saveNode(updated_task));
   const [form] = Form.useForm();
   const [useDefaultEditor, setUseDefaultEditor] = useState(false);
 

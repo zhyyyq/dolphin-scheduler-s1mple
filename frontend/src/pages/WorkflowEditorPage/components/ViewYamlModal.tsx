@@ -1,26 +1,27 @@
 import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Modal, Button, Input, Tabs } from 'antd';
 import { Diff, parseDiff } from 'react-diff-view';
 import 'react-diff-view/style/index.css';
 import * as diff from 'diff';
+import { RootState, AppDispatch } from '../../../store';
+import {
+  setIsYamlModalVisible,
+  setYamlContent,
+  syncYamlToGraph,
+} from '../../../store/slices/workflowEditorSlice';
 
-interface ViewYamlModalProps {
-  isModalVisible: boolean;
-  onCancel: () => void;
-  onSync: () => void;
-  yamlContent: string;
-  onYamlContentChange: (content: string) => void;
-  originalYaml?: string;
-}
+export const ViewYamlModal: React.FC = () => {
+  const dispatch: AppDispatch = useDispatch();
+  const {
+    isYamlModalVisible,
+    yamlContent,
+    originalYaml,
+  } = useSelector((state: RootState) => state.workflowEditor);
 
-export const ViewYamlModal: React.FC<ViewYamlModalProps> = ({
-  isModalVisible,
-  onCancel,
-  onSync,
-  yamlContent,
-  onYamlContentChange,
-  originalYaml,
-}) => {
+  const onCancel = () => dispatch(setIsYamlModalVisible(false));
+  const onSync = () => dispatch(syncYamlToGraph());
+  const onYamlContentChange = (content: string) => dispatch(setYamlContent(content));
   const renderDiff = () => {
     if (!originalYaml) {
       return null;

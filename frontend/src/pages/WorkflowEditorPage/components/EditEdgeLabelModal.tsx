@@ -1,15 +1,16 @@
 import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Modal, Form, Input } from 'antd';
 import { Edge } from '@antv/x6';
+import { RootState, AppDispatch } from '../../../store';
+import { setCurrentEdge, saveEdgeLabel } from '../../../store/slices/workflowEditorSlice';
 
-interface EditEdgeLabelModalProps {
-  open: boolean;
-  edge: Edge | null;
-  onCancel: () => void;
-  onSave: (edge: Edge, newLabel: string) => void;
-}
-
-const EditEdgeLabelModal: React.FC<EditEdgeLabelModalProps> = ({ open, edge, onCancel, onSave }) => {
+const EditEdgeLabelModal: React.FC = () => {
+  const dispatch: AppDispatch = useDispatch();
+  const { currentEdge: edge } = useSelector((state: RootState) => state.workflowEditor);
+  const open = !!edge;
+  const onCancel = () => dispatch(setCurrentEdge(null));
+  const onSave = (edge: Edge, newLabel: string) => dispatch(saveEdgeLabel({ edge, newLabel }));
   const [form] = Form.useForm();
 
   useEffect(() => {

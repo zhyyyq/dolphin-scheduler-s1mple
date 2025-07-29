@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Modal, Input, Form, Select, Button } from 'antd';
 import { Task } from '@/types'; // We can still use Task as a loose shape for the node data
 import { Graph } from '@antv/x6';
-
-interface EditParamNodeModalProps {
-  open: boolean;
-  node: Task | null;
-  graph: Graph | null;
-  onCancel: () => void;
-  onSave: (updated_node: Task) => void;
-}
+import { RootState, AppDispatch } from '../../../store';
+import { setCurrentParamNode, saveNode } from '../../../store/slices/workflowEditorSlice';
 
 const { Option } = Select;
 
-const EditParamNodeModal: React.FC<EditParamNodeModalProps> = ({ open, node, graph, onCancel, onSave }) => {
+const EditParamNodeModal: React.FC = () => {
+  const dispatch: AppDispatch = useDispatch();
+  const {
+    currentParamNode: node,
+    graph,
+  } = useSelector((state: RootState) => state.workflowEditor);
+  const open = !!node;
+  const onCancel = () => dispatch(setCurrentParamNode(null));
+  const onSave = (updated_node: Task) => dispatch(saveNode(updated_node));
   const [form] = Form.useForm();
   const [isConnected, setIsConnected] = useState(false);
 

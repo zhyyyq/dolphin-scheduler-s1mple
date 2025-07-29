@@ -1,22 +1,20 @@
 import React from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Menu } from 'antd';
 import { taskCategories, taskTypes } from '../../../config/taskTypes';
+import { RootState, AppDispatch } from '../../../store';
+import { handleMenuClick as handleMenuClickThunk } from '../../../store/slices/workflowEditorSlice';
 
-interface WorkflowContextMenuProps {
-  visible: boolean;
-  x: number;
-  y: number;
-  onMenuClick: (e: { key: string }) => void;
-  diyFunctions?: any[];
-}
+export const WorkflowContextMenu: React.FC = () => {
+  const dispatch: AppDispatch = useDispatch();
+  const {
+    contextMenu: { visible, x, y },
+    diyFunctions,
+  } = useSelector((state: RootState) => state.workflowEditor);
 
-export const WorkflowContextMenu: React.FC<WorkflowContextMenuProps> = ({
-  visible,
-  x,
-  y,
-  onMenuClick,
-  diyFunctions = [],
-}) => {
+  const onMenuClick = (e: { key: string }) => {
+    dispatch(handleMenuClickThunk(e));
+  };
   if (!visible) return null;
 
   const menuItems = taskCategories.map(category => ({

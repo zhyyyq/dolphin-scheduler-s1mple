@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Button, Input, Switch, Modal, DatePicker, Typography, List } from 'antd';
 import { Cron } from 'react-js-cron';
 import 'react-js-cron/dist/styles.css';
 import dayjs from 'dayjs';
 import { CronExpressionParser } from 'cron-parser';
+import { RootState, AppDispatch } from '../../../store';
+import {
+  setWorkflowName,
+  setWorkflowSchedule,
+  setIsScheduleEnabled,
+  setScheduleTimeRange,
+} from '../../../store/slices/workflowEditorSlice';
 
 const { RangePicker } = DatePicker;
 
 interface WorkflowToolbarProps {
-  workflowName: string;
-  onWorkflowNameChange: (name: string) => void;
-  workflowSchedule: string;
-  onWorkflowScheduleChange: (schedule: string) => void;
-  scheduleTimeRange: [dayjs.Dayjs | null, dayjs.Dayjs | null];
-  onScheduleTimeRangeChange: (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null]) => void;
-  isScheduleEnabled: boolean;
-  onIsScheduleEnabledChange: (enabled: boolean) => void;
   onShowYaml: () => void;
   onSave: () => void;
   onAutoLayout: () => void;
@@ -23,19 +23,30 @@ interface WorkflowToolbarProps {
 }
 
 export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
-  workflowName,
-  onWorkflowNameChange,
-  workflowSchedule,
-  onWorkflowScheduleChange,
-  isScheduleEnabled,
-  onIsScheduleEnabledChange,
-  scheduleTimeRange,
-  onScheduleTimeRangeChange,
   onShowYaml,
   onSave,
   onAutoLayout,
   onImportYaml,
 }) => {
+  const dispatch: AppDispatch = useDispatch();
+  const {
+    workflowName,
+    workflowSchedule,
+    isScheduleEnabled,
+    scheduleTimeRange: scheduleTimeRangeISO,
+  } = useSelector((state: RootState) => state.workflowEditor);
+
+  const scheduleTimeRange = [
+    scheduleTimeRangeISO[0] ? dayjs(scheduleTimeRangeISO[0]) : null,
+    scheduleTimeRangeISO[1] ? dayjs(scheduleTimeRangeISO[1]) : null,
+  ] as [dayjs.Dayjs | null, dayjs.Dayjs | null];
+
+  const onWorkflowNameChange = (name: string) => dispatch(setWorkflowName(name));
+  const onWorkflowScheduleChange = (schedule: string) => dispatch(setWorkflowSchedule(schedule));
+  const onIsScheduleEnabledChange = (enabled: boolean) => dispatch(setIsScheduleEnabled(enabled));
+  const onScheduleTimeRangeChange = (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null]) => {
+    dispatch(setScheduleTimeRange([dates[0]?.toISOString() ?? null, dates[1]?.toISOString() ?? null]));
+  };
   const [isCronModalVisible, setIsCronModalVisible] = useState(false);
   const [nextRunTimes, setNextRunTimes] = useState<string[]>([]);
   const [cronError, setCronError] = useState<string | null>(null);
