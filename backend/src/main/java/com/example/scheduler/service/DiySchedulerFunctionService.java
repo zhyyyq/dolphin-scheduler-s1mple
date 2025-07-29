@@ -18,7 +18,7 @@ public class DiySchedulerFunctionService {
     private DiySchedulerFunctionRepository repository;
 
     public List<DiySchedulerFunction> getAllFunctions() {
-        return repository.findAll();
+        return repository.findAllByDeletedFalse();
     }
 
     public Optional<DiySchedulerFunction> getFunctionById(Long id) {
@@ -27,7 +27,7 @@ public class DiySchedulerFunctionService {
 
     public DiySchedulerFunction createFunction(DiySchedulerFunction function) {
         // Check for duplicates before creating
-        if (repository.findByFunctionName(function.getFunctionName()).isPresent()) {
+        if (repository.findByFunctionNameAndDeletedFalse(function.getFunctionName()).isPresent()) {
             throw new RuntimeException("Function with name '" + function.getFunctionName() + "' already exists.");
         }
         return repository.save(function);
@@ -40,7 +40,7 @@ public class DiySchedulerFunctionService {
 
         String finalName = baseName;
         int counter = 1;
-        while (repository.findByFunctionName(finalName).isPresent()) {
+        while (repository.findByFunctionNameAndDeletedFalse(finalName).isPresent()) {
             finalName = baseName + "_" + counter;
             counter++;
         }
@@ -65,6 +65,7 @@ public class DiySchedulerFunctionService {
     public void deleteFunction(Long id) {
         DiySchedulerFunction function = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Function not found with id: " + id));
-        repository.delete(function);
+        function.setDeleted(true);
+        repository.save(function);
     }
 }
