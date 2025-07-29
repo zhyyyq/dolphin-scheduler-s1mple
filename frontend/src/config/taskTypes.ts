@@ -9,6 +9,7 @@ import SwitchTaskEditor from '../components/tasks/logic/SwitchTaskEditor';
 import DependentTaskEditor from '../components/tasks/dependent/DependentTaskEditor';
 import LogicGateTaskEditor from '../components/tasks/logic/LogicGateTaskEditor';
 import SubWorkflowTaskEditor from '../components/tasks/logic/SubProcessTaskEditor';
+import DiyFunctionTaskEditor from '../components/tasks/DiyFunctionTaskEditor';
 
 const AndTask = { taskInfo: LogicGateTaskEditor.taskInfo.AND };
 const OrTask = { taskInfo: LogicGateTaskEditor.taskInfo.OR };
@@ -24,6 +25,7 @@ const editors = [
   SwitchTaskEditor,
   DependentTaskEditor,
   SubWorkflowTaskEditor,
+  DiyFunctionTaskEditor,
   AndTask,
   OrTask,
 ];

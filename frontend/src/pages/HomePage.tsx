@@ -115,6 +115,30 @@ const HomePage: React.FC = () => {
       // Create a temporary graph instance to compile the workflow
       const tempGraph = new Graph({ container: document.createElement('div') });
       const originalTasks = doc.tasks || [];
+
+      // Pre-process DIY_FUNCTION tasks
+      const diyFunctionPromises = originalTasks
+        .filter((task: any) => task.type === 'DIY_FUNCTION')
+        .map(async (task: any) => {
+          const functionId = task.task_params?.functionId;
+          if (functionId) {
+            try {
+              const funcData = await api.get<any>(`/api/diy-functions/${functionId}`);
+              // Mutate the task object in place
+              task.command = funcData.functionContent;
+              task.type = 'PYTHON'; 
+              task.task_type = 'PYTHON';
+            } catch (e) {
+              console.error(`Failed to fetch DIY function ${functionId}`, e);
+              // Stop the process if a function can't be fetched
+              throw new Error(`Failed to fetch code for custom component with ID ${functionId}.`);
+            }
+          }
+        });
+
+      // Wait for all DIY functions to be processed
+      await Promise.all(diyFunctionPromises);
+
       const relations: { from: string, to: string }[] = [];
       for (const task of originalTasks) {
         if (task.deps) {

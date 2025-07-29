@@ -49,7 +49,9 @@ public class GitService {
         if (git == null) {
             init();
         }
-        git.add().addFilepattern(filename).call();
+        // Using "." is more robust as it stages all changes in the working directory,
+        // avoiding issues with relative paths and the current working directory of the process.
+        git.add().addFilepattern(".").call();
         git.commit().setMessage(message).call();
     }
 
@@ -57,7 +59,10 @@ public class GitService {
         if (git == null) {
             init();
         }
+        // The rm command correctly uses the filepattern relative to the repo root.
+        // However, to be consistent and robust, we ensure all changes are staged.
         git.rm().addFilepattern(filename).call();
+        git.add().addFilepattern(".").call(); // Stage the removal
         git.commit().setMessage(message).call();
     }
 

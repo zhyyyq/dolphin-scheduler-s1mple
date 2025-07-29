@@ -415,36 +415,10 @@ const WorkflowEditorPage: React.FC = () => {
       const func = diyFunctions.find(f => f.functionName === functionName);
       if (!func) return;
 
-      const pythonTaskInfo = taskTypes.find(t => t.type === 'PYTHON');
-      if (!pythonTaskInfo) return;
+      const diyTaskInfo = taskTypes.find(t => t.type === 'DIY_FUNCTION');
+      if (!diyTaskInfo || typeof diyTaskInfo.createNode !== 'function') return;
 
-      const existingNodes = graph.getNodes();
-      let newNodeName = functionName;
-      let counter = 1;
-      while (existingNodes.some(n => n.getData().label === newNodeName)) {
-        newNodeName = `${functionName}_${counter}`;
-        counter++;
-      }
-
-      const nodeData: Partial<Task> = {
-        name: newNodeName,
-        label: newNodeName,
-        task_type: 'PYTHON',
-        type: 'PYTHON',
-        task_params: {
-          ...JSON.parse(JSON.stringify((pythonTaskInfo as any).default_params || {})),
-          isCustom: true, // Add a flag to identify this as a custom, non-editable component
-        },
-        _display_type: 'PYTHON',
-        command: func.functionContent,
-      };
-
-      graph.addNode({
-        shape: 'task-node',
-        x: contextMenu.px,
-        y: contextMenu.py,
-        data: nodeData as Task,
-      });
+      diyTaskInfo.createNode(graph, diyTaskInfo, contextMenu, func);
 
       setContextMenu({ ...contextMenu, visible: false });
       return;
