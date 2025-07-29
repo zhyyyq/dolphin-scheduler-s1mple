@@ -14,6 +14,8 @@ import WorkflowInstanceDetailPage from './pages/WorkflowInstanceDetailPage';
 import FileUploadPage from './pages/FileUploadPage';
 import DiyFunctionPage from './pages/DiyFunctionPage';
 import PythonEditorPage from './pages/PythonEditorPage';
+import DiyFunctionInstancesPage from './pages/DiyFunctionInstancesPage';
+import DiyFunctionInstanceDetailPage from './pages/DiyFunctionInstanceDetailPage';
 
 import './App.css';
 
@@ -54,6 +56,11 @@ const App: React.FC = () => {
       icon: <CodeOutlined />,
       label: <Link to="/functions">自定义组件</Link>,
     },
+    {
+      key: '/functions/runs',
+      icon: <HistoryOutlined />,
+      label: <Link to="/functions/runs">组件运行实例</Link>,
+    },
   ];
 
   return (
@@ -83,6 +90,8 @@ const App: React.FC = () => {
             <Route path="/upload" element={<FileUploadPage />} />
             <Route path="/functions" element={<DiyFunctionPage />} />
             <Route path="/functions/edit/:functionId" element={<PythonEditorPage />} />
+            <Route path="/functions/runs" element={<DiyFunctionInstancesPage />} />
+            <Route path="/functions/runs/:runId" element={<DiyFunctionInstanceDetailPage />} />
           </Routes>
         </Content>
       </Layout>
