@@ -56,7 +56,7 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
       }
     }
   }, [workflowSchedule]);
-
+  console.log('WorkflowToolbar rendered');
   return (
     <>
       <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px', background: 'white', padding: '8px', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
@@ -82,6 +82,7 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
             style={{ width: '350px' }}
             value={scheduleTimeRange}
             onChange={(dates) => {
+              console.log('Selected dates:', dates);
               onScheduleTimeRangeChange(dates as [dayjs.Dayjs | null, dayjs.Dayjs | null]);
             }}
             disabled={!isScheduleEnabled}
@@ -90,7 +91,7 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
       </div>
       <Modal
         title="定时配置"
-        visible={isCronModalVisible}
+        open={isCronModalVisible}
         onCancel={() => setIsCronModalVisible(false)}
         footer={null}
         width={650}

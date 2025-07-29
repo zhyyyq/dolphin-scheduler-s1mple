@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { useGraph } from '../../../../hooks/useGraph';
 
 interface EditorDagGraphProps {
-  container: HTMLDivElement | null;
   onBlankContextMenu: (e: any, x: number, y: number) => void;
   onEdgeDoubleClick: (edge: any) => void;
   onNodeDoubleClick: (args: { node: any }) => void;
@@ -12,7 +11,6 @@ interface EditorDagGraphProps {
 }
 
 const EditorDagGraph: React.FC<EditorDagGraphProps> = ({
-  container,
   onBlankContextMenu,
   onEdgeDoubleClick,
   onNodeDoubleClick,
@@ -20,6 +18,13 @@ const EditorDagGraph: React.FC<EditorDagGraphProps> = ({
   setLoadGraphData,
   setAutoLayout,
 }) => {
+  const [container, setContainer] = React.useState<HTMLDivElement | null>(null);
+  const containerRefCallback = React.useCallback((node: HTMLDivElement) => {
+    if (node) {
+      setContainer(node);
+    }
+  }, []);
+
   const { graph, loadGraphData, autoLayout } = useGraph({
     container: container,
     onBlankContextMenu: onBlankContextMenu,
@@ -39,7 +44,7 @@ const EditorDagGraph: React.FC<EditorDagGraphProps> = ({
     }
   }, [graph, onNodeDoubleClick, setGraphInstance, setLoadGraphData, setAutoLayout, loadGraphData, autoLayout]);
 
-  return <div ref={container as any} style={{ width: '100%', height: '100%' }} />;
+  return <div ref={containerRefCallback} style={{ width: '100%', height: '100%' }} />;
 };
 
 export default EditorDagGraph;

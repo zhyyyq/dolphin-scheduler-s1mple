@@ -22,12 +22,6 @@ const WorkflowEditorPage: React.FC = () => {
   const navigate = useNavigate();
   const { workflow_uuid } = useParams<{ workflow_uuid: string }>();
   const { message } = AntApp.useApp();
-  const [container, setContainer] = useState<HTMLDivElement | null>(null);
-  const containerRefCallback = useCallback((node: HTMLDivElement) => {
-    if (node) {
-      setContainer(node);
-    }
-  }, []);
 
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; px: number; py: number }>({ visible: false, x: 0, y: 0, px: 0, py: 0 });
   const [isYamlModalVisible, setIsYamlModalVisible] = useState(false);
@@ -43,6 +37,10 @@ const WorkflowEditorPage: React.FC = () => {
     dayjs(),
     dayjs().add(100, 'year'),
   ]);
+
+  const handleScheduleTimeRangeChange = useCallback((dates: [dayjs.Dayjs | null, dayjs.Dayjs | null]) => {
+    setScheduleTimeRange(dates);
+  }, []);
   const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
   const [workflowData, setWorkflowData] = useState<WorkflowDetail | null>(null);
   const [originalYaml, setOriginalYaml] = useState<string>('');
@@ -63,7 +61,7 @@ const WorkflowEditorPage: React.FC = () => {
   const [loadGraphData, setLoadGraphData] = useState<any>(null);
   const [autoLayout, setAutoLayout] = useState<any>(null);
 
-  const handleNodeDoubleClick = (args: { node: any }) => {
+  const handleNodeDoubleClick = useCallback((args: { node: any }) => {
     const { node } = args;
     const nodeData = node.getData();
     
@@ -74,7 +72,7 @@ const WorkflowEditorPage: React.FC = () => {
       setAllTasksForModal(allNodes);
       setCurrentTaskNode({ ...nodeData, id: node.id });
     }
-  };
+  }, [graph]);
 
   useEffect(() => {
     const fetchDiyFunctions = async () => {
@@ -246,7 +244,7 @@ const WorkflowEditorPage: React.FC = () => {
     loadGraphContent();
   }, [graph, workflowData?.yaml_content, loadGraphData]);
 
-  const handleSaveNode = (updatedNode: Task) => {
+  const handleSaveNode = useCallback((updatedNode: Task) => {
     if (!graph) return;
     
     const nodeToUpdate = graph.getNodes().find((n: any) => n.id === (updatedNode as any).id);
@@ -263,9 +261,9 @@ const WorkflowEditorPage: React.FC = () => {
     
     setCurrentTaskNode(null);
     setCurrentParamNode(null);
-  };
+  }, [graph]);
 
-  const handleSaveEdgeLabel = (edge: any, newLabel: string) => {
+  const handleSaveEdgeLabel = useCallback((edge: any, newLabel: string) => {
     edge.setLabelAt(0, {
       attrs: {
         label: {
@@ -274,25 +272,25 @@ const WorkflowEditorPage: React.FC = () => {
       },
     });
     setCurrentEdge(null);
-  };
+  }, []);
 
-  const handleCancelEditEdgeLabel = () => {
+  const handleCancelEditEdgeLabel = useCallback(() => {
     setCurrentEdge(null);
-  };
+  }, []);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setCurrentTaskNode(null);
     setCurrentParamNode(null);
-  };
+  }, []);
 
-  const handleShowYaml = () => {
+  const handleShowYaml = useCallback(() => {
     if (!graph) return;
     const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml);
     setYamlContent(yamlStr);
     setIsYamlModalVisible(true);
-  };
+  }, [graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml]);
 
-  const handleSyncYamlToGraph = async () => {
+  const handleSyncYamlToGraph = useCallback(async () => {
     if (!graph) return;
     try {
       const doc = yaml.parseDocument(yamlContent);
@@ -386,9 +384,9 @@ const WorkflowEditorPage: React.FC = () => {
     } catch (error: any) {
       message.error(`从 YAML 同步到画布失败: ${error.message}`);
     }
-  };
+  }, [graph, yamlContent, loadGraphData, message]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!graph) return;
     const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml);
     if (!yamlStr) {
@@ -416,9 +414,9 @@ const WorkflowEditorPage: React.FC = () => {
     } catch (error: any) {
       message.error(`保存工作流时出错: ${error.message}`);
     }
-  };
+  }, [graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml, workflow_uuid, workflowUuid, message, navigate]);
 
-  const handleMenuClick = (e: { key: string }) => {
+  const handleMenuClick = useCallback((e: { key: string }) => {
     if (!graph) return;
 
     if (e.key.startsWith('diy-')) {
@@ -443,9 +441,9 @@ const WorkflowEditorPage: React.FC = () => {
     }
 
     setContextMenu({ ...contextMenu, visible: false });
-  };
+  }, [graph, contextMenu, diyFunctions]);
 
-  const handleImportYaml = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportYaml = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -488,7 +486,7 @@ const WorkflowEditorPage: React.FC = () => {
     }
     // Reset file input to allow importing the same file again
     event.target.value = '';
-  };
+  }, [graph, loadGraphData, message]);
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
@@ -501,25 +499,20 @@ const WorkflowEditorPage: React.FC = () => {
           isScheduleEnabled={isScheduleEnabled}
           onIsScheduleEnabledChange={setIsScheduleEnabled}
           scheduleTimeRange={scheduleTimeRange}
-          onScheduleTimeRangeChange={setScheduleTimeRange}
+          onScheduleTimeRangeChange={handleScheduleTimeRangeChange}
           onShowYaml={handleShowYaml}
           onSave={handleSave}
           onAutoLayout={autoLayout}
           onImportYaml={handleImportYaml}
         />
-        <div ref={containerRefCallback} style={{ width: '100%', height: '100%' }}>
-          {container && (
-            <EditorDagGraph
-              container={container}
-              onBlankContextMenu={handleBlankContextMenu}
-              onEdgeDoubleClick={handleEdgeDoubleClick}
-              onNodeDoubleClick={handleNodeDoubleClick}
-              setGraphInstance={setGraphInstance}
-              setLoadGraphData={setLoadGraphData}
-              setAutoLayout={setAutoLayout}
-            />
-          )}
-        </div>
+        <EditorDagGraph
+          onBlankContextMenu={handleBlankContextMenu}
+          onEdgeDoubleClick={handleEdgeDoubleClick}
+          onNodeDoubleClick={handleNodeDoubleClick}
+          setGraphInstance={setGraphInstance}
+          setLoadGraphData={setLoadGraphData}
+          setAutoLayout={setAutoLayout}
+        />
         <EditTaskModal
           open={!!currentTaskNode}
           task={currentTaskNode}
