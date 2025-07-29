@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { App as AntApp, Layout, Menu, ConfigProvider, Typography } from 'antd';
-import { DashboardOutlined, ApartmentOutlined, PlusOutlined, UploadOutlined, HistoryOutlined } from '@ant-design/icons';
+import { DashboardOutlined, ApartmentOutlined, PlusOutlined, UploadOutlined, HistoryOutlined, CodeOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 
 import HomePage from './pages/HomePage';
@@ -12,6 +12,7 @@ import WorkflowHistoryPage from './pages/WorkflowHistoryPage';
 import WorkflowInstancesPage from './pages/WorkflowInstancesPage';
 import WorkflowInstanceDetailPage from './pages/WorkflowInstanceDetailPage';
 import FileUploadPage from './pages/FileUploadPage';
+import DiyFunctionPage from './pages/DiyFunctionPage';
 
 import './App.css';
 
@@ -47,6 +48,11 @@ const App: React.FC = () => {
       icon: <HistoryOutlined />,
       label: <Link to="/instances">运行实例</Link>,
     },
+    {
+      key: '/functions',
+      icon: <CodeOutlined />,
+      label: <Link to="/functions">自定义组件</Link>,
+    },
   ];
 
   return (
@@ -74,6 +80,7 @@ const App: React.FC = () => {
             <Route path="/instances" element={<WorkflowInstancesPage />} />
             <Route path="/instances/:projectCode/:instanceId" element={<WorkflowInstanceDetailPage />} />
             <Route path="/upload" element={<FileUploadPage />} />
+            <Route path="/functions" element={<DiyFunctionPage />} />
           </Routes>
         </Content>
       </Layout>
