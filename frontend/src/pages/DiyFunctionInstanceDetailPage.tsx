@@ -35,14 +35,14 @@ const DiyFunctionInstanceDetailPage: React.FC = () => {
         },
         {
             title: '时间戳',
-            dataIndex: 'serverTimestamp',
-            key: 'serverTimestamp',
+            dataIndex: 'timestamp',
+            key: 'timestamp',
         },
         {
             title: '数据',
-            dataIndex: 'data',
-            key: 'data',
-            render: (data: any) => <pre>{JSON.stringify(data, null, 2)}</pre>,
+            dataIndex: 'eventData',
+            key: 'eventData',
+            render: (data: any) => <pre>{JSON.stringify(JSON.parse(data), null, 2)}</pre>,
         },
     ];
 
@@ -61,7 +61,7 @@ const DiyFunctionInstanceDetailPage: React.FC = () => {
                     <Table
                         columns={columns}
                         dataSource={events}
-                        rowKey="serverTimestamp"
+                        rowKey="timestamp"
                         pagination={false}
                     />
                 </Card>

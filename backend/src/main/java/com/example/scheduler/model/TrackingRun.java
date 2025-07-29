@@ -17,6 +17,9 @@ public class TrackingRun {
     @Column
     private String functionName;
 
+    @Column
+    private String workflowName;
+
     @Column(nullable = false)
     private Instant startTime;
 
@@ -46,6 +49,14 @@ public class TrackingRun {
 
     public void setFunctionName(String functionName) {
         this.functionName = functionName;
+    }
+
+    public String getWorkflowName() {
+        return workflowName;
+    }
+
+    public void setWorkflowName(String workflowName) {
+        this.workflowName = workflowName;
     }
 
     public Instant getStartTime() {

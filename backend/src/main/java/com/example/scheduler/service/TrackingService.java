@@ -72,6 +72,7 @@ public class TrackingService {
         return runRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public List<TrackingEvent> getEventsForRun(String runId) {
         return eventRepository.findByRunId(runId);
     }
