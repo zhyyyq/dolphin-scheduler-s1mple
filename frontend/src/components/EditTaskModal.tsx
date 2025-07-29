@@ -166,7 +166,8 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, gra
 
     if (taskConfig && taskConfig.editor) {
       const EditorComponent = taskConfig.editor as React.FC<any>;
-      return <EditorComponent form={form} initialValues={task} allTasks={allTasks} graph={graph} />;
+      const isCustom = task?.task_params?.isCustom === true;
+      return <EditorComponent form={form} initialValues={task} allTasks={allTasks} graph={graph} isCustom={isCustom} />;
     }
 
     return <DefaultTaskEditor initialValues={task} form={form} />;

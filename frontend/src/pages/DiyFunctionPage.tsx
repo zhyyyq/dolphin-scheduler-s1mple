@@ -70,12 +70,6 @@ const DiyFunctionPage: React.FC = () => {
             key: 'functionName',
         },
         {
-            title: '函数内容',
-            dataIndex: 'functionContent',
-            key: 'functionContent',
-            ellipsis: true,
-        },
-        {
             title: '操作',
             key: 'action',
             render: (_: any, record: any) => (

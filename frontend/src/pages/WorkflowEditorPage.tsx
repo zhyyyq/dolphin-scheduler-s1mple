@@ -16,6 +16,7 @@ import { taskTypes } from '../config/taskTypes';
 import { generateYamlStr as generateYaml } from '../utils/yamlUtils';
 
 const WorkflowEditorPage: React.FC = () => {
+  const [diyFunctions, setDiyFunctions] = useState<any[]>([]);
   const navigate = useNavigate();
   const { workflow_uuid } = useParams<{ workflow_uuid: string }>();
   const { message } = AntApp.useApp();
@@ -84,6 +85,17 @@ const WorkflowEditorPage: React.FC = () => {
   }, [graph]);
 
   useEffect(() => {
+    const fetchDiyFunctions = async () => {
+      try {
+        const funcs = await api.get<any[]>('/api/diy-functions');
+        setDiyFunctions(funcs);
+      } catch (error) {
+        message.error('加载自定义组件失败');
+      }
+    };
+
+    fetchDiyFunctions();
+
     if (workflow_uuid) {
       const fetchWorkflow = async () => {
         try {
@@ -398,6 +410,46 @@ const WorkflowEditorPage: React.FC = () => {
   const handleMenuClick = (e: { key: string }) => {
     if (!graph) return;
 
+    if (e.key.startsWith('diy-')) {
+      const functionName = e.key.substring(4);
+      const func = diyFunctions.find(f => f.functionName === functionName);
+      if (!func) return;
+
+      const pythonTaskInfo = taskTypes.find(t => t.type === 'PYTHON');
+      if (!pythonTaskInfo) return;
+
+      const existingNodes = graph.getNodes();
+      let newNodeName = functionName;
+      let counter = 1;
+      while (existingNodes.some(n => n.getData().label === newNodeName)) {
+        newNodeName = `${functionName}_${counter}`;
+        counter++;
+      }
+
+      const nodeData: Partial<Task> = {
+        name: newNodeName,
+        label: newNodeName,
+        task_type: 'PYTHON',
+        type: 'PYTHON',
+        task_params: {
+          ...JSON.parse(JSON.stringify((pythonTaskInfo as any).default_params || {})),
+          isCustom: true, // Add a flag to identify this as a custom, non-editable component
+        },
+        _display_type: 'PYTHON',
+        command: func.functionContent,
+      };
+
+      graph.addNode({
+        shape: 'task-node',
+        x: contextMenu.px,
+        y: contextMenu.py,
+        data: nodeData as Task,
+      });
+
+      setContextMenu({ ...contextMenu, visible: false });
+      return;
+    }
+
     const taskInfo = taskTypes.find(t => t.type === e.key);
     if (!taskInfo) return;
 
@@ -503,6 +555,7 @@ const WorkflowEditorPage: React.FC = () => {
           x={contextMenu.x}
           y={contextMenu.y}
           onMenuClick={handleMenuClick}
+          diyFunctions={diyFunctions}
         />
       </div>
     </div>

@@ -6,11 +6,15 @@ import { CodeOutlined } from '@ant-design/icons';
 
 const { TextArea } = Input;
 
-interface PythonTaskEditorComponent extends React.FC {
+interface PythonTaskEditorProps {
+  isCustom?: boolean;
+}
+
+interface PythonTaskEditorComponent extends React.FC<PythonTaskEditorProps> {
   taskInfo: any;
 }
 
-const PythonTaskEditor: PythonTaskEditorComponent = () => {
+const PythonTaskEditor: PythonTaskEditorComponent = ({ isCustom = false }) => {
   return (
     <Form.Item
       label="Python Definition"
@@ -21,6 +25,7 @@ const PythonTaskEditor: PythonTaskEditorComponent = () => {
         rows={15}
         placeholder="在此输入您的 Python 脚本"
         style={{ fontFamily: 'monospace' }}
+        readOnly={isCustom}
       />
     </Form.Item>
   );

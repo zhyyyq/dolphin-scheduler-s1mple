@@ -52,14 +52,13 @@ const PythonEditorPage: React.FC = () => {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 32px)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#fff' }}>
             <div
                 style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '16px 24px',
-                    borderBottom: '1px solid #f0f0f0',
                     backgroundColor: 'white',
                 }}
             >
@@ -79,7 +78,7 @@ const PythonEditorPage: React.FC = () => {
                     language="python"
                     value={code}
                     onChange={(value) => setCode(value)}
-                    theme="vs-dark"
+                    theme="light"
                     options={{
                         selectOnLineNumbers: true,
                         automaticLayout: true,

@@ -7,6 +7,7 @@ interface WorkflowContextMenuProps {
   x: number;
   y: number;
   onMenuClick: (e: { key: string }) => void;
+  diyFunctions?: any[];
 }
 
 export const WorkflowContextMenu: React.FC<WorkflowContextMenuProps> = ({
@@ -14,6 +15,7 @@ export const WorkflowContextMenu: React.FC<WorkflowContextMenuProps> = ({
   x,
   y,
   onMenuClick,
+  diyFunctions = [],
 }) => {
   if (!visible) return null;
 
@@ -27,6 +29,17 @@ export const WorkflowContextMenu: React.FC<WorkflowContextMenuProps> = ({
         label: task.label,
       })),
   }));
+
+  if (diyFunctions.length > 0) {
+    menuItems.push({
+      key: 'diy',
+      label: '自定义组件',
+      children: diyFunctions.map(func => ({
+        key: `diy-${func.functionName}`, // Use a prefix to identify diy functions
+        label: func.functionName,
+      })),
+    });
+  }
 
   return (
     <div style={{ position: 'fixed', top: y, left: x, zIndex: 1000 }}>
