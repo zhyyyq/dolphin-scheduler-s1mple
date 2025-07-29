@@ -1,4 +1,4 @@
-package com.example;
+package com.example.scheduler.controller;
 
 import com.example.scheduler.service.DsService;
 import org.springframework.beans.factory.annotation.Autowired;

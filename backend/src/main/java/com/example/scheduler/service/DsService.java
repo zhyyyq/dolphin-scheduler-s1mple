@@ -123,23 +123,17 @@ public class DsService {
         return allWorkflows;
     }
 
-    public List<Map<String, Object>> getUsers() throws Exception {
-        HttpGet request = new HttpGet(dsUrl + "/users/list?pageNo=1&pageSize=1000");
+    public JSONArray getUsers() throws Exception {
+        HttpGet request = new HttpGet(dsUrl + "/users/list-all?pageNo=1&pageSize=1000");
         request.addHeader("token", token);
         CloseableHttpResponse response = httpClient.execute(request);
         String responseString = EntityUtils.toString(response.getEntity());
         JSONObject data = JSON.parseObject(responseString);
-
+        logger.info("DS API response for getUsers: {}", data.toJSONString());
         if (data.getIntValue("code") != 0) {
             throw new Exception("DS API error (getUsers): " + data.getString("msg"));
         }
-
-        JSONArray userList = data.getJSONObject("data").getJSONArray("totalList");
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (int i = 0; i < userList.size(); i++) {
-            result.add(userList.getJSONObject(i).getInnerMap());
-        }
-        return result;
+        return data.getJSONArray("data");
     }
 
     public List<Map<String, Object>> getDatasources() throws Exception {
