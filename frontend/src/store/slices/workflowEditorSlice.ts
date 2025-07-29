@@ -302,14 +302,14 @@ export const syncYamlToGraph = createAsyncThunk(
     });
 
     const allNodes = [...tasks, ...globalParamNodes, ...localParamNodes];
-    const relations: { from: string, to: string, label?: string }[] = [];
+    const relations: { from: string, to: string, sourcePort?: string, targetPort?: string, label?: string }[] = [];
 
-    for (const task of tasks) {
-      if (task.deps) {
-        for (const dep of task.deps) {
-          relations.push({ from: dep, to: task.name });
+      for (const task of tasks) {
+        if (task.deps) {
+          for (const dep of task.deps) {
+            relations.push({ from: dep, to: task.name, sourcePort: 'out', targetPort: 'in' });
+          }
         }
-      }
       if (task.type === 'SWITCH' && task.task_params?.switchResult) {
         const { dependTaskList, nextNode } = task.task_params.switchResult;
         if (dependTaskList) {
@@ -593,9 +593,7 @@ export const loadGraphContent = createAsyncThunk(
       for (const task of tasks) {
         if (task.deps) {
           for (const dep of task.deps) {
-            if (!conditionTasks.has(dep)) {
-              relations.push({ from: dep, to: task.name });
-            }
+            relations.push({ from: dep, to: task.name, sourcePort: 'out', targetPort: 'in' });
           }
         }
         if (task.type === 'SWITCH' && task.task_params?.switchResult) {
@@ -625,6 +623,7 @@ export const loadGraphContent = createAsyncThunk(
         }
       }
       
+      const nodeNameToIdMap = new Map<string, string>();
       graph.clearCells();
       allNodes.forEach((nodeData: any) => {
         const taskEditor = taskTypes.find((t) => t.type === nodeData.task_type);
@@ -638,6 +637,7 @@ export const loadGraphContent = createAsyncThunk(
         const newNode = (taskEditor as any).createNode(graph, { ...nodeData, label: nodeData.name }, { px: position.x, py: position.y });
   
         if (newNode) {
+          nodeNameToIdMap.set(nodeData.name, newNode.id);
           newNode.setData(nodeData);
           if (locations) {
             newNode.position(position.x, position.y);
@@ -646,12 +646,16 @@ export const loadGraphContent = createAsyncThunk(
       });
 
       relations.forEach((rel: any) => {
-        graph.addEdge({
-          shape: 'edge',
-          source: { cell: rel.from, port: rel.sourcePort },
-          target: { cell: rel.to, port: rel.targetPort },
-          labels: rel.label ? [rel.label] : [],
-        });
+        const sourceId = nodeNameToIdMap.get(rel.from);
+        const targetId = nodeNameToIdMap.get(rel.to);
+        if (sourceId && targetId) {
+          graph.addEdge({
+            shape: 'edge',
+            source: { cell: sourceId, port: rel.sourcePort },
+            target: { cell: targetId, port: rel.targetPort },
+            labels: rel.label ? [rel.label] : [],
+          });
+        }
       });
     } catch (error) {
       // How to handle message.error? Maybe dispatch an error action.

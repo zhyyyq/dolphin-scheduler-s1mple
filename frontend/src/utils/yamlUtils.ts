@@ -82,7 +82,7 @@ export const generateYamlStr = (
             type: sourceNodeData.task_params?.type || 'VARCHAR',
             value: sourceNodeData.task_params?.value || '',
           });
-        } else if (sourceNodeData.type !== 'CONDITIONS' && sourceNodeData.type !== 'SWITCH') {
+        } else {
           deps.push(sourceNodeData.name);
         }
       }
