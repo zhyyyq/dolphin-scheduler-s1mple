@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface DiySchedulerFunctionRepository extends JpaRepository<DiySchedulerFunction, Long> {
     Optional<DiySchedulerFunction> findByFunctionNameAndDeletedFalse(String functionName);
+    Optional<DiySchedulerFunction> findByFunctionName(String functionName); // Find by name regardless of deleted status
     List<DiySchedulerFunction> findAllByDeletedFalse();
 }

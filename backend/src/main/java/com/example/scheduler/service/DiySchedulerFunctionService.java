@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,20 +37,24 @@ public class DiySchedulerFunctionService {
     public DiySchedulerFunction createFunctionFromUpload(MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename();
         String baseName = FilenameUtils.getBaseName(originalFilename);
-        String content = new String(file.getBytes());
+        String content = new String(file.getBytes(), StandardCharsets.UTF_8);
 
-        String finalName = baseName;
-        int counter = 1;
-        while (repository.findByFunctionNameAndDeletedFalse(finalName).isPresent()) {
-            finalName = baseName + "_" + counter;
-            counter++;
+        Optional<DiySchedulerFunction> existingFunctionOpt = repository.findByFunctionName(baseName);
+
+        if (existingFunctionOpt.isPresent()) {
+            // If a function with the same name exists (regardless of deleted status), update it.
+            DiySchedulerFunction existingFunction = existingFunctionOpt.get();
+            existingFunction.setFunctionContent(content);
+            existingFunction.setDeleted(false); // Undelete it if it was deleted
+            return repository.save(existingFunction);
+        } else {
+            // If no function with this name has ever existed, create a new one.
+            DiySchedulerFunction newFunction = new DiySchedulerFunction();
+            newFunction.setFunctionName(baseName);
+            newFunction.setFunctionContent(content);
+            newFunction.setDeleted(false);
+            return repository.save(newFunction);
         }
-
-        DiySchedulerFunction newFunction = new DiySchedulerFunction();
-        newFunction.setFunctionName(finalName);
-        newFunction.setFunctionContent(content);
-
-        return repository.save(newFunction);
     }
 
     public DiySchedulerFunction updateFunction(Long id, DiySchedulerFunction functionDetails) {
