@@ -146,7 +146,7 @@ const WorkflowEditorPage: React.FC = () => {
     } catch (error) {
       message.error(`解析工作流元数据失败: ${(error as Error).message}`);
     }
-  }, [workflowData?.name, workflowData?.uuid, workflowData?.yaml_content, message]);
+  }, [workflowData?.name, workflowData?.uuid, workflowData?.yaml_content]);
 
   // Effect for graph content
   useEffect(() => {
@@ -257,7 +257,7 @@ const WorkflowEditorPage: React.FC = () => {
     };
 
     loadGraphContent();
-  }, [graph, workflowData?.yaml_content, loadGraphData, message]);
+  }, [graph, workflowData?.yaml_content, loadGraphData]);
 
   const handleSaveNode = (updatedNode: Task) => {
     if (!graph) return;
