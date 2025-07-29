@@ -241,6 +241,8 @@ export const saveWorkflow = createAsyncThunk(
       original_filename: workflowUuid ? `${workflowUuid}.yaml` : undefined,
       uuid: workflowUuid,
       locations: JSON.stringify(locations),
+      projectCode: workflowData?.projectCode,
+      projectName: workflowData?.projectName,
     });
 
     dispatch(setWorkflowUuid(response.uuid));

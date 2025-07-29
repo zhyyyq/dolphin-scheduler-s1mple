@@ -15,7 +15,7 @@ interface HomeState {
   loading: boolean;
   error: string | null;
   projects: Project[];
-  selectedProject: string | null;
+  selectedProject: number | 'all' | null;
   isRestoreModalOpen: boolean;
   isBackfillModalOpen: boolean;
   selectedWorkflow: Workflow | null;
@@ -26,7 +26,7 @@ const initialState: HomeState = {
   loading: true,
   error: null,
   projects: [],
-  selectedProject: null,
+  selectedProject: 'all',
   isRestoreModalOpen: false,
   isBackfillModalOpen: false,
   selectedWorkflow: null,
@@ -48,7 +48,7 @@ export const homeSlice = createSlice({
     setProjects: (state, action: PayloadAction<Project[]>) => {
       state.projects = action.payload;
     },
-    setSelectedProject: (state, action: PayloadAction<string | null>) => {
+    setSelectedProject: (state, action: PayloadAction<number | 'all' | null>) => {
       state.selectedProject = action.payload;
     },
     setIsRestoreModalOpen: (state, action: PayloadAction<boolean>) => {

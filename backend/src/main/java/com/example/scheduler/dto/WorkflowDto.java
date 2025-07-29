@@ -9,4 +9,6 @@ public class WorkflowDto {
     private String originalFilename;
     private String uuid;
     private String locations;
+    private Long projectCode;
+    private String projectName;
 }

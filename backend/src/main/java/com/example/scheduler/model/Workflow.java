@@ -21,4 +21,8 @@ public class Workflow {
 
     @Column(columnDefinition = "TEXT")
     private String locations;
+
+    private Long projectCode;
+
+    private String projectName;
 }

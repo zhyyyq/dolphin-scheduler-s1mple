@@ -57,6 +57,8 @@ public class WorkflowService {
       newWorkflow.setUuid(workflowUuid);
       newWorkflow.setName(workflowName);
       newWorkflow.setLocations(workflowDto.getLocations());
+      newWorkflow.setProjectCode(workflowDto.getProjectCode());
+      newWorkflow.setProjectName(workflowDto.getProjectName());
       workflowRepository.save(newWorkflow);
     } else {
       commitMessage = "Update workflow " + workflowName;
@@ -64,6 +66,8 @@ public class WorkflowService {
       dbWorkflow.setUuid(workflowUuid);
       dbWorkflow.setName(workflowName);
       dbWorkflow.setLocations(workflowDto.getLocations());
+      dbWorkflow.setProjectCode(workflowDto.getProjectCode());
+      dbWorkflow.setProjectName(workflowDto.getProjectName());
       workflowRepository.save(dbWorkflow);
     }
 
@@ -102,7 +106,8 @@ public class WorkflowService {
           Map<String, Object> map = new java.util.HashMap<>();
           map.put("name", workflow.getName());
           map.put("uuid", workflow.getUuid());
-          map.put("projectName", "Local File");
+          map.put("projectName", workflow.getProjectName());
+          map.put("projectCode", workflow.getProjectCode());
           map.put("releaseState", "OFFLINE");
 
           String filename = workflow.getUuid() + ".yaml";

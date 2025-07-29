@@ -122,7 +122,7 @@ const HomePage: React.FC = () => {
   }
 
   const filteredWorkflows = selectedProject && selectedProject !== 'all'
-    ? workflows.filter(w => w.projectName === selectedProject)
+    ? workflows.filter(w => w.projectCode === selectedProject)
     : workflows;
 
   return (
@@ -135,14 +135,10 @@ const HomePage: React.FC = () => {
             placeholder="选择项目"
             style={{ width: 200 }}
             onChange={(value) => {
-              if (value === 'create_new_project') {
-                setIsCreateProjectModalOpen(true);
-              } else {
-                dispatch(setSelectedProject(value));
-              }
+              dispatch(setSelectedProject(value as number | 'all'));
             }}
-            value={selectedProject || 'all'}
-            dropdownRender={(menu) => (
+            value={selectedProject}
+            popupRender={(menu) => (
               <>
                 {menu}
                 <Divider style={{ margin: '8px 0' }} />
@@ -154,10 +150,10 @@ const HomePage: React.FC = () => {
           >
             <Select.Option value="all">所有项目</Select.Option>
             {projects.map(p => (
-              <Select.Option key={p.code} value={p.name}>
+              <Select.Option key={p.code} value={p.code}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>{p.name}</span>
-                  <Button
+                  {/* <Button
                     type="text"
                     danger
                     size="small"
@@ -173,13 +169,13 @@ const HomePage: React.FC = () => {
                     }}
                   >
                     X
-                  </Button>
+                  </Button> */}
                 </div>
               </Select.Option>
             ))}
           </Select>
           <Button onClick={() => dispatch(setIsRestoreModalOpen(true))}>恢复工作流</Button>
-          <Link to={`/workflow/edit${selectedProject && selectedProject !== 'all' ? `?projectName=${selectedProject}&projectCode=${projects.find(p => p.name === selectedProject)?.code}` : ''}`}>
+          <Link to={`/workflow/edit${selectedProject && selectedProject !== 'all' ? `?projectName=${projects.find(p => p.code === selectedProject)?.name}&projectCode=${selectedProject}` : ''}`}>
             <Button type="primary">新建工作流</Button>
           </Link>
         </Space>
