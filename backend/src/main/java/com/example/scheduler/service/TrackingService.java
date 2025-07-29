@@ -31,6 +31,7 @@ public class TrackingService {
     public void recordEvent(Map<String, Object> eventPayload) {
         String runId = (String) eventPayload.get("runId");
         String functionName = (String) eventPayload.get("functionName");
+        String workflowName = (String) eventPayload.get("workflowName"); // Get workflowName
         String eventName = (String) eventPayload.get("eventName");
         Object eventData = eventPayload.get("data");
 
@@ -40,6 +41,7 @@ public class TrackingService {
             TrackingRun newRun = new TrackingRun();
             newRun.setRunId(runId);
             newRun.setFunctionName(functionName);
+            newRun.setWorkflowName(workflowName); // Set workflowName
             newRun.setStartTime(Instant.now());
             newRun.setStatus("RUNNING");
             return newRun;

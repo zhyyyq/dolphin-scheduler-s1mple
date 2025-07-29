@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, message, Tag } from 'antd';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Table, Button, message, Tag, Input, Space } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+
+const { Search } = Input;
 
 const DiyFunctionInstancesPage: React.FC = () => {
     const [runs, setRuns] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [searchText, setSearchText] = useState('');
     const navigate = useNavigate();
 
     const fetchRuns = async () => {
@@ -24,11 +27,25 @@ const DiyFunctionInstancesPage: React.FC = () => {
         fetchRuns();
     }, []);
 
+    const filteredRuns = useMemo(() => {
+        if (!searchText) {
+            return runs;
+        }
+        return runs.filter(run =>
+            run.functionName?.toLowerCase().includes(searchText.toLowerCase())
+        );
+    }, [runs, searchText]);
+
     const columns = [
         {
             title: '运行 ID',
             dataIndex: 'runId',
             key: 'runId',
+        },
+        {
+            title: '工作流名称',
+            dataIndex: 'workflowName',
+            key: 'workflowName',
         },
         {
             title: '函数名称',
@@ -64,15 +81,25 @@ const DiyFunctionInstancesPage: React.FC = () => {
     ];
 
     return (
-        <div>
-            <Button onClick={fetchRuns} style={{ marginBottom: 16 }}>
-                刷新
-            </Button>
+        <div style={{ padding: 24, background: '#fff', borderRadius: 8 }}>
+            <Space style={{ marginBottom: 16 }}>
+                <Button onClick={fetchRuns}>
+                    刷新
+                </Button>
+                <Search
+                    placeholder="按函数名称搜索"
+                    onSearch={setSearchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    style={{ width: 300 }}
+                    allowClear
+                />
+            </Space>
             <Table
                 columns={columns}
-                dataSource={runs}
+                dataSource={filteredRuns}
                 rowKey="runId"
                 loading={loading}
+                bordered
             />
         </div>
     );
