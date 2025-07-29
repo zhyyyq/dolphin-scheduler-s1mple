@@ -94,7 +94,8 @@ export const fetchWorkflows = createAsyncThunk(
     dispatch(setError(null));
     try {
       const combinedWorkflows = await api.get<Workflow[]>('/api/workflow/combined');
-      dispatch(setWorkflows(combinedWorkflows));
+      const sortedWorkflows = combinedWorkflows.sort((a, b) => new Date(b.updateTime).getTime() - new Date(a.updateTime).getTime());
+      dispatch(setWorkflows(sortedWorkflows));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       dispatch(setError(errorMessage));
