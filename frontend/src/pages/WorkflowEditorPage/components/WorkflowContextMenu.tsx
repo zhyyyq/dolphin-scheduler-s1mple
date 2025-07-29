@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu } from 'antd';
-import { taskCategories, taskTypes } from '../config/taskTypes';
+import { taskCategories, taskTypes } from '../../../config/taskTypes';
 
 interface WorkflowContextMenuProps {
   visible: boolean;

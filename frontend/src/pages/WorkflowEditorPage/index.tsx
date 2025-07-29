@@ -1,20 +1,21 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import './index.less';
 import { useNavigate, useParams } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 import yaml from 'yaml';
 import dayjs from 'dayjs';
-import '../components/TaskNode'; // Register custom node
-import { Task, WorkflowDetail } from '../types';
-import api from '../api';
-import { useGraph } from '../hooks/useGraph';
-import { WorkflowToolbar } from '../components/WorkflowToolbar';
-import EditTaskModal from '../components/EditTaskModal';
-import EditParamNodeModal from '../components/EditParamNodeModal';
-import EditEdgeLabelModal from '../components/EditEdgeLabelModal';
-import { ViewYamlModal } from '../components/ViewYamlModal';
-import { WorkflowContextMenu } from '../components/WorkflowContextMenu';
-import { taskTypes } from '../config/taskTypes';
-import { generateYamlStr as generateYaml } from '../utils/yamlUtils';
+import '../../components/TaskNode'; // Register custom node
+import { Task, WorkflowDetail } from '../../types';
+import api from '../../api';
+import EditorDagGraph from './components/EditorDagGraph';
+import { WorkflowToolbar } from './components/WorkflowToolbar';
+import EditTaskModal from './components/EditTaskModal';
+import EditParamNodeModal from './components/EditParamNodeModal';
+import EditEdgeLabelModal from './components/EditEdgeLabelModal';
+import { ViewYamlModal } from './components/ViewYamlModal';
+import { WorkflowContextMenu } from './components/WorkflowContextMenu';
+import { taskTypes } from '../../config/taskTypes';
+import { generateYamlStr as generateYaml } from '../../utils/yamlUtils';
 
 const WorkflowEditorPage: React.FC = () => {
   const [diyFunctions, setDiyFunctions] = useState<any[]>([]);
@@ -35,8 +36,6 @@ const WorkflowEditorPage: React.FC = () => {
   const [currentParamNode, setCurrentParamNode] = useState<any>(null);
   const [currentEdge, setCurrentEdge] = useState<any>(null);
   const [allTasksForModal, setAllTasksForModal] = useState<Task[]>([]);
-  const [nodeName, setNodeName] = useState('');
-  const [nodeCommand, setNodeCommand] = useState('');
   const [workflowName, setWorkflowName] = useState('my-workflow');
   const [workflowSchedule, setWorkflowSchedule] = useState('0 0 * * *');
   const [isScheduleEnabled, setIsScheduleEnabled] = useState(true);
@@ -60,34 +59,22 @@ const WorkflowEditorPage: React.FC = () => {
     }
   }, []);
 
-  const { graph, loadGraphData, autoLayout } = useGraph({
-    container: container,
-    onBlankContextMenu: handleBlankContextMenu,
-    onEdgeDoubleClick: handleEdgeDoubleClick,
-  });
+  const [graph, setGraphInstance] = useState<any>(null);
+  const [loadGraphData, setLoadGraphData] = useState<any>(null);
+  const [autoLayout, setAutoLayout] = useState<any>(null);
 
-  useEffect(() => {
-    if (graph) {
-      const handleNodeDoubleClick = (args: { node: any }) => {
-        const { node } = args;
-        const nodeData = node.getData();
-        
-        if (nodeData.type === 'PARAMS') {
-          setCurrentParamNode({ ...nodeData, id: node.id });
-        } else {
-          const allNodes = graph.getNodes().map(n => n.getData() as Task);
-          setAllTasksForModal(allNodes);
-          setCurrentTaskNode({ ...nodeData, id: node.id });
-        }
-      };
-
-      graph.on('node:dblclick', handleNodeDoubleClick);
-
-      return () => {
-        graph.off('node:dblclick', handleNodeDoubleClick);
-      };
+  const handleNodeDoubleClick = (args: { node: any }) => {
+    const { node } = args;
+    const nodeData = node.getData();
+    
+    if (nodeData.type === 'PARAMS') {
+      setCurrentParamNode({ ...nodeData, id: node.id });
+    } else {
+      const allNodes = graph.getNodes().map((n: any) => n.getData() as Task);
+      setAllTasksForModal(allNodes);
+      setCurrentTaskNode({ ...nodeData, id: node.id });
     }
-  }, [graph]);
+  };
 
   useEffect(() => {
     const fetchDiyFunctions = async () => {
@@ -262,7 +249,7 @@ const WorkflowEditorPage: React.FC = () => {
   const handleSaveNode = (updatedNode: Task) => {
     if (!graph) return;
     
-    const nodeToUpdate = graph.getNodes().find(n => n.id === (updatedNode as any).id);
+    const nodeToUpdate = graph.getNodes().find((n: any) => n.id === (updatedNode as any).id);
     if (nodeToUpdate) {
       const existingData = nodeToUpdate.getData();
       const newData = { ...existingData, ...updatedNode };
@@ -409,7 +396,7 @@ const WorkflowEditorPage: React.FC = () => {
       return;
     }
 
-    const locations = graph.getNodes().map(node => {
+    const locations = graph.getNodes().map((node: any) => {
       const { x, y } = node.getPosition();
       const data = node.getData();
       return { taskCode: data.name, x, y };
@@ -439,7 +426,7 @@ const WorkflowEditorPage: React.FC = () => {
       const func = diyFunctions.find(f => f.functionName === functionName);
       if (!func) return;
 
-      const diyTaskInfo = taskTypes.find(t => t.type === 'DIY_FUNCTION');
+      const diyTaskInfo = taskTypes.find((t: any) => t.type === 'DIY_FUNCTION');
       if (!diyTaskInfo || typeof diyTaskInfo.createNode !== 'function') return;
 
       diyTaskInfo.createNode(graph, diyTaskInfo, contextMenu, func);
@@ -448,7 +435,7 @@ const WorkflowEditorPage: React.FC = () => {
       return;
     }
 
-    const taskInfo = taskTypes.find(t => t.type === e.key);
+    const taskInfo = taskTypes.find((t: any) => t.type === e.key);
     if (!taskInfo) return;
 
     if (typeof taskInfo.createNode === 'function') {
@@ -520,7 +507,19 @@ const WorkflowEditorPage: React.FC = () => {
           onAutoLayout={autoLayout}
           onImportYaml={handleImportYaml}
         />
-        <div ref={containerRefCallback} style={{ width: '100%', height: '100%' }}></div>
+        <div ref={containerRefCallback} style={{ width: '100%', height: '100%' }}>
+          {container && (
+            <EditorDagGraph
+              container={container}
+              onBlankContextMenu={handleBlankContextMenu}
+              onEdgeDoubleClick={handleEdgeDoubleClick}
+              onNodeDoubleClick={handleNodeDoubleClick}
+              setGraphInstance={setGraphInstance}
+              setLoadGraphData={setLoadGraphData}
+              setAutoLayout={setAutoLayout}
+            />
+          )}
+        </div>
         <EditTaskModal
           open={!!currentTaskNode}
           task={currentTaskNode}

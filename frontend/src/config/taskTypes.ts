@@ -1,15 +1,15 @@
-import ShellTaskEditor from '../components/tasks/general/ShellTaskEditor';
-import PythonTaskEditor from '../components/tasks/general/PythonTaskEditor';
-import SqlTaskEditor from '../components/tasks/general/SqlTaskEditor';
-import ProcedureTaskEditor from '../components/tasks/general/ProcedureTaskEditor';
-import HttpTaskEditor from '../components/tasks/general/HttpTaskEditor';
-import ParamsTaskEditor from '../components/tasks/general/ParamsTaskEditor';
-import ConditionsTaskEditor from '../components/tasks/logic/ConditionsTaskEditor';
-import SwitchTaskEditor from '../components/tasks/logic/SwitchTaskEditor';
-import DependentTaskEditor from '../components/tasks/dependent/DependentTaskEditor';
-import LogicGateTaskEditor from '../components/tasks/logic/LogicGateTaskEditor';
-import SubWorkflowTaskEditor from '../components/tasks/logic/SubProcessTaskEditor';
-import DiyFunctionTaskEditor from '../components/tasks/DiyFunctionTaskEditor';
+import ShellTaskEditor from '../pages/WorkflowEditorPage/components/tasks/general/ShellTaskEditor';
+import PythonTaskEditor from '../pages/WorkflowEditorPage/components/tasks/general/PythonTaskEditor';
+import SqlTaskEditor from '../pages/WorkflowEditorPage/components/tasks/general/SqlTaskEditor';
+import ProcedureTaskEditor from '../pages/WorkflowEditorPage/components/tasks/general/ProcedureTaskEditor';
+import HttpTaskEditor from '../pages/WorkflowEditorPage/components/tasks/general/HttpTaskEditor';
+import ParamsTaskEditor from '../pages/WorkflowEditorPage/components/tasks/general/ParamsTaskEditor';
+import ConditionsTaskEditor from '../pages/WorkflowEditorPage/components/tasks/logic/ConditionsTaskEditor';
+import SwitchTaskEditor from '../pages/WorkflowEditorPage/components/tasks/logic/SwitchTaskEditor';
+import DependentTaskEditor from '../pages/WorkflowEditorPage/components/tasks/dependent/DependentTaskEditor';
+import LogicGateTaskEditor from '../pages/WorkflowEditorPage/components/tasks/logic/LogicGateTaskEditor';
+import SubWorkflowTaskEditor from '../pages/WorkflowEditorPage/components/tasks/logic/SubProcessTaskEditor';
+import DiyFunctionTaskEditor from '../pages/WorkflowEditorPage/components/tasks/DiyFunctionTaskEditor';
 
 const AndTask = { taskInfo: LogicGateTaskEditor.taskInfo.AND };
 const OrTask = { taskInfo: LogicGateTaskEditor.taskInfo.OR };

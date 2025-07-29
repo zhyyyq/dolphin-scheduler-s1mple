@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Select, Form } from 'antd';
 import { Node, Graph } from '@antv/x6';
-import { Task } from '../../../types';
+import { Task } from '@/types';
 import { PartitionOutlined } from '@ant-design/icons';
-import api from '../../../api';
+import api from '@/api';
 
 const { Option } = Select;
 

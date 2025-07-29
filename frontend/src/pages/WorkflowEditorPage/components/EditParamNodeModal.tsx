@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Input, Form, Select, Button } from 'antd';
-import { Task } from '../types'; // We can still use Task as a loose shape for the node data
+import { Task } from '@/types'; // We can still use Task as a loose shape for the node data
 import { Graph } from '@antv/x6';
 
 interface EditParamNodeModalProps {

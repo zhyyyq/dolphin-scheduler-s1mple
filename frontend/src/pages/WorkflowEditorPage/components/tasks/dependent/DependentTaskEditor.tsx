@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Form, FormInstance, Input, Select, Switch, Radio, Button, Space, InputNumber, Card } from 'antd';
 import { PlusOutlined, DeleteOutlined, NodeIndexOutlined } from '@ant-design/icons';
 import { Graph } from '@antv/x6';
-import { Task } from '../../../types';
-import api from '../../../api';
+import { Task } from '@/types';
+import api from '@/api';
 
 const { Option } = Select;
 

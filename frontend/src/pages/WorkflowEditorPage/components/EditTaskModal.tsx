@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Input, Form, Switch, Space, Button, InputNumber } from 'antd';
-import { Task } from '../types';
+import { Task } from '../../../types';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
-import { taskTypes } from '../config/taskTypes';
+import { taskTypes } from '../../../config/taskTypes';
 import { Graph } from '@antv/x6';
 
 interface EditTaskModalProps {

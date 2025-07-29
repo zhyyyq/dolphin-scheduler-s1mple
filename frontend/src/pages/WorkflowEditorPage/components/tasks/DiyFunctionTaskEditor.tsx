@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Button, Modal } from 'antd';
 import { Graph } from '@antv/x6';
-import { Task } from '../../types';
+import { Task } from '@/types';
 import { CodeOutlined, EyeOutlined } from '@ant-design/icons';
 import Editor from '@monaco-editor/react';
 
@@ -13,7 +13,7 @@ interface DiyFunctionTaskEditorComponent extends React.FC<DiyFunctionTaskEditorP
   taskInfo: any;
 }
 
-import api from '../../api';
+import api from '@/api';
 import { Spin } from 'antd';
 
 const DiyFunctionTaskEditor: DiyFunctionTaskEditorComponent = ({ task }) => {

@@ -1,25 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Form, Select } from 'antd';
+import { Input, Form, Select, Typography } from 'antd';
 import { Graph } from '@antv/x6';
-import { Task } from '../../../types';
-import api from '../../../api';
-import { SettingOutlined } from '@ant-design/icons';
+import { Task } from '@/types';
+import api from '@/api';
+import { DatabaseOutlined } from '@ant-design/icons';
 
 const { TextArea } = Input;
+const { Title } = Typography;
 const { Option } = Select;
 
 interface Datasource {
   label: string;
-  value: string;
-  id: number;
-  type: string;
+  value: string; // The name of the datasource
+  id: number;    // The ID of the datasource
+  type: string;  // The type of the datasource (e.g., POSTGRESQL)
 }
 
-interface ProcedureTaskEditorComponent extends React.FC {
+interface SqlTaskEditorComponent extends React.FC {
   taskInfo: any;
 }
 
-const ProcedureTaskEditor: ProcedureTaskEditorComponent = () => {
+const SqlTaskEditor: SqlTaskEditorComponent = () => {
   const [datasources, setDatasources] = useState<Datasource[]>([]);
   const [loading, setLoading] = useState(true);
   const form = Form.useFormInstance();
@@ -31,13 +32,16 @@ const ProcedureTaskEditor: ProcedureTaskEditorComponent = () => {
         const data = await api.get<Datasource[]>('/api/ds/datasources');
         setDatasources(data);
 
+        // After fetching, check if we need to set the initial datasource
         const currentDatasourceId = form.getFieldValue('datasource');
         if (!currentDatasourceId && data.length > 0) {
+          // If no datasource is set, default to the first one in the list
           form.setFieldsValue({
             datasource: data[0].id,
             datasourceType: data[0].type,
           });
         } else {
+          // If a datasource ID is set but the type is missing, find and set it
           const currentDatasourceType = form.getFieldValue('datasourceType');
           if (currentDatasourceId && !currentDatasourceType) {
             const matchingDs = data.find(ds => ds.id === currentDatasourceId);
@@ -57,13 +61,16 @@ const ProcedureTaskEditor: ProcedureTaskEditorComponent = () => {
   }, [form]);
 
   const handleDatasourceChange = (value: number, option: any) => {
+    // When the datasource changes, we need to update both the 'datasource' (id) and 'datasourceType' fields
+    // in the form's underlying data store.
     form.setFieldsValue({
-      datasourceType: option.key,
+      datasourceType: option.key,  // The type (e.g., POSTGRESQL)
     });
   };
 
   return (
     <>
+      {/* This field is for storing the datasource type, but it's hidden from the user */}
       <Form.Item name="datasourceType" noStyle>
         <Input type="hidden" />
       </Form.Item>
@@ -84,24 +91,37 @@ const ProcedureTaskEditor: ProcedureTaskEditorComponent = () => {
         </Select>
       </Form.Item>
       
-      <Form.Item label="SQL Statement" name="method" rules={[{ required: true, message: "请输入 SQL 语句" }]}>
-        <TextArea rows={6} placeholder="call procedure_name(${param1}, ${param2})" />
+      <Form.Item label="SQL 类型" name="sqlType" initialValue="0">
+        <Select placeholder="选择 SQL 类型">
+          <Option value="0">查询</Option>
+          <Option value="1">非查询</Option>
+        </Select>
+      </Form.Item>
+      
+      <Form.Item label="SQL" name="sql" rules={[{ required: true, message: "请输入 SQL 语句" }]}>
+        <TextArea rows={6} placeholder="输入 SQL 语句或 $FILE{...} 引用" />
+      </Form.Item>
+      
+      <Form.Item label="显示行数" name="displayRows" initialValue={10}>
+        <Input type="number" />
       </Form.Item>
     </>
   );
 };
 
-ProcedureTaskEditor.taskInfo = {
-  label: '存储过程',
-  type: 'PROCEDURE',
+SqlTaskEditor.taskInfo = {
+  label: 'SQL',
+  type: 'SQL',
+  category: 'general',
+  icon: DatabaseOutlined,
+  editor: SqlTaskEditor,
   default_params: {
     failRetryTimes: 0,
     failRetryInterval: 1,
+    sqlType: '0',
+    sql: 'SELECT * FROM a',
+    displayRows: 10,
   },
-  command: '',
-  category: 'general',
-  icon: SettingOutlined,
-  editor: ProcedureTaskEditor,
   createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }) => {
     const existingNodes = graph.getNodes();
     let newNodeName = task.label;
@@ -129,4 +149,4 @@ ProcedureTaskEditor.taskInfo = {
   },
 };
 
-export default ProcedureTaskEditor;
+export default SqlTaskEditor;
