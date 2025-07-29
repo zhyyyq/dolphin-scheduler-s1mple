@@ -148,7 +148,8 @@ services:
     env_file:
       - ./backend/docker.env
     environment:
-      PYTHONPATH: /app/src
+      - LANG=C.UTF-8
+      - PYTHONPATH=/app/src
     ports:
       - "8000:8000"
     networks:
