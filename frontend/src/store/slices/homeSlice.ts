@@ -69,6 +69,19 @@ export const {
   setSelectedWorkflow,
 } = homeSlice.actions;
 
+export const fetchProjects = createAsyncThunk(
+  'home/fetchProjects',
+  async (_, { dispatch }) => {
+    try {
+      const projects = await api.get<string[]>('/api/projects');
+      dispatch(setProjects(projects));
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      dispatch(setError(errorMessage));
+    }
+  }
+);
+
 export const fetchWorkflows = createAsyncThunk(
   'home/fetchWorkflows',
   async (_, { dispatch }) => {
@@ -77,8 +90,6 @@ export const fetchWorkflows = createAsyncThunk(
     try {
       const combinedWorkflows = await api.get<Workflow[]>('/api/workflow/combined');
       dispatch(setWorkflows(combinedWorkflows));
-      const uniqueProjects = Array.from(new Set(combinedWorkflows.map(w => w.projectName).filter(Boolean) as string[]));
-      dispatch(setProjects(uniqueProjects));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       dispatch(setError(errorMessage));

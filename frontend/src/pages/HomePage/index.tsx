@@ -12,6 +12,7 @@ import { Graph, Node as X6Node } from '@antv/x6';
 import { Workflow, WorkflowDetail, Task } from '../../types';
 import { RootState, AppDispatch } from '../../store';
 import {
+  fetchProjects,
   fetchWorkflows,
   setSelectedProject,
   setIsRestoreModalOpen,
@@ -50,6 +51,7 @@ const HomePage: React.FC = () => {
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
 
   useEffect(() => {
+    dispatch(fetchProjects());
     dispatch(fetchWorkflows());
   }, [dispatch, location]);
 
