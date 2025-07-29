@@ -21,8 +21,8 @@ public class DashboardController {
     public DashboardStatsDto getStats(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime,
-            @RequestParam(required = false) Long projectCode,
-            @RequestParam(required = false) Long workflowCode) {
+            @RequestParam(required = false) String projectCode,
+            @RequestParam(required = false) String workflowCode) {
         
         LocalDateTime start = null;
         if (startTime != null && !startTime.isEmpty() && !"undefined".equals(startTime)) {
@@ -34,6 +34,16 @@ public class DashboardController {
             end = LocalDateTime.parse(endTime);
         }
 
-        return dashboardService.getStats(start, end, projectCode, workflowCode);
+        Long pCode = null;
+        if (projectCode != null && !projectCode.isEmpty() && !"null".equals(projectCode)) {
+            pCode = Long.parseLong(projectCode);
+        }
+
+        Long wCode = null;
+        if (workflowCode != null && !workflowCode.isEmpty() && !"null".equals(workflowCode)) {
+            wCode = Long.parseLong(workflowCode);
+        }
+
+        return dashboardService.getStats(start, end, pCode, wCode);
     }
 }
