@@ -22,7 +22,18 @@ public class DiySchedulerFunction {
     @Column(name = "function_content", columnDefinition = "TEXT")
     private String functionContent;
 
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
     // Getters and Setters
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
     public Long getFunctionId() {
         return functionId;
     }
