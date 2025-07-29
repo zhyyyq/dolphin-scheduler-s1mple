@@ -21,7 +21,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onCancel,
 
   useEffect(() => {
     if (open) {
-      api.get<User[]>('/api/users').then(response => {
+      api.get<User[]>('/api/users/list').then(response => {
         setUsers(response);
         if (response.length > 0) {
           form.setFieldsValue({ owner: response[0].userName });
