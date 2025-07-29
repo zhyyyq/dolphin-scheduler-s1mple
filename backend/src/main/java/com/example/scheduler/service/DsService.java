@@ -49,7 +49,7 @@ public class DsService {
         HttpGet request = new HttpGet(dsUrl + "/environment/list-paging?pageNo=1&pageSize=1000&searchVal=");
         request.addHeader("token", token);
         CloseableHttpResponse response = httpClient.execute(request);
-        String responseString = EntityUtils.toString(response.getEntity());
+        String responseString = EntityUtils.toString(response.getEntity(), "UTF-8");
         JSONObject data = JSON.parseObject(responseString);
 
         if (data.getIntValue("code") != 0) {
@@ -470,7 +470,7 @@ public class DsService {
         params.add(new BasicNameValuePair("projectName", projectName));
         params.add(new BasicNameValuePair("description", description));
         params.add(new BasicNameValuePair("userName", userName));
-        createRequest.setEntity(new UrlEncodedFormEntity(params));
+        createRequest.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
         
         CloseableHttpResponse createResponse = httpClient.execute(createRequest);
         String createResponseString = EntityUtils.toString(createResponse.getEntity());
