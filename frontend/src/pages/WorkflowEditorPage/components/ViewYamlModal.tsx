@@ -75,7 +75,7 @@ export const ViewYamlModal: React.FC = () => {
   return (
     <Modal
       title="工作流 YAML"
-      open={isModalVisible}
+      open={isYamlModalVisible}
       onCancel={onCancel}
       footer={[
         <Button key="back" onClick={onCancel}>

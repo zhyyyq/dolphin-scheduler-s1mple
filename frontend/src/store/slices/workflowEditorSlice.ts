@@ -400,6 +400,37 @@ export const fetchWorkflow = createAsyncThunk(
     const response = await api.get<WorkflowDetail>(`/api/workflow/${workflow_uuid}`);
     dispatch(setWorkflowData(response));
     dispatch(setOriginalYaml(response.yaml_content));
+
+    const { name, uuid, yaml_content } = response;
+    dispatch(setWorkflowName(name));
+    dispatch(setWorkflowUuid(uuid));
+
+    try {
+      const doc = yaml.parseDocument(yaml_content);
+      const schedule = doc.getIn(['workflow', 'schedule']);
+      const startTime = doc.getIn(['workflow', 'startTime']);
+      const endTime = doc.getIn(['workflow', 'endTime']);
+
+      if (schedule !== undefined && schedule !== null) {
+        let scheduleStr = String(schedule).replace(/\?/g, '*');
+        const parts = scheduleStr.split(' ');
+        if (parts.length === 6 || parts.length === 7) {
+          scheduleStr = `${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]}`;
+        }
+        dispatch(setWorkflowSchedule(scheduleStr));
+        dispatch(setIsScheduleEnabled(true));
+        if (startTime && endTime) {
+          dispatch(setScheduleTimeRange([dayjs(String(startTime)).toISOString(), dayjs(String(endTime)).toISOString()]));
+        }
+      } else {
+        dispatch(setIsScheduleEnabled(false));
+      }
+    } catch (error) {
+      // How to handle message.error? Maybe dispatch an error action.
+      console.error(`解析工作流元数据失败: ${(error as Error).message}`);
+    }
+
+    dispatch(loadGraphContent());
     return response;
   }
 );
