@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, message, Popconfirm } from 'antd';
+import { Table, Button, Modal, Form, Input, message, Popconfirm, Upload } from 'antd';
+import { UploadOutlined } from '@ant-design/icons';
 import api from '../api';
 
 interface DiyFunction {
@@ -58,14 +59,30 @@ const DiyFunctionPage: React.FC = () => {
                 await api.put(`/api/diy-functions/${editingFunction.functionId}`, values);
                 message.success('更新成功');
             } else {
-                await api.post('/api/diy-functions', values);
-                message.success('创建成功');
+                // This branch is now handled by upload
             }
             setIsModalVisible(false);
             fetchFunctions();
         } catch (error) {
             message.error('操作失败');
         }
+    };
+
+    const uploadProps = {
+        name: 'file',
+        action: '/api/diy-functions/upload',
+        headers: {
+            // authorization: 'authorization-text',
+        },
+        showUploadList: false,
+        onChange(info: any) {
+            if (info.file.status === 'done') {
+                message.success(`${info.file.name} 文件上传成功`);
+                fetchFunctions();
+            } else if (info.file.status === 'error') {
+                message.error(`${info.file.name} 文件上传失败.`);
+            }
+        },
     };
 
     const columns = [
@@ -101,12 +118,14 @@ const DiyFunctionPage: React.FC = () => {
 
     return (
         <div>
-            <Button type="primary" onClick={handleAdd} style={{ marginBottom: 16 }}>
-                新增自定义函数
-            </Button>
+            <Upload {...uploadProps}>
+                <Button icon={<UploadOutlined />} type="primary" style={{ marginBottom: 16 }}>
+                    上传 Python 文件新增
+                </Button>
+            </Upload>
             <Table columns={columns} dataSource={functions} rowKey="functionId" />
             <Modal
-                title={editingFunction ? '编辑自定义函数' : '新增自定义函数'}
+                title="编辑自定义函数"
                 visible={isModalVisible}
                 onOk={handleOk}
                 onCancel={() => setIsModalVisible(false)}
