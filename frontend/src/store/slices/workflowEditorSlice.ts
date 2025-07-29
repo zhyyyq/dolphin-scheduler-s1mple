@@ -600,10 +600,10 @@ export const loadGraphContent = createAsyncThunk(
           const { dependTaskList, nextNode } = task.task_params.switchResult;
           if (dependTaskList) {
             for (const item of dependTaskList) {
-              if (item.nextNode) relations.push({ from: task.name, to: item.nextNode, label: item.condition });
+              if (item.nextNode) relations.push({ from: task.name, to: item.nextNode, sourcePort: 'out', targetPort: 'in', label: item.condition });
             }
           }
-          if (nextNode) relations.push({ from: task.name, to: nextNode, label: '' });
+          if (nextNode) relations.push({ from: task.name, to: nextNode, sourcePort: 'out', targetPort: 'in', label: '' });
         }
         if (task.type === 'CONDITIONS' && task.task_params?.dependence?.dependTaskList?.[0]?.conditionResult) {
           const { successNode, failedNode } = task.task_params.dependence.dependTaskList[0].conditionResult;
@@ -617,8 +617,11 @@ export const loadGraphContent = createAsyncThunk(
         const params = task.localParams || task.task_params?.localParams;
         if (params) {
           for (const param of params) {
-            if (param.direct === 'IN') relations.push({ from: param.prop, to: task.name });
-            else relations.push({ from: task.name, to: param.prop });
+            if (param.direct === 'IN') {
+              relations.push({ from: param.prop, to: task.name, sourcePort: 'out', targetPort: 'in' });
+            } else { // OUT
+              relations.push({ from: task.name, to: param.prop, sourcePort: 'out', targetPort: 'in' });
+            }
           }
         }
       }
@@ -677,7 +680,6 @@ export const showYaml = createAsyncThunk(
       originalYaml,
       workflowData,
     } = state.workflowEditor;
-
     if (!graph) {
       throw new Error('Graph not initialized');
     }

@@ -13,7 +13,6 @@ export const generateYamlStr = (
   projectCode?: number,
 ): string => {
   const doc = yaml.parseDocument(originalYaml || 'workflow:\n  name: new-workflow\ntasks: []\nparameters: []');
-
   doc.setIn(['workflow', 'name'], workflowName);
   if (projectName) {
     doc.setIn(['workflow', 'project'], projectName);
@@ -173,8 +172,8 @@ export const generateYamlStr = (
 
       for (const edge of switchOutgoingEdges) {
         const targetNode = allGraphNodes.find(n => n.id === edge.target.cell);
-        if (targetNode && targetNode.data.type !== 'PARAMS') {
-          const condition = edge.labels?.[0]?.attrs?.label?.text || '';
+        if (targetNode) {
+          const condition = edge.labels?.[0] || '';
           if (condition) {
             dependTaskList.push({
               condition: condition,
@@ -194,7 +193,7 @@ export const generateYamlStr = (
           dependTaskList: dependTaskList,
           nextNode: defaultBranchNode,
         };
-      } else if (taskPayload.task_params.switchResult) {
+      } else if (taskPayload.task_params?.switchResult) {
         // Keep existing switchResult if no new edges are found
         // This can happen if the graph is not fully connected yet
       }
