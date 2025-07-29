@@ -2,7 +2,9 @@ package com.example.scheduler.controller;
 
 import com.example.scheduler.service.DsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,9 +31,12 @@ public class ProjectController {
     }
 
     @GetMapping
-    public List<String> getProjects() throws Exception {
-        return dsService.getProjects().stream()
-                .map(p -> (String) p.get("name"))
-                .collect(Collectors.toList());
+    public List<Map<String, Object>> getProjects() throws Exception {
+        return dsService.getProjects();
+    }
+
+    @DeleteMapping("/{projectCode}")
+    public void deleteProject(@PathVariable Long projectCode) throws Exception {
+        dsService.deleteProject(projectCode);
     }
 }

@@ -5,11 +5,16 @@ import yaml from 'yaml';
 import { Graph, Node as X6Node } from '@antv/x6';
 import { compileGraph } from '../../utils/graphUtils';
 
+interface Project {
+  code: number;
+  name: string;
+}
+
 interface HomeState {
   workflows: Workflow[];
   loading: boolean;
   error: string | null;
-  projects: string[];
+  projects: Project[];
   selectedProject: string | null;
   isRestoreModalOpen: boolean;
   isBackfillModalOpen: boolean;
@@ -40,7 +45,7 @@ export const homeSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-    setProjects: (state, action: PayloadAction<string[]>) => {
+    setProjects: (state, action: PayloadAction<Project[]>) => {
       state.projects = action.payload;
     },
     setSelectedProject: (state, action: PayloadAction<string | null>) => {
@@ -73,7 +78,7 @@ export const fetchProjects = createAsyncThunk(
   'home/fetchProjects',
   async (_, { dispatch }) => {
     try {
-      const projects = await api.get<string[]>('/api/projects');
+      const projects = await api.get<Project[]>('/api/projects');
       dispatch(setProjects(projects));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';

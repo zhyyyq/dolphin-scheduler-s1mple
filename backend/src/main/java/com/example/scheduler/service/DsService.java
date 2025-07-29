@@ -487,6 +487,18 @@ public class DsService {
         return createDataElement.getLongValue("code");
     }
 
+    public void deleteProject(Long projectCode) throws Exception {
+        HttpDelete deleteRequest = new HttpDelete(dsUrl + "/projects/" + projectCode);
+        deleteRequest.addHeader("token", token);
+        CloseableHttpResponse deleteResponse = httpClient.execute(deleteRequest);
+        String deleteResponseString = EntityUtils.toString(deleteResponse.getEntity(), "UTF-8");
+        JSONObject deleteData = JSON.parseObject(deleteResponseString);
+
+        if (deleteData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (delete project): " + deleteData.getString("msg"));
+        }
+    }
+
     public String executeDsWorkflow(String projectCode, String processDefinitionCode, Map<String, Object> payload) throws Exception {
         HttpPost executeRequest = new HttpPost(dsUrl + "/projects/" + projectCode + "/executors/start-process-instance");
         executeRequest.addHeader("token", token);

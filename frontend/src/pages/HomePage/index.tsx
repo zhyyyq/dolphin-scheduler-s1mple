@@ -137,6 +137,7 @@ const HomePage: React.FC = () => {
         <Title level={2} style={{ margin: 0 }}>所有工作流</Title>
         <Space>
           <Select
+            allowClear
             placeholder="选择项目"
             style={{ width: 200 }}
             onChange={(value) => {
@@ -158,7 +159,30 @@ const HomePage: React.FC = () => {
             )}
           >
             <Select.Option value="all">所有项目</Select.Option>
-            {projects.map(p => <Select.Option key={p} value={p}>{p}</Select.Option>)}
+            {projects.map(p => (
+              <Select.Option key={p.code} value={p.name}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>{p.name}</span>
+                  <Button
+                    type="text"
+                    danger
+                    size="small"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      try {
+                        await api.delete(`/api/projects/${p.code}`);
+                        message.success('项目删除成功');
+                        dispatch(fetchProjects());
+                      } catch (error) {
+                        message.error('删除项目失败');
+                      }
+                    }}
+                  >
+                    X
+                  </Button>
+                </div>
+              </Select.Option>
+            ))}
           </Select>
           <Button onClick={() => dispatch(setIsRestoreModalOpen(true))}>恢复工作流</Button>
           <Link to="/workflow/edit">
