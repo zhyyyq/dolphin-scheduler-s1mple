@@ -104,12 +104,14 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, gra
       // Also update rawScript in task_params for compatibility with DolphinScheduler
       updated_task_params.rawScript = final_command;
 
+      // Ensure failRetryTimes and failRetryInterval are part of task_params
+      updated_task_params.failRetryTimes = failRetryTimes;
+      updated_task_params.failRetryInterval = failRetryInterval;
+
       let finalTask: Task = {
         ...task!,
         name: name,
         command: final_command, // Keep command for consistency within our app
-        failRetryTimes: failRetryTimes,
-        failRetryInterval: failRetryInterval,
         task_params: updated_task_params,
       };
 
