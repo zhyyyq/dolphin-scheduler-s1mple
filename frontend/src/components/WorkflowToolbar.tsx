@@ -12,8 +12,8 @@ interface WorkflowToolbarProps {
   onWorkflowNameChange: (name: string) => void;
   workflowSchedule: string;
   onWorkflowScheduleChange: (schedule: string) => void;
-  scheduleTimeRange: [string | null, string | null];
-  onScheduleTimeRangeChange: (dates: [string | null, string | null]) => void;
+  scheduleTimeRange: [dayjs.Dayjs | null, dayjs.Dayjs | null];
+  onScheduleTimeRangeChange: (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null]) => void;
   isScheduleEnabled: boolean;
   onIsScheduleEnabledChange: (enabled: boolean) => void;
   onShowYaml: () => void;
@@ -80,13 +80,9 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
           <RangePicker
             showTime
             style={{ width: '350px' }}
-            value={scheduleTimeRange[0] && scheduleTimeRange[1] ? [dayjs(scheduleTimeRange[0]), dayjs(scheduleTimeRange[1])] : null}
+            value={scheduleTimeRange}
             onChange={(dates) => {
-              if (dates) {
-                onScheduleTimeRangeChange([dates[0]?.format('YYYY-MM-DD HH:mm:ss') || null, dates[1]?.format('YYYY-MM-DD HH:mm:ss') || null]);
-              } else {
-                onScheduleTimeRangeChange([null, null]);
-              }
+              onScheduleTimeRangeChange(dates as [dayjs.Dayjs | null, dayjs.Dayjs | null]);
             }}
             disabled={!isScheduleEnabled}
           />

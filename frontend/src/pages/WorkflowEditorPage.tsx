@@ -40,9 +40,9 @@ const WorkflowEditorPage: React.FC = () => {
   const [workflowName, setWorkflowName] = useState('my-workflow');
   const [workflowSchedule, setWorkflowSchedule] = useState('0 0 * * *');
   const [isScheduleEnabled, setIsScheduleEnabled] = useState(true);
-  const [scheduleTimeRange, setScheduleTimeRange] = useState<[string | null, string | null]>([
-    dayjs().format('YYYY-MM-DD HH:mm:ss'),
-    dayjs().add(100, 'year').format('YYYY-MM-DD HH:mm:ss'),
+  const [scheduleTimeRange, setScheduleTimeRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null]>([
+    dayjs(),
+    dayjs().add(100, 'year'),
   ]);
   const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
   const [workflowData, setWorkflowData] = useState<WorkflowDetail | null>(null);
@@ -115,36 +115,47 @@ const WorkflowEditorPage: React.FC = () => {
     }
   }, [workflow_uuid, message]);
 
+  // Effect for workflow metadata
   useEffect(() => {
-    const loadGraph = async () => {
+    if (!workflowData) return;
+
+    const { name, uuid, yaml_content } = workflowData;
+    setWorkflowName(name);
+    setWorkflowUuid(uuid);
+
+    try {
+      const doc = yaml.parseDocument(yaml_content);
+      const schedule = doc.getIn(['workflow', 'schedule']);
+      const startTime = doc.getIn(['workflow', 'startTime']);
+      const endTime = doc.getIn(['workflow', 'endTime']);
+
+      if (schedule !== undefined && schedule !== null) {
+        let scheduleStr = String(schedule).replace(/\?/g, '*');
+        const parts = scheduleStr.split(' ');
+        if (parts.length === 6 || parts.length === 7) {
+          scheduleStr = `${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]}`;
+        }
+        setWorkflowSchedule(scheduleStr);
+        setIsScheduleEnabled(true);
+        if (startTime && endTime) {
+          setScheduleTimeRange([dayjs(String(startTime)), dayjs(String(endTime))]);
+        }
+      } else {
+        setIsScheduleEnabled(false);
+      }
+    } catch (error) {
+      message.error(`解析工作流元数据失败: ${(error as Error).message}`);
+    }
+  }, [workflowData?.name, workflowData?.uuid, workflowData?.yaml_content, message]);
+
+  // Effect for graph content
+  useEffect(() => {
+    const loadGraphContent = async () => {
       if (!graph || !workflowData) return;
 
-      const { name, uuid, yaml_content } = workflowData;
-      setWorkflowName(name);
-      setWorkflowUuid(uuid);
-
+      const { yaml_content } = workflowData;
       try {
         const doc = yaml.parseDocument(yaml_content);
-        const schedule = doc.getIn(['workflow', 'schedule']);
-        const startTime = doc.getIn(['workflow', 'startTime']);
-        const endTime = doc.getIn(['workflow', 'endTime']);
-
-        if (schedule !== undefined && schedule !== null) {
-          let scheduleStr = String(schedule).replace(/\?/g, '*');
-          const parts = scheduleStr.split(' ');
-          // Handle Quartz 6 or 7-part cron expressions by converting to standard 5-part
-          if (parts.length === 6 || parts.length === 7) {
-            // Quartz: s m h d M DOW (Y) -> Standard: m h d M DOW
-            scheduleStr = `${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]}`;
-          }
-          setWorkflowSchedule(scheduleStr);
-          setIsScheduleEnabled(true);
-          if (startTime && endTime) {
-            setScheduleTimeRange([String(startTime), String(endTime)]);
-          }
-        } else {
-          setIsScheduleEnabled(false);
-        }
         const tasks = (doc.get('tasks') as any)?.toJSON() || [];
         
         // Pre-process DIY_FUNCTION tasks to enrich them with full data
@@ -156,16 +167,11 @@ const WorkflowEditorPage: React.FC = () => {
               try {
                 const funcData = await api.get<any>(`/api/diy-functions/${functionId}`);
                 if (funcData) {
-                  // Enrich the task object with data needed for rendering
                   task.label = funcData.functionName;
-                  // Do NOT update task.name, as it's the unique identifier for deps
                   task.command = funcData.functionContent;
-                  if (!task.task_params) {
-                    task.task_params = {};
-                  }
+                  if (!task.task_params) task.task_params = {};
                   task.task_params.contentHash = funcData.contentHash;
                 } else {
-                  // Handle cases where API returns 2xx but with empty body
                   throw new Error('API returned empty data');
                 }
               } catch (e) {
@@ -179,18 +185,12 @@ const WorkflowEditorPage: React.FC = () => {
         await Promise.all(diyFunctionPromises);
 
         const parameters = (doc.get('parameters') as any)?.toJSON() || [];
-
         const globalParamNodes = parameters.map((p: any) => ({
           name: p.name,
           label: p.name,
           type: 'PARAMS',
           task_type: 'PARAMS',
-          task_params: {
-            prop: p.name,
-            type: p.type,
-            value: p.value,
-            direction: p.direction,
-          },
+          task_params: { prop: p.name, type: p.type, value: p.value, direction: p.direction },
         }));
 
         const localParamNodes: any[] = [];
@@ -198,19 +198,13 @@ const WorkflowEditorPage: React.FC = () => {
           const params = task.localParams || task.task_params?.localParams;
           if (params) {
             params.forEach((p: any) => {
-              // Avoid duplicating nodes if they are already defined globally
               if (!globalParamNodes.some((gp: any) => gp.name === p.prop) && !localParamNodes.some((lp: any) => lp.name === p.prop)) {
                 localParamNodes.push({
                   name: p.prop,
                   label: p.prop,
                   type: 'PARAMS',
                   task_type: 'PARAMS',
-                  task_params: {
-                    prop: p.prop,
-                    type: p.type,
-                    value: p.value,
-                    direction:p.direction,
-                  },
+                  task_params: { prop: p.prop, type: p.type, value: p.value, direction: p.direction },
                 });
               }
             });
@@ -218,7 +212,6 @@ const WorkflowEditorPage: React.FC = () => {
         });
 
         const allNodes = [...tasks, ...globalParamNodes, ...localParamNodes];
-        
         const locations = workflowData.locations ? JSON.parse(workflowData.locations) : null;
         const relations: { from: string, to: string, sourcePort?: string, targetPort?: string, label?: string }[] = [];
         const conditionTasks = new Set(tasks.filter((t: any) => t.type === 'CONDITIONS').map((t: any) => t.name));
@@ -226,57 +219,34 @@ const WorkflowEditorPage: React.FC = () => {
         for (const task of tasks) {
           if (task.deps) {
             for (const dep of task.deps) {
-              // If the dependency is a condition, it will be handled by the condition's success/failed nodes
-              if (conditionTasks.has(dep)) {
-                continue;
+              if (!conditionTasks.has(dep)) {
+                relations.push({ from: dep, to: task.name });
               }
-              relations.push({ from: dep, to: task.name });
             }
           }
           if (task.type === 'SWITCH' && task.task_params?.switchResult) {
             const { dependTaskList, nextNode } = task.task_params.switchResult;
             if (dependTaskList) {
               for (const item of dependTaskList) {
-                if (item.nextNode) {
-                  relations.push({
-                    from: task.name,
-                    to: item.nextNode,
-                    label: item.condition,
-                  });
-                }
+                if (item.nextNode) relations.push({ from: task.name, to: item.nextNode, label: item.condition });
               }
             }
-            if (nextNode) {
-              relations.push({
-                from: task.name,
-                to: nextNode,
-                label: '', // Default branch
-              });
-            }
+            if (nextNode) relations.push({ from: task.name, to: nextNode, label: '' });
           }
-
           if (task.type === 'CONDITIONS' && task.task_params?.dependence?.dependTaskList?.[0]?.conditionResult) {
             const { successNode, failedNode } = task.task_params.dependence.dependTaskList[0].conditionResult;
             if (successNode) {
-              for (const nodeName of successNode) {
-                relations.push({ from: task.name, to: nodeName, sourcePort: 'out-success', targetPort: 'in' });
-              }
+              for (const nodeName of successNode) relations.push({ from: task.name, to: nodeName, sourcePort: 'out-success', targetPort: 'in' });
             }
             if (failedNode) {
-              for (const nodeName of failedNode) {
-                relations.push({ from: task.name, to: nodeName, sourcePort: 'out-failure', targetPort: 'in' });
-              }
+              for (const nodeName of failedNode) relations.push({ from: task.name, to: nodeName, sourcePort: 'out-failure', targetPort: 'in' });
             }
           }
-
           const params = task.localParams || task.task_params?.localParams;
           if (params) {
             for (const param of params) {
-              if (param.direct === 'IN') {
-                relations.push({ from: param.prop, to: task.name });
-              } else { // OUT
-                relations.push({ from: task.name, to: param.prop });
-              }
+              if (param.direct === 'IN') relations.push({ from: param.prop, to: task.name });
+              else relations.push({ from: task.name, to: param.prop });
             }
           }
         }
@@ -286,8 +256,8 @@ const WorkflowEditorPage: React.FC = () => {
       }
     };
 
-    loadGraph();
-  }, [graph, workflowData, loadGraphData, message]);
+    loadGraphContent();
+  }, [graph, workflowData?.yaml_content, loadGraphData, message]);
 
   const handleSaveNode = (updatedNode: Task) => {
     if (!graph) return;

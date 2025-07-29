@@ -1,12 +1,13 @@
 import yaml from 'yaml';
 import { Graph } from '@antv/x6';
+import dayjs from 'dayjs';
 
 export const generateYamlStr = (
   graph: Graph,
   workflowName: string,
   isScheduleEnabled: boolean,
   workflowSchedule: string,
-  scheduleTimeRange: [string | null, string | null],
+  scheduleTimeRange: [dayjs.Dayjs | null, dayjs.Dayjs | null],
   originalYaml?: string
 ): string => {
   const doc = yaml.parseDocument(originalYaml || 'workflow:\n  name: new-workflow\ntasks: []\nparameters: []');
@@ -15,8 +16,8 @@ export const generateYamlStr = (
   if (isScheduleEnabled) {
     doc.setIn(['workflow', 'schedule'], workflowSchedule);
     if (scheduleTimeRange[0] && scheduleTimeRange[1]) {
-      doc.setIn(['workflow', 'startTime'], scheduleTimeRange[0]);
-      doc.setIn(['workflow', 'endTime'], scheduleTimeRange[1]);
+      doc.setIn(['workflow', 'startTime'], scheduleTimeRange[0].format('YYYY-MM-DD HH:mm:ss'));
+      doc.setIn(['workflow', 'endTime'], scheduleTimeRange[1].format('YYYY-MM-DD HH:mm:ss'));
     } else {
       doc.deleteIn(['workflow', 'startTime']);
       doc.deleteIn(['workflow', 'endTime']);
