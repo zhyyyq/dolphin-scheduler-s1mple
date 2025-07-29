@@ -8,11 +8,19 @@ export const generateYamlStr = (
   isScheduleEnabled: boolean,
   workflowSchedule: string,
   scheduleTimeRange: [dayjs.Dayjs | null, dayjs.Dayjs | null],
-  originalYaml?: string
+  originalYaml?: string,
+  projectName?: string,
+  projectCode?: number,
 ): string => {
   const doc = yaml.parseDocument(originalYaml || 'workflow:\n  name: new-workflow\ntasks: []\nparameters: []');
 
   doc.setIn(['workflow', 'name'], workflowName);
+  if (projectName) {
+    doc.setIn(['workflow', 'project'], projectName);
+  }
+  if (projectCode) {
+    doc.setIn(['workflow', 'projectCode'], projectCode);
+  }
   if (isScheduleEnabled) {
     doc.setIn(['workflow', 'schedule'], workflowSchedule);
     if (scheduleTimeRange[0] && scheduleTimeRange[1]) {

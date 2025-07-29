@@ -120,6 +120,7 @@ export const saveWorkflow = createAsyncThunk(
       scheduleTimeRange: scheduleTimeRangeISO,
       originalYaml,
       workflowUuid,
+      workflowData,
     } = state.workflowEditor;
 
     if (!graph) {
@@ -131,7 +132,7 @@ export const saveWorkflow = createAsyncThunk(
       scheduleTimeRangeISO[1] ? dayjs(scheduleTimeRangeISO[1]) : null,
     ] as [dayjs.Dayjs | null, dayjs.Dayjs | null];
 
-    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml);
+    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml, workflowData?.projectName, workflowData?.projectCode);
     if (!yamlStr) {
       throw new Error('Canvas is empty or not initialized.');
     }
@@ -574,6 +575,7 @@ export const showYaml = createAsyncThunk(
       workflowSchedule,
       scheduleTimeRange: scheduleTimeRangeISO,
       originalYaml,
+      workflowData,
     } = state.workflowEditor;
 
     if (!graph) {
@@ -585,7 +587,7 @@ export const showYaml = createAsyncThunk(
       scheduleTimeRangeISO[1] ? dayjs(scheduleTimeRangeISO[1]) : null,
     ] as [dayjs.Dayjs | null, dayjs.Dayjs | null];
 
-    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml);
+    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml, workflowData?.projectName, workflowData?.projectCode);
     dispatch(setYamlContent(yamlStr));
     dispatch(setIsYamlModalVisible(true));
   }
