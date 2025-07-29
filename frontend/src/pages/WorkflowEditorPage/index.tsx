@@ -288,7 +288,7 @@ const WorkflowEditorPage: React.FC = () => {
     const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml);
     setYamlContent(yamlStr);
     setIsYamlModalVisible(true);
-  }, [graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml]);
+  }, [graph, workflowName, isScheduleEnabled, workflowSchedule, originalYaml]);
 
   const handleSyncYamlToGraph = useCallback(async () => {
     if (!graph) return;

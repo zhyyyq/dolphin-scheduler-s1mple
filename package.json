@@ -1,7 +1,9 @@
 {
   "dependencies": {
+    "@reduxjs/toolkit": "^2.8.2",
     "@types/dagre": "^0.7.53",
     "dagre": "^0.8.5",
-    "insert-css": "^2.0.0"
+    "insert-css": "^2.0.0",
+    "react-redux": "^9.2.0"
   }
 }
