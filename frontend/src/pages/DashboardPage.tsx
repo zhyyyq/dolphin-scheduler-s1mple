@@ -1,93 +1,80 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Row, Col, Card, Statistic, Spin, Alert, Table, Tag, App as AntApp } from 'antd';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-import { DashboardStats, WorkflowInstance } from '../types';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Row, Col, Card, Spin, Alert, DatePicker, Select, Button } from 'antd';
+import { Line, Bar, Gauge } from '@ant-design/plots';
 import api from '../api';
 
-const COLORS = {
-  success: '#52c41a',
-  failure: '#f5222d',
-  running: '#1890ff',
-  other: '#fa8c16',
-};
-
-const STATE_MAP: { [key: string]: string } = {
-  SUCCESS: '成功',
-  FAILURE: '失败',
-  RUNNING_EXECUTION: '运行中',
-  STOP: '停止',
-  KILL: '终止',
-};
-
-interface StatCardProps {
-  title: string;
-  value: number;
-  color: string;
-  icon: React.ReactNode;
-  onClick?: () => void;
-}
-
-const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon, onClick }) => (
-  <Card onClick={onClick} hoverable>
-    <Statistic title={title} value={value} valueStyle={{ color }} prefix={icon} />
-  </Card>
-);
+const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 const DashboardPage: React.FC = () => {
-  const { message } = AntApp.useApp();
-  const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [projects, setProjects] = useState<{ code: number; name: string }[]>([]);
+  const [workflows, setWorkflows] = useState<{ code: number; name: string }[]>([]);
+  const [dashboardData, setDashboardData] = useState<any>({
+    projectHealth: 0,
+    workflowHealth: 0,
+    taskHealth: 0,
+    resourceUtilization: 0,
+    workflowTrend: [],
+    taskTrend: [],
+    failedTasks: [],
+    slowTasks: [],
+    slowWorkflows: [],
+    ganttData: [],
+  });
+  const [filters, setFilters] = useState({
+    timeRange: [null, null],
+    projectCode: null,
+    workflowCode: null,
+  });
 
-  const fetchStats = useCallback(async () => {
+  const fetchDashboardData = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
-      const data = await api.get<DashboardStats>('/api/dashboard/stats');
-      setStats(data);
+      const params = {
+        startTime: filters.timeRange[0] ? (filters.timeRange[0] as any).format('YYYY-MM-DD HH:mm:ss') : undefined,
+        endTime: filters.timeRange[1] ? (filters.timeRange[1] as any).format('YYYY-MM-DD HH:mm:ss') : undefined,
+        projectCode: filters.projectCode,
+        workflowCode: filters.workflowCode,
+      };
+      const data = await api.get('/api/dashboard/stats', params);
+      setDashboardData(data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-      message.error(errorMessage);
+      setError('Failed to fetch dashboard data');
     } finally {
       setLoading(false);
     }
-  }, [message]);
+  }, [filters]);
+
+  const fetchProjects = useCallback(async () => {
+    try {
+      const data = await api.get<{ code: number; name: string }[]>('/api/projects');
+      setProjects(data);
+    } catch (err) {
+      setError('Failed to fetch projects');
+    }
+  }, []);
+
+  const fetchWorkflows = useCallback(async (projectCode: number | null) => {
+    try {
+      const params = projectCode ? { projectCode } : {};
+      const data = await api.get<{ code: number; name: string }[]>('/api/workflow/combined', params);
+      setWorkflows(data);
+    } catch (err) {
+      setError('Failed to fetch workflows');
+    }
+  }, []);
 
   useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    fetchProjects();
+    fetchWorkflows(null);
+    fetchDashboardData();
+  }, [fetchProjects, fetchWorkflows, fetchDashboardData]);
 
-  const pieData = useMemo(() => {
-    if (!stats) return [];
-    const data = [
-      { name: '成功', value: stats.success, color: COLORS.success },
-      { name: '失败', value: stats.failure, color: COLORS.failure },
-      { name: '运行中', value: stats.running, color: COLORS.running },
-      { name: '其他', value: stats.other, color: COLORS.other },
-    ];
-    return data.filter(item => item.value > 0);
-  }, [stats]);
-
-  const recentInstancesColumns: ColumnsType<WorkflowInstance> = useMemo(() => [
-    { title: '名称', dataIndex: 'name', key: 'name' },
-    {
-      title: '状态',
-      dataIndex: 'state',
-      key: 'state',
-      render: (state: WorkflowInstance['state']) => {
-        const stateText = STATE_MAP[state] || state;
-        const stateColor = state === 'SUCCESS' ? 'success' : state.includes('FAIL') ? 'error' : 'processing';
-        return <Tag color={stateColor}>{stateText}</Tag>;
-      },
-    },
-    { title: '开始时间', dataIndex: 'startTime', key: 'startTime' },
-    { title: '结束时间', dataIndex: 'endTime', key: 'endTime' },
-  ], []);
+  const handleFilterChange = (changedFilters: any) => {
+    setFilters(prev => ({ ...prev, ...changedFilters }));
+  };
 
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><Spin size="large" /></div>;
@@ -97,92 +84,109 @@ const DashboardPage: React.FC = () => {
     return <Alert message="错误" description={error} type="error" showIcon />;
   }
 
-  if (!stats) {
-    return <Alert message="无数据" description="无法加载仪表盘统计信息。" type="info" showIcon />;
-  }
-
   return (
     <div style={{ padding: '24px', background: '#f0f2f5' }}>
-      <Row gutter={[16, 16]}>
+      <Card style={{ marginBottom: '24px' }}>
+        <Row gutter={16}>
+          <Col>
+            <RangePicker onChange={(dates) => handleFilterChange({ timeRange: dates })} />
+          </Col>
+          <Col>
+            <Select
+              style={{ width: 200 }}
+              placeholder="选择项目"
+              onChange={(value) => {
+                handleFilterChange({ projectCode: value });
+                fetchWorkflows(value);
+              }}
+              allowClear
+            >
+              {projects.map(p => <Option key={p.code} value={p.code}>{p.name}</Option>)}
+            </Select>
+          </Col>
+          <Col>
+            <Select
+              style={{ width: 200 }}
+              placeholder="选择工作流"
+              onChange={(value) => handleFilterChange({ workflowCode: value })}
+              allowClear
+            >
+              {workflows.map(w => <Option key={w.code} value={w.code}>{w.name}</Option>)}
+            </Select>
+          </Col>
+          <Col>
+            <Button type="primary" onClick={fetchDashboardData}>查询</Button>
+          </Col>
+        </Row>
+      </Card>
+
+      <Row gutter={[24, 24]}>
         <Col span={6}>
-          <StatCard
-            title="成功"
-            value={stats.success}
-            color={COLORS.success}
-            icon={<CheckCircleOutlined />}
-            onClick={() => navigate('/instances?state=SUCCESS')}
-          />
+          <Card title="项目健康度">
+            <Gauge percent={dashboardData.projectHealth} />
+          </Card>
         </Col>
         <Col span={6}>
-          <StatCard
-            title="失败"
-            value={stats.failure}
-            color={COLORS.failure}
-            icon={<CloseCircleOutlined />}
-            onClick={() => navigate('/instances?state=FAILURE')}
-          />
+          <Card title="工作流健康度">
+            <Gauge percent={dashboardData.workflowHealth} />
+          </Card>
         </Col>
         <Col span={6}>
-          <StatCard
-            title="运行中"
-            value={stats.running}
-            color={COLORS.running}
-            icon={<SyncOutlined spin />}
-            onClick={() => navigate('/instances?state=RUNNING_EXECUTION')}
-          />
+          <Card title="任务健康度">
+            <Gauge percent={dashboardData.taskHealth} />
+          </Card>
         </Col>
         <Col span={6}>
-          <Card onClick={() => navigate('/instances')} hoverable>
-            <Statistic title="总计" value={stats.total} />
+          <Card title="资源利用率">
+            <Gauge percent={dashboardData.resourceUtilization} />
           </Card>
         </Col>
       </Row>
-      <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
-        <Col span={8}>
-          <Card title="执行状态分布" style={{ height: '100%' }}>
-            {pieData.length > 1 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '300px', textAlign: 'center' }}>
-                {pieData.length === 1 ? (
-                  <>
-                    <div style={{ fontSize: '32px', color: pieData[0].color, fontWeight: 'bold' }}>100%</div>
-                    <div style={{ fontSize: '16px', marginTop: '8px' }}>{pieData[0].name}</div>
-                  </>
-                ) : (
-                  <div style={{ color: '#8c8c8c', fontSize: '16px' }}>暂无执行数据</div>
-                )}
-              </div>
-            )}
+
+      <Row gutter={[24, 24]} style={{ marginTop: '24px' }}>
+        <Col span={12}>
+          <Card title="工作流实例趋势">
+            <Line data={dashboardData.workflowTrend} xField="date" yField="count" seriesField="status" />
           </Card>
         </Col>
-        <Col span={16}>
-          <Card title="最近工作流实例" style={{ height: '100%' }}>
-            <Table
-              columns={recentInstancesColumns}
-              dataSource={stats.recent_instances}
-              rowKey="id"
-              size="middle"
-              pagination={{ pageSize: 5 }}
+        <Col span={12}>
+          <Card title="任务实例趋势">
+            <Line data={dashboardData.taskTrend} xField="date" yField="count" seriesField="status" />
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[24, 24]} style={{ marginTop: '24px' }}>
+        <Col span={8}>
+          <Card title="失败任务 Top 10">
+            <Bar data={dashboardData.failedTasks} xField="count" yField="name" seriesField="name" />
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card title="耗时任务 Top 10">
+            <Bar data={dashboardData.slowTasks} xField="duration" yField="name" seriesField="name" />
+          </Card>
+        </Col>
+        <Col span={8}>
+          <Card title="耗时工作流 Top 10">
+            <Bar data={dashboardData.slowWorkflows} xField="duration" yField="name" seriesField="name" />
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[24, 24]} style={{ marginTop: '24px' }}>
+        <Col span={24}>
+          <Card title="工作流实例甘特图">
+            <Bar
+              data={dashboardData.ganttData}
+              xField="duration"
+              yField="name"
+              seriesField="status"
+              isStack={true}
+              label={{
+                position: 'middle',
+                layout: [{ type: 'interval-adjust-position' }],
+              }}
             />
           </Card>
         </Col>

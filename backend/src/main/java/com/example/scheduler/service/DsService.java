@@ -556,6 +556,84 @@ public class DsService {
         return executeData.getString("data");
     }
 
+    public Map<String, Object> getWorkflowInstanceStateCount(Long projectCode) throws Exception {
+        return getWorkflowInstanceStateCount(projectCode, null, null);
+    }
+
+    public Map<String, Object> getWorkflowInstanceStateCount(Long projectCode, String startDate, String endDate) throws Exception {
+        URIBuilder builder = new URIBuilder(dsUrl + "/projects/analysis/process-state-count");
+        if (projectCode != null) {
+            builder.setParameter("projectCode", String.valueOf(projectCode));
+        }
+        if (startDate != null) {
+            builder.setParameter("startDate", startDate);
+        }
+        if (endDate != null) {
+            builder.setParameter("endDate", endDate);
+        }
+        HttpGet request = new HttpGet(builder.build());
+        request.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject data = JSON.parseObject(responseString);
+        if (data.getIntValue("code") != 0) {
+            throw new Exception("DS API error (process-state-count): " + data.getString("msg"));
+        }
+        return data.getJSONObject("data").getInnerMap();
+    }
+
+    public Map<String, Object> getTaskInstanceStateCount(Long projectCode) throws Exception {
+        return getTaskInstanceStateCount(projectCode, null, null);
+    }
+
+    public Map<String, Object> getTaskInstanceStateCount(Long projectCode, String startDate, String endDate) throws Exception {
+        URIBuilder builder = new URIBuilder(dsUrl + "/projects/analysis/task-state-count");
+        if (projectCode != null) {
+            builder.setParameter("projectCode", String.valueOf(projectCode));
+        }
+        if (startDate != null) {
+            builder.setParameter("startDate", startDate);
+        }
+        if (endDate != null) {
+            builder.setParameter("endDate", endDate);
+        }
+        HttpGet request = new HttpGet(builder.build());
+        request.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject data = JSON.parseObject(responseString);
+        if (data.getIntValue("code") != 0) {
+            throw new Exception("DS API error (task-state-count): " + data.getString("msg"));
+        }
+        return data.getJSONObject("data").getInnerMap();
+    }
+
+    public List<Map<String, Object>> getTopNLongestRunningProcessInstance(Long projectCode, int topN) throws Exception {
+        URIBuilder builder = new URIBuilder(dsUrl + "/projects/" + projectCode + "/process-instances/top-n");
+        builder.setParameter("size", String.valueOf(topN));
+        HttpGet request = new HttpGet(builder.build());
+        request.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject data = JSON.parseObject(responseString);
+        if (data.getIntValue("code") != 0) {
+            throw new Exception("DS API error (top-n): " + data.getString("msg"));
+        }
+        return (List<Map<String, Object>>) data.getJSONObject("data").get("longestRunningProcess");
+    }
+
+    public Map<String, Object> getQueueCount() throws Exception {
+        HttpGet request = new HttpGet(dsUrl + "/projects/analysis/queue-count");
+        request.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject data = JSON.parseObject(responseString);
+        if (data.getIntValue("code") != 0) {
+            throw new Exception("DS API error (queue-count): " + data.getString("msg"));
+        }
+        return data.getJSONObject("data").getInnerMap();
+    }
+
     public Map<String, Object> getWorkflowInstanceStats() throws Exception {
         Map<String, Object> stats = new HashMap<>();
         stats.put("success", 0);

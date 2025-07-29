@@ -111,7 +111,7 @@ const HomePage: React.FC = () => {
       key: 'actions',
       render: (_, record: Workflow) => <ActionButtons record={record} />,
     },
-  ], []);
+  ], [projects]);
 
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><Spin size="large" /></div>;
@@ -121,9 +121,14 @@ const HomePage: React.FC = () => {
     return <Alert message="错误" description={error} type="error" showIcon />;
   }
 
-  const filteredWorkflows = selectedProject && selectedProject !== 'all'
-    ? workflows.filter(w => w.projectCode === selectedProject)
-    : workflows;
+  const filteredWorkflows = useMemo(() => {
+    if (selectedProject && selectedProject !== 'all') {
+      return workflows.filter(w =>
+        w.projectCode === selectedProject || w.releaseState === 'UNSUBMITTED' || w.releaseState === 'MODIFIED'
+      );
+    }
+    return workflows;
+  }, [workflows, selectedProject]);
 
   return (
     <div style={{ padding: '24px', background: '#fff', borderRadius: '8px' }}>
