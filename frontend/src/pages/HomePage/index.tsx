@@ -125,7 +125,7 @@ const HomePage: React.FC = () => {
     return <Alert message="错误" description={error} type="error" showIcon />;
   }
 
-  const filteredWorkflows = selectedProject
+  const filteredWorkflows = selectedProject && selectedProject !== 'all'
     ? workflows.filter(w => w.projectName === selectedProject)
     : workflows;
 

@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
-import { Modal, Form, Input, App as AntApp } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Modal, Form, Input, App as AntApp, Select } from 'antd';
 import api from '../../../api';
+
+interface User {
+  id: number;
+  userName: string;
+}
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -12,6 +17,21 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onCancel,
   const [form] = Form.useForm();
   const { message } = AntApp.useApp();
   const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      api.get<User[]>('/api/users').then(response => {
+        setUsers(response);
+        if (response.length > 0) {
+          form.setFieldsValue({ owner: response[0].userName });
+        }
+      }).catch(err => {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        message.error(`获取用户列表失败: ${errorMessage}`);
+      });
+    }
+  }, [open, form, message]);
 
   const handleOk = async () => {
     try {
@@ -48,10 +68,15 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ open, onCancel,
         <Form.Item
           name="owner"
           label="所属用户"
-          rules={[{ required: true, message: '请输入所属用户' }]}
-          initialValue="admin"
+          rules={[{ required: true, message: '请选择所属用户' }]}
         >
-          <Input />
+          <Select placeholder="请选择用户">
+            {users.map(user => (
+              <Select.Option key={user.id} value={user.userName}>
+                {user.userName}
+              </Select.Option>
+            ))}
+          </Select>
         </Form.Item>
         <Form.Item
           name="description"
