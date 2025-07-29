@@ -471,8 +471,19 @@ export const onlineWorkflow = createAsyncThunk(
         const cronParts = String(workflow.schedule).split(' ');
         let dsCron = workflow.schedule;
         if (cronParts.length === 5) {
-          dsCron = `0 ${workflow.schedule} ?`;
+          // cronParts: [minute, hour, dayOfMonth, month, dayOfWeek]
+          // In Quartz, one of day-of-month or day-of-week must be '?' if the other is not '*'.
+          if (cronParts[2] !== '*' && cronParts[4] !== '*') {
+            // If both are specified, DS prefers day-of-week to be '?'
+            cronParts[4] = '?';
+          } else if (cronParts[2] === '*' && cronParts[4] === '*') {
+            // If both are '*', one must be '?'. It's common to set day-of-week to '?'
+            cronParts[4] = '?';
+          }
+          // If one is '*' and the other is a value, it's a valid 5-part cron that can be converted.
+          dsCron = `0 ${cronParts.join(' ')}`;
         }
+        
         payload.schedule = {
           startTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
           endTime: '2125-07-25 00:00:00',
