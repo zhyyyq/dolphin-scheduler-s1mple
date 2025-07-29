@@ -49,8 +49,8 @@ export const compileGraph = (graph: Graph) => {
       const logicRelation = logicNode.getData().type; // The relation of the current logic gate
 
       // Separate upstream nodes into simple dependencies and already compiled groups
-      const simpleUpstreamNodes = upstreamNodes.filter(n => !n.getData().task_params.denpendence.dependTaskList);
-      const complexUpstreamNodes = upstreamNodes.filter(n => !!n.getData().task_params.denpendence.dependTaskList);
+      const simpleUpstreamNodes = upstreamNodes.filter(n => !n.getData().task_params.dependence.dependTaskList);
+      const complexUpstreamNodes = upstreamNodes.filter(n => !!n.getData().task_params.dependence.dependTaskList);
 
       // Start building the new dependTaskList
       let newDependTaskList: any[] = [];
@@ -58,7 +58,7 @@ export const compileGraph = (graph: Graph) => {
       // Create a new group for all simple dependencies, using the current logic gate's relation
       if (simpleUpstreamNodes.length > 0) {
         const simpleDependItems = simpleUpstreamNodes.map(n => {
-          const dep = n.getData().task_params.denpendence;
+          const dep = n.getData().task_params.dependence;
           return {
             dependentType: 'DEPENDENT_ON_WORKFLOW',
             projectCode: dep.project,
@@ -76,7 +76,7 @@ export const compileGraph = (graph: Graph) => {
       }
 
       // Add the task lists from the already compiled groups
-      const complexDependTaskLists = complexUpstreamNodes.flatMap(n => n.getData().task_params.denpendence.dependTaskList);
+      const complexDependTaskLists = complexUpstreamNodes.flatMap(n => n.getData().task_params.dependence.dependTaskList);
       newDependTaskList = newDependTaskList.concat(complexDependTaskLists);
 
       // Aggregate localParams from all upstream nodes
@@ -92,7 +92,7 @@ export const compileGraph = (graph: Graph) => {
         type: 'DEPENDENT',
         task_params: {
           localParams: uniqueLocalParams,
-          denpendence: {
+          dependence: {
             relation: logicRelation,
             dependTaskList: newDependTaskList,
             failurePolicy: logicGateParams.failure_strategy === 'fail' ? 'DEPENDENT_FAILURE_FAILURE' : 'DEPENDENT_FAILURE_WAITING',
@@ -142,9 +142,9 @@ export const compileGraph = (graph: Graph) => {
     const taskData = node.getData();
     const localParams = taskData.task_params?.localParams;
 
-    if (taskData.type === 'DEPENDENT' && !taskData.task_params.denpendence.dependTaskList) {
+    if (taskData.type === 'DEPENDENT' && !taskData.task_params.dependence.dependTaskList) {
       // This is a standalone, un-compiled DEPENDENT node. Compile it now.
-      const dep = taskData.task_params.denpendence;
+      const dep = taskData.task_params.dependence;
       const dependItem = {
         dependentType: 'DEPENDENT_ON_WORKFLOW',
         projectCode: dep.project,
@@ -171,7 +171,7 @@ export const compileGraph = (graph: Graph) => {
         ...taskData,
         task_params: {
           ...taskData.task_params,
-          denpendence: compiledDependence,
+          dependence: compiledDependence,
         }
       };
       if (localParams) {

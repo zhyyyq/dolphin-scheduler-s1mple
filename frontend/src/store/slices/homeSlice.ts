@@ -255,7 +255,7 @@ export const onlineWorkflow = createAsyncThunk(
         } else if (task.type === 'DEPENDENT') {
           const params = { ...originalTaskParams, ...(task.task_params || {}) };
           taskParams = {
-            dependence: params.denpendence, // Correctly pass the object
+            dependence: params.dependence, // Correctly pass the object
             localParams: params.localParams || [],
             resourceList: [],
           };

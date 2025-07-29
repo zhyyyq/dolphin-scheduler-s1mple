@@ -17,7 +17,7 @@ interface DependentTaskEditorComponent extends React.FC<DependentTaskEditorProps
 }
 
 const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
-  const denpendence = Form.useWatch('denpendence', form);
+  const dependence = Form.useWatch('dependence', form);
   const [projects, setProjects] = useState<any[]>([]);
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [isLoadingWorkflows, setIsLoadingWorkflows] = useState(false);
@@ -30,7 +30,7 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
 
   // Pre-fill workflows when editing an existing node
   useEffect(() => {
-    const initialProject = form.getFieldValue(['denpendence', 'project']);
+    const initialProject = form.getFieldValue(['dependence', 'project']);
     if (initialProject) {
       setIsLoadingWorkflows(true);
       api.getWorkflows(initialProject).then(data => {
@@ -43,7 +43,7 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
 
   const handleProjectChange = (projectCode: string) => {
     // Reset workflow when project changes
-    form.setFieldValue(['denpendence', 'workflow'], undefined);
+    form.setFieldValue(['dependence', 'workflow'], undefined);
     
     setIsLoadingWorkflows(true);
     api.getWorkflows(projectCode).then(data => {
@@ -57,7 +57,7 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
     <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: 16 }}>
       <Form.Item
         label="依赖类型"
-        name={['denpendence', 'type']}
+        name={['dependence', 'type']}
         initialValue="workflow"
         rules={[{ required: true }]}
       >
@@ -68,7 +68,7 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
 
       <Form.Item
         label="项目名称"
-        name={['denpendence', 'project']}
+        name={['dependence', 'project']}
         rules={[{ required: true, message: '请选择项目' }]}
       >
         <Select
@@ -85,14 +85,14 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
 
       <Form.Item
         label="工作流名称"
-        name={['denpendence', 'workflow']}
+        name={['dependence', 'workflow']}
         rules={[{ required: true, message: '请选择工作流' }]}
       >
         <Select
           showSearch
           placeholder="请先选择项目"
           loading={isLoadingWorkflows}
-          disabled={!denpendence?.project}
+          disabled={!dependence?.project}
           filterOption={(input, option) =>
             (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
           }
@@ -103,7 +103,7 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
 
       <Form.Item label="时间周期">
         <Space>
-          <Form.Item name={['denpendence', 'date_unit']} noStyle initialValue="day">
+          <Form.Item name={['dependence', 'date_unit']} noStyle initialValue="day">
             <Select style={{ width: 120 }}>
               <Option value="month">月</Option>
               <Option value="week">周</Option>
@@ -111,7 +111,7 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
               <Option value="hour">时</Option>
             </Select>
           </Form.Item>
-          <Form.Item name={['denpendence', 'date_value']} noStyle initialValue="today">
+          <Form.Item name={['dependence', 'date_value']} noStyle initialValue="today">
             <Select style={{ width: 120 }}>
               <Option value="today">今天</Option>
               <Option value="yesterday">昨天</Option>
@@ -123,12 +123,12 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
         </Space>
       </Form.Item>
 
-      <Form.Item label="参数传递" valuePropName="checked" name={['denpendence', 'pass_params']}>
+      <Form.Item label="参数传递" valuePropName="checked" name={['dependence', 'pass_params']}>
         <Switch />
       </Form.Item>
 
-      {denpendence?.pass_params && (
-        <Form.List name={['denpendence', 'param_mappings']}>
+      {dependence?.pass_params && (
+        <Form.List name={['dependence', 'param_mappings']}>
           {(paramFields, { add: addParam, remove: removeParam }) => (
             <div style={{ paddingLeft: 24 }}>
               {paramFields.map(paramField => (
@@ -154,7 +154,7 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
 
       <Form.Item
         label="检查间隔"
-        name={['denpendence', 'check_interval']}
+        name={['dependence', 'check_interval']}
         initialValue={10}
       >
         <InputNumber min={1} addonAfter="秒" style={{ width: '100%' }} />
@@ -162,7 +162,7 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
 
       <Form.Item
         label="依赖失败策略"
-        name={['denpendence', 'failure_strategy']}
+        name={['dependence', 'failure_strategy']}
         initialValue="wait"
       >
         <Radio.Group>
@@ -171,10 +171,10 @@ const DependentTaskEditor: DependentTaskEditorComponent = ({ form }) => {
         </Radio.Group>
       </Form.Item>
 
-      {denpendence?.failure_strategy === 'wait' && (
+      {dependence?.failure_strategy === 'wait' && (
         <Form.Item
           label="依赖失败等待时间"
-          name={['denpendence', 'failure_waiting_time']}
+          name={['dependence', 'failure_waiting_time']}
           initialValue={30}
           rules={[{ required: true, message: '请输入等待时间' }]}
         >
@@ -209,7 +209,7 @@ DependentTaskEditor.taskInfo = {
       failRetryTimes: 0,
       failRetryInterval: 1,
       task_params: {
-        denpendence: {
+        dependence: {
           type: 'workflow',
           date_unit: 'day',
           date_value: 'today',
