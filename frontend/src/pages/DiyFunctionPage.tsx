@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, message, Popconfirm, Upload } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { Table, Button, message, Popconfirm, Upload } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import api from '../api';
 
@@ -9,13 +10,9 @@ interface DiyFunction {
     functionContent: string;
 }
 
-const { TextArea } = Input;
-
 const DiyFunctionPage: React.FC = () => {
     const [functions, setFunctions] = useState<DiyFunction[]>([]);
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [editingFunction, setEditingFunction] = useState<DiyFunction | null>(null);
-    const [form] = Form.useForm();
+    const navigate = useNavigate();
 
     const fetchFunctions = async () => {
         try {
@@ -30,16 +27,8 @@ const DiyFunctionPage: React.FC = () => {
         fetchFunctions();
     }, []);
 
-    const handleAdd = () => {
-        setEditingFunction(null);
-        form.resetFields();
-        setIsModalVisible(true);
-    };
-
-    const handleEdit = (record: any) => {
-        setEditingFunction(record);
-        form.setFieldsValue(record);
-        setIsModalVisible(true);
+    const handleEdit = (record: DiyFunction) => {
+        navigate(`/functions/edit/${record.functionId}`);
     };
 
     const handleDelete = async (id: number) => {
@@ -49,22 +38,6 @@ const DiyFunctionPage: React.FC = () => {
             fetchFunctions();
         } catch (error) {
             message.error('删除失败');
-        }
-    };
-
-    const handleOk = async () => {
-        try {
-            const values = await form.validateFields();
-            if (editingFunction) {
-                await api.put(`/api/diy-functions/${editingFunction.functionId}`, values);
-                message.success('更新成功');
-            } else {
-                // This branch is now handled by upload
-            }
-            setIsModalVisible(false);
-            fetchFunctions();
-        } catch (error) {
-            message.error('操作失败');
         }
     };
 
@@ -124,29 +97,6 @@ const DiyFunctionPage: React.FC = () => {
                 </Button>
             </Upload>
             <Table columns={columns} dataSource={functions} rowKey="functionId" />
-            <Modal
-                title="编辑自定义函数"
-                visible={isModalVisible}
-                onOk={handleOk}
-                onCancel={() => setIsModalVisible(false)}
-            >
-                <Form form={form} layout="vertical">
-                    <Form.Item
-                        name="functionName"
-                        label="函数名称"
-                        rules={[{ required: true, message: '请输入函数名称' }]}
-                    >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item
-                        name="functionContent"
-                        label="函数内容"
-                        rules={[{ required: true, message: '请输入函数内容' }]}
-                    >
-                        <TextArea rows={10} />
-                    </Form.Item>
-                </Form>
-            </Modal>
         </div>
     );
 };

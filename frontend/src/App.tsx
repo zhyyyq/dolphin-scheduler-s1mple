@@ -13,6 +13,7 @@ import WorkflowInstancesPage from './pages/WorkflowInstancesPage';
 import WorkflowInstanceDetailPage from './pages/WorkflowInstanceDetailPage';
 import FileUploadPage from './pages/FileUploadPage';
 import DiyFunctionPage from './pages/DiyFunctionPage';
+import PythonEditorPage from './pages/PythonEditorPage';
 
 import './App.css';
 
@@ -81,6 +82,7 @@ const App: React.FC = () => {
             <Route path="/instances/:projectCode/:instanceId" element={<WorkflowInstanceDetailPage />} />
             <Route path="/upload" element={<FileUploadPage />} />
             <Route path="/functions" element={<DiyFunctionPage />} />
+            <Route path="/functions/edit/:functionId" element={<PythonEditorPage />} />
           </Routes>
         </Content>
       </Layout>
