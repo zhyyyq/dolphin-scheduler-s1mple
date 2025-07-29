@@ -4,6 +4,7 @@ import { App as AntApp, Layout, Menu, ConfigProvider, Typography } from 'antd';
 import { DashboardOutlined, ApartmentOutlined, PlusOutlined, UploadOutlined, HistoryOutlined, CodeOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 
+import WelcomePage from './pages/WelcomePage';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import WorkflowEditorPage from './pages/WorkflowEditorPage';
@@ -27,14 +28,19 @@ const App: React.FC = () => {
 
   const menuItems = [
     {
+      key: '/',
+      icon: <DashboardOutlined />,
+      label: <Link to="/">欢迎页</Link>,
+    },
+    {
       key: '/dashboard',
       icon: <DashboardOutlined />,
       label: <Link to="/dashboard">仪表盘</Link>,
     },
     {
-      key: '/',
+      key: '/workflows',
       icon: <ApartmentOutlined />,
-      label: <Link to="/">工作流</Link>,
+      label: <Link to="/workflows">工作流</Link>,
     },
     {
       key: '/workflow/edit',
@@ -79,8 +85,9 @@ const App: React.FC = () => {
         </Header>
         <Content style={{ margin: '16px' }}>
           <Routes>
+            <Route path="/" element={<WelcomePage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/" element={<HomePage />} />
+            <Route path="/workflows" element={<HomePage />} />
             <Route path="/workflow/edit" element={<WorkflowEditorPage />} />
             <Route path="/workflow/edit/:workflow_uuid" element={<WorkflowEditorPage />} />
             <Route path="/workflow/:workflow_uuid/history" element={<WorkflowHistoryPage />} />
