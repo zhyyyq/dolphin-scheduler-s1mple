@@ -404,6 +404,134 @@ export const fetchWorkflow = createAsyncThunk(
   }
 );
 
+export const loadGraphContent = createAsyncThunk(
+  'workflowEditor/loadGraphContent',
+  async (_, { getState, dispatch }) => {
+    const state = getState() as RootState;
+    const { graph, workflowData } = state.workflowEditor;
+
+    if (!graph || !workflowData) {
+      return;
+    }
+
+    const { yaml_content, locations: locationsStr } = workflowData;
+    try {
+      const doc = yaml.parseDocument(yaml_content);
+      const tasks = (doc.get('tasks') as any)?.toJSON() || [];
+      
+      const diyFunctionPromises = tasks
+        .filter((task: any) => task.type === 'DIY_FUNCTION')
+        .map(async (task: any) => {
+          const functionId = task.task_params?.functionId;
+          if (functionId) {
+            try {
+              const funcData = await api.get<any>(`/api/diy-functions/${functionId}`);
+              if (funcData) {
+                task.label = funcData.functionName;
+                task.command = funcData.functionContent;
+                if (!task.task_params) task.task_params = {};
+                task.task_params.contentHash = funcData.contentHash;
+              } else {
+                throw new Error('API returned empty data');
+              }
+            } catch (e) {
+              console.error(`Failed to fetch DIY function ${functionId}`, e);
+              task.label = `Error: Func ${functionId} not found`;
+              task.name = `Error: Func ${functionId} not found`;
+            }
+          }
+        });
+
+      await Promise.all(diyFunctionPromises);
+
+      const parameters = (doc.get('parameters') as any)?.toJSON() || [];
+      const globalParamNodes = parameters.map((p: any) => ({
+        name: p.name,
+        label: p.name,
+        type: 'PARAMS',
+        task_type: 'PARAMS',
+        task_params: { prop: p.name, type: p.type, value: p.value, direction: p.direction },
+      }));
+
+      const localParamNodes: any[] = [];
+      tasks.forEach((task: any) => {
+        const params = task.localParams || task.task_params?.localParams;
+        if (params) {
+          params.forEach((p: any) => {
+            if (!globalParamNodes.some((gp: any) => gp.name === p.prop) && !localParamNodes.some((lp: any) => lp.name === p.prop)) {
+              localParamNodes.push({
+                name: p.prop,
+                label: p.prop,
+                type: 'PARAMS',
+                task_type: 'PARAMS',
+                task_params: { prop: p.prop, type: p.type, value: p.value, direction: p.direction },
+              });
+            }
+          });
+        }
+      });
+
+      const allNodes = [...tasks, ...globalParamNodes, ...localParamNodes];
+      const locations = locationsStr ? JSON.parse(locationsStr) : null;
+      const relations: { from: string, to: string, sourcePort?: string, targetPort?: string, label?: string }[] = [];
+      const conditionTasks = new Set(tasks.filter((t: any) => t.type === 'CONDITIONS').map((t: any) => t.name));
+
+      for (const task of tasks) {
+        if (task.deps) {
+          for (const dep of task.deps) {
+            if (!conditionTasks.has(dep)) {
+              relations.push({ from: dep, to: task.name });
+            }
+          }
+        }
+        if (task.type === 'SWITCH' && task.task_params?.switchResult) {
+          const { dependTaskList, nextNode } = task.task_params.switchResult;
+          if (dependTaskList) {
+            for (const item of dependTaskList) {
+              if (item.nextNode) relations.push({ from: task.name, to: item.nextNode, label: item.condition });
+            }
+          }
+          if (nextNode) relations.push({ from: task.name, to: nextNode, label: '' });
+        }
+        if (task.type === 'CONDITIONS' && task.task_params?.dependence?.dependTaskList?.[0]?.conditionResult) {
+          const { successNode, failedNode } = task.task_params.dependence.dependTaskList[0].conditionResult;
+          if (successNode) {
+            for (const nodeName of successNode) relations.push({ from: task.name, to: nodeName, sourcePort: 'out-success', targetPort: 'in' });
+          }
+          if (failedNode) {
+            for (const nodeName of failedNode) relations.push({ from: task.name, to: nodeName, sourcePort: 'out-failure', targetPort: 'in' });
+          }
+        }
+        const params = task.localParams || task.task_params?.localParams;
+        if (params) {
+          for (const param of params) {
+            if (param.direct === 'IN') relations.push({ from: param.prop, to: task.name });
+            else relations.push({ from: task.name, to: param.prop });
+          }
+        }
+      }
+      
+      graph.fromJSON({
+        nodes: allNodes.map((node: any) => ({
+          id: node.name,
+          shape: 'custom-node',
+          data: node,
+          x: locations?.[node.name]?.x,
+          y: locations?.[node.name]?.y,
+        })),
+        edges: relations.map((rel: any) => ({
+          source: { cell: rel.from, port: rel.sourcePort },
+          target: { cell: rel.to, port: rel.targetPort },
+          labels: rel.label ? [rel.label] : [],
+        })),
+      });
+    } catch (error) {
+      // How to handle message.error? Maybe dispatch an error action.
+      console.error(`解析工作流 YAML 失败: ${(error as Error).message}`);
+    }
+  }
+);
+
 export const showYaml = createAsyncThunk(
   'workflowEditor/showYaml',
   async (_, { getState, dispatch }) => {

@@ -11,29 +11,25 @@ import {
   setWorkflowSchedule,
   setIsScheduleEnabled,
   setScheduleTimeRange,
+  showYaml,
+  saveWorkflow,
+  importYaml,
 } from '../../../store/slices/workflowEditorSlice';
 
 const { RangePicker } = DatePicker;
+import { useNavigate } from 'react-router-dom';
+import { App as AntApp } from 'antd';
 
-interface WorkflowToolbarProps {
-  onShowYaml: () => void;
-  onSave: () => void;
-  onAutoLayout: () => void;
-  onImportYaml: (event: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
-export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
-  onShowYaml,
-  onSave,
-  onAutoLayout,
-  onImportYaml,
-}) => {
+export const WorkflowToolbar: React.FC = () => {
+  const { message } = AntApp.useApp();
+  const navigate = useNavigate();
   const dispatch: AppDispatch = useDispatch();
   const {
     workflowName,
     workflowSchedule,
     isScheduleEnabled,
     scheduleTimeRange: scheduleTimeRangeISO,
+    graph,
   } = useSelector((state: RootState) => state.workflowEditor);
 
   const scheduleTimeRange = [
@@ -46,6 +42,39 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
   const onIsScheduleEnabledChange = (enabled: boolean) => dispatch(setIsScheduleEnabled(enabled));
   const onScheduleTimeRangeChange = (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null]) => {
     dispatch(setScheduleTimeRange([dates[0]?.toISOString() ?? null, dates[1]?.toISOString() ?? null]));
+  };
+
+  const onShowYaml = () => dispatch(showYaml());
+
+  const onSave = async () => {
+    try {
+      await dispatch(saveWorkflow()).unwrap();
+      message.success('工作流保存成功！');
+      navigate('/');
+    } catch (error: any) {
+      message.error(`保存工作流时出错: ${error.message}`);
+    }
+  };
+
+  const onAutoLayout = () => {
+    if (graph) {
+      // Assuming autoLayout is a method on the graph object from useGraph hook
+      // This part needs to be connected to the actual auto-layout logic
+      console.log("Auto layout triggered");
+    }
+  };
+
+  const onImportYaml = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        await dispatch(importYaml(file)).unwrap();
+        message.success('YAML 导入成功！');
+      } catch (err) {
+        message.error('解析或加载导入的 YAML 文件失败。');
+      }
+    }
+    event.target.value = '';
   };
   const [isCronModalVisible, setIsCronModalVisible] = useState(false);
   const [nextRunTimes, setNextRunTimes] = useState<string[]>([]);

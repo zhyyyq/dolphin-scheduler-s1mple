@@ -1,23 +1,32 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
 import { useGraph } from '../../../../hooks/useGraph';
+import { AppDispatch } from '../../../../store';
+import {
+  setContextMenu,
+  setCurrentEdge,
+  handleNodeDoubleClick as handleNodeDoubleClickThunk,
+  setGraph,
+} from '../../../../store/slices/workflowEditorSlice';
 
-interface EditorDagGraphProps {
-  onBlankContextMenu: (e: any, x: number, y: number) => void;
-  onEdgeDoubleClick: (edge: any) => void;
-  onNodeDoubleClick: (args: { node: any }) => void;
-  setGraphInstance: (graph: any) => void;
-  setLoadGraphData: (loadGraphData: any) => void;
-  setAutoLayout: (autoLayout: any) => void;
-}
+const EditorDagGraph: React.FC = () => {
+  const dispatch: AppDispatch = useDispatch();
 
-const EditorDagGraph: React.FC<EditorDagGraphProps> = ({
-  onBlankContextMenu,
-  onEdgeDoubleClick,
-  onNodeDoubleClick,
-  setGraphInstance,
-  setLoadGraphData,
-  setAutoLayout,
-}) => {
+  const onBlankContextMenu = useCallback((e: any, x: number, y: number) => {
+    e.preventDefault();
+    dispatch(setContextMenu({ visible: true, x: e.clientX, y: e.clientY, px: x, py: y }));
+  }, [dispatch]);
+
+  const onEdgeDoubleClick = useCallback((edge: any) => {
+    const sourceNode = edge.getSourceNode();
+    if (sourceNode && sourceNode.getData().type === 'SWITCH') {
+      dispatch(setCurrentEdge(edge));
+    }
+  }, [dispatch]);
+
+  const onNodeDoubleClick = useCallback((args: { node: any }) => {
+    dispatch(handleNodeDoubleClickThunk(args));
+  }, [dispatch]);
   const [container, setContainer] = React.useState<HTMLDivElement | null>(null);
   const containerRefCallback = React.useCallback((node: HTMLDivElement) => {
     if (node) {
@@ -33,16 +42,14 @@ const EditorDagGraph: React.FC<EditorDagGraphProps> = ({
 
   useEffect(() => {
     if (graph) {
-      setGraphInstance(graph);
-      setLoadGraphData(() => loadGraphData);
-      setAutoLayout(() => autoLayout);
+      dispatch(setGraph(graph));
       graph.on('node:dblclick', onNodeDoubleClick);
 
       return () => {
         graph.off('node:dblclick', onNodeDoubleClick);
       };
     }
-  }, [graph, onNodeDoubleClick, setGraphInstance, setLoadGraphData, setAutoLayout, loadGraphData, autoLayout]);
+  }, [graph, onNodeDoubleClick, dispatch]);
 
   return <div ref={containerRefCallback} style={{ width: '100%', height: '100%' }} />;
 };
