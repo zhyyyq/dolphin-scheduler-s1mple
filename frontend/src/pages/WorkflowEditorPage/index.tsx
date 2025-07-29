@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import './index.less';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 import '../../components/TaskNode'; // Register custom node
 import EditorDagGraph from './components/EditorDagGraph';
@@ -16,10 +16,14 @@ import {
   setContextMenu,
   fetchDiyFunctions,
   fetchWorkflow,
+  setWorkflowData,
+  // initialState,
 } from '../../store/slices/workflowEditorSlice';
+import { WorkflowDetail } from '../../types';
 
 const WorkflowEditorPage: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
+  const location = useLocation();
   const { workflow_uuid } = useParams<{ workflow_uuid: string }>();
   const { message } = AntApp.useApp();
 
@@ -34,8 +38,35 @@ const WorkflowEditorPage: React.FC = () => {
 
     if (workflow_uuid) {
       dispatch(fetchWorkflow(workflow_uuid)).unwrap().catch(() => message.error('加载工作流数据失败。'));
+    } else {
+      const searchParams = new URLSearchParams(location.search);
+      const projectName = searchParams.get('projectName');
+      const projectCode = searchParams.get('projectCode');
+      if (projectName && projectCode) {
+        const initialWorkflowData: WorkflowDetail = {
+          code: 0,
+          name: 'new-workflow',
+          uuid: '',
+          project: projectName,
+          projectCode: parseInt(projectCode, 10),
+          projectName: projectName,
+          releaseState: 'UNSUBMITTED',
+          updateTime: '',
+          schedule_text: '',
+          schedule_human_readable: '',
+          tasks: [],
+          parameters: [],
+          relations: [],
+          filename: '',
+          yaml_content: '',
+          locations: '',
+          schedule: '',
+          local_status: 'new',
+        };
+        dispatch(setWorkflowData(initialWorkflowData));
+      }
     }
-  }, [workflow_uuid, message, dispatch]);
+  }, [workflow_uuid, message, dispatch, location.search]);
 
 
 

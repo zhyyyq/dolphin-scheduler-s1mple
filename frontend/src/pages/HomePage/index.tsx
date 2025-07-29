@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Table, Spin, Alert, Typography, Tag, Button, Space, Tooltip,
   App as AntApp,
@@ -8,8 +8,7 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import type { ColumnsType } from 'antd/es/table';
-import { Graph, Node as X6Node } from '@antv/x6';
-import { Workflow, WorkflowDetail, Task } from '../../types';
+import { Workflow } from '../../types';
 import { RootState, AppDispatch } from '../../store';
 import {
   fetchProjects,
@@ -17,16 +16,11 @@ import {
   setSelectedProject,
   setIsRestoreModalOpen,
   setIsBackfillModalOpen,
-  setSelectedWorkflow,
-  deleteWorkflow,
-  onlineWorkflow,
 } from '../../store/slices/homeSlice';
 import api from '../../api';
-import yaml from 'yaml';
 import RestoreWorkflowModal from '../../components/RestoreWorkflowModal';
 import BackfillModal from '../../components/BackfillModal';
 import CreateProjectModal from './components/CreateProjectModal';
-import { compileGraph } from '../../utils/graphUtils';
 import '../../components/TaskNode'; // Register custom node
 import { ActionButtons } from './components/ActionButtons';
 
@@ -185,7 +179,7 @@ const HomePage: React.FC = () => {
             ))}
           </Select>
           <Button onClick={() => dispatch(setIsRestoreModalOpen(true))}>恢复工作流</Button>
-          <Link to={`/workflow/edit${selectedProject && selectedProject !== 'all' ? `?project=${selectedProject}` : ''}`}>
+          <Link to={`/workflow/edit${selectedProject && selectedProject !== 'all' ? `?projectName=${selectedProject}&projectCode=${projects.find(p => p.name === selectedProject)?.code}` : ''}`}>
             <Button type="primary">新建工作流</Button>
           </Link>
         </Space>
@@ -218,6 +212,7 @@ const HomePage: React.FC = () => {
         onCancel={() => setIsCreateProjectModalOpen(false)}
         onSuccess={() => {
           setIsCreateProjectModalOpen(false);
+          dispatch(fetchProjects());
           dispatch(fetchWorkflows());
         }}
       />
