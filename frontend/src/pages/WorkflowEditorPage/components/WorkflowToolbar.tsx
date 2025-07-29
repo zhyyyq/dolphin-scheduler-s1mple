@@ -13,14 +13,17 @@ import {
   setScheduleTimeRange,
   showYaml,
   saveWorkflow,
-  importYaml,
 } from '../../../store/slices/workflowEditorSlice';
 
 const { RangePicker } = DatePicker;
 import { useNavigate } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 
-export const WorkflowToolbar: React.FC = () => {
+interface WorkflowToolbarProps {
+  onImport: (file: File) => void;
+}
+
+export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({ onImport }) => {
   const { message } = AntApp.useApp();
   const navigate = useNavigate();
   const dispatch: AppDispatch = useDispatch();
@@ -64,15 +67,10 @@ export const WorkflowToolbar: React.FC = () => {
     }
   };
 
-  const onImportYaml = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onImportYaml = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      try {
-        await dispatch(importYaml(file)).unwrap();
-        message.success('YAML 导入成功！');
-      } catch (err) {
-        message.error('解析或加载导入的 YAML 文件失败。');
-      }
+      onImport(file);
     }
     event.target.value = '';
   };

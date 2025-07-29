@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import './index.less';
 import { useParams, useLocation } from 'react-router-dom';
@@ -18,10 +18,10 @@ import {
   fetchWorkflow,
   setWorkflowData,
   clearWorkflow,
+  importYaml,
+  initializeGraph,
 } from '../../store/slices/workflowEditorSlice';
 import { WorkflowDetail } from '../../types';
-
-
 
 const WorkflowEditorPage: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -33,11 +33,17 @@ const WorkflowEditorPage: React.FC = () => {
     contextMenu,
   } = useSelector((state: RootState) => state.workflowEditor);
 
+  const containerRefCallback = React.useCallback((node: HTMLDivElement) => {
+    if (node) {
+      dispatch(initializeGraph(node));
+    }
+  }, [dispatch]);
+
   useEffect(() => {
     dispatch(fetchDiyFunctions()).unwrap().catch(() => message.error('加载自定义组件失败'));
 
     if (workflow_uuid) {
-      dispatch(fetchWorkflow(workflow_uuid)).unwrap().catch(() => message.error('加载工作流数据失败。'));
+      dispatch(fetchWorkflow(workflow_uuid));
     } else {
       dispatch(clearWorkflow());
       const searchParams = new URLSearchParams(location.search);
@@ -69,14 +75,16 @@ const WorkflowEditorPage: React.FC = () => {
     }
   }, [workflow_uuid, message, dispatch, location.search]);
 
-
-
+  const handleImport = (file: File) => {
+    dispatch(importYaml(file)).unwrap()
+      .catch(() => message.error('导入 YAML 失败'));
+  };
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
       <div style={{ flex: 1, position: 'relative' }} onClick={() => dispatch(setContextMenu({ ...contextMenu, visible: false }))}>
-        <WorkflowToolbar />
-        <EditorDagGraph />
+        <WorkflowToolbar onImport={handleImport} />
+        <EditorDagGraph containerRef={containerRefCallback} />
         <EditTaskModal />
         <EditParamNodeModal />
         <EditEdgeLabelModal />

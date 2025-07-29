@@ -55,6 +55,85 @@ const initialState: WorkflowEditorState = {
   originalYaml: '',
 };
 
+import { Keyboard } from '@antv/x6-plugin-keyboard';
+import { Selection } from '@antv/x6-plugin-selection';
+import { History } from '@antv/x6-plugin-history';
+
+export const initializeGraph = createAsyncThunk(
+  'workflowEditor/initializeGraph',
+  async (container: HTMLDivElement, { dispatch }) => {
+    const graphInstance = new Graph({
+      container,
+      autoResize: true,
+      panning: true,
+      mousewheel: true,
+      background: { color: '#F2F7FA' },
+      connecting: {
+        router: 'manhattan',
+        connector: { name: 'rounded', args: { radius: 8 } },
+        anchor: 'center',
+        connectionPoint: 'anchor',
+        allowBlank: false,
+        allowMulti: 'withPort',
+        allowNode: false,
+        allowEdge: false,
+        snap: { radius: 20 },
+        createEdge() {
+          return this.createEdge({
+            attrs: {
+              line: {
+                stroke: '#8f8f8f',
+                strokeWidth: 1,
+              },
+            },
+            zIndex: -1,
+            label: {
+              text: '',
+            },
+          });
+        },
+      },
+      highlighting: {
+        magnetAdsorbed: {
+          name: 'stroke',
+          args: { attrs: { fill: '#fff', stroke: '#31d0c6', strokeWidth: 4 } },
+        },
+      },
+    });
+
+    graphInstance.use(new Selection({ enabled: true, rubberband: true, showNodeSelectionBox: true, showEdgeSelectionBox: true }));
+    graphInstance.use(new Keyboard({ enabled: true, global: true }));
+    graphInstance.use(new History({ enabled: true }));
+
+    graphInstance.bindKey(['delete', 'backspace'], () => {
+      const selectedCells = graphInstance.getSelectedCells();
+      if (selectedCells.length) {
+        graphInstance.removeCells(selectedCells);
+      }
+    });
+
+    graphInstance.bindKey('ctrl+z', () => graphInstance.undo());
+    graphInstance.bindKey('ctrl+y', () => graphInstance.redo());
+
+    graphInstance.on('node:dblclick', ({ node }) => dispatch(handleNodeDoubleClick({ node })));
+    graphInstance.on('edge:dblclick', ({ edge }) => {
+        const sourceNode = edge.getSourceNode();
+        if (sourceNode && sourceNode.getData().type === 'SWITCH') {
+          dispatch(setCurrentEdge(edge));
+        }
+    });
+    graphInstance.on('blank:contextmenu', ({ e, x, y }) => {
+        e.preventDefault();
+        dispatch(setContextMenu({ visible: true, x: e.clientX, y: e.clientY, px: x, py: y }));
+    });
+    graphInstance.on('node:contextmenu', ({ e }) => e.preventDefault());
+    graphInstance.on('edge:contextmenu', ({ e }) => e.preventDefault());
+
+    dispatch(setGraph(graphInstance));
+    return graphInstance;
+  }
+);
+
 export const workflowEditorSlice = createSlice({
   name: 'workflowEditor',
   initialState,
@@ -301,18 +380,7 @@ export const importYaml = createAsyncThunk(
       dispatch(setIsScheduleEnabled(false));
     }
 
-    // Reparse and load graph
-    const tasks = (doc.get('tasks') as any).toJSON();
-    const relations: { from: string, to: string }[] = [];
-    for (const task of tasks) {
-      if (task.deps) {
-        for (const dep of task.deps) {
-          relations.push({ from: dep, to: task.name });
-        }
-      }
-    }
-    
-    return { tasks, relations };
+    dispatch(loadGraphContent());
   }
 );
 
@@ -556,20 +624,25 @@ export const loadGraphContent = createAsyncThunk(
         }
       }
       
-      graph.fromJSON({
-        nodes: allNodes.map((node: any) => ({
-          id: node.name,
+      graph.clearCells();
+      allNodes.forEach((nodeData: any) => {
+        const pos = locations?.find((l: any) => l.taskCode === nodeData.name);
+        graph.addNode({
+          id: nodeData.name,
           shape: 'custom-node',
-          data: node,
-          x: locations?.[node.name]?.x,
-          y: locations?.[node.name]?.y,
-        })),
-        edges: relations.map((rel: any) => ({
+          data: nodeData,
+          x: pos?.x,
+          y: pos?.y,
+        });
+      });
+
+      relations.forEach((rel: any) => {
+        graph.addEdge({
+          shape: 'edge',
           source: { cell: rel.from, port: rel.sourcePort },
           target: { cell: rel.to, port: rel.targetPort },
           labels: rel.label ? [rel.label] : [],
-          
-        })),
+        });
       });
     } catch (error) {
       // How to handle message.error? Maybe dispatch an error action.
@@ -604,6 +677,54 @@ export const showYaml = createAsyncThunk(
     const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml, workflowData?.projectName, workflowData?.projectCode);
     dispatch(setYamlContent(yamlStr));
     dispatch(setIsYamlModalVisible(true));
+  }
+);
+
+export const autoLayout = createAsyncThunk(
+  'workflowEditor/autoLayout',
+  async (_, { getState }) => {
+    const state = getState() as RootState;
+    const { graph } = state.workflowEditor;
+    if (!graph) return;
+
+    const dagre = await import('dagre');
+    const graphNodes = graph.getNodes();
+    const graphEdges = graph.getEdges();
+    const g = new dagre.graphlib.Graph();
+    g.setGraph({ rankdir: 'TB', nodesep: 40, ranksep: 80 });
+    g.setDefaultEdgeLabel(() => ({}));
+
+    const width = 180;
+    const height = 36;
+    graphNodes.forEach((node) => {
+      if (node.id) {
+        g.setNode(node.id, { width, height });
+      }
+    });
+
+    graphEdges.forEach((edge) => {
+      const source = edge.getSource();
+      const target = edge.getTarget();
+      if (source && 'cell' in source && target && 'cell' in target) {
+        const sourceId = source.cell as string;
+        const targetId = target.cell as string;
+        if (sourceId && targetId) {
+          g.setEdge(sourceId, targetId);
+        }
+      }
+    });
+
+    dagre.layout(g);
+
+    g.nodes().forEach((id: string) => {
+      const node = graph.getCellById(id);
+      if (node && node.isNode()) {
+        const pos = g.node(id);
+        node.position(pos.x, pos.y);
+      }
+    });
+
+    graph.centerContent();
   }
 );
 
