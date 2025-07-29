@@ -110,14 +110,17 @@ const taskInfo = {
       }
     }
 
+    const finalTaskParams = { ...task.task_params, functionId };
+    if (isNewNode && func.contentHash) {
+      finalTaskParams.contentHash = func.contentHash;
+    }
+
     const nodeData: Partial<Task> = {
       name: newNodeName,
       label: isNewNode ? newNodeName : task.label || baseName,
       task_type: 'DIY_FUNCTION',
       type: 'DIY_FUNCTION',
-      task_params: {
-        functionId: functionId,
-      },
+      task_params: finalTaskParams,
       _display_type: 'DIY_FUNCTION',
       command: task.command || '', // Preserve command if already fetched
     };
