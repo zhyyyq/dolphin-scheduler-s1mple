@@ -171,7 +171,6 @@ export const useGraph = ({ container, onNodeDoubleClick, onEdgeDoubleClick, onBl
     console.log('Locations:', locations);
     currentGraph.clearCells();
     const nodeMap = new Map();
-
     // Create all nodes
     nodes.forEach((nodeData) => {
       const taskEditor = taskTypes.find((t) => t.type === nodeData.task_type);

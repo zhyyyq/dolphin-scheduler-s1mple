@@ -27,9 +27,16 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, gra
         ...taskCopy,
         ...taskCopy.task_params,
       };
+
+      // Unify script source. The form uses 'command', but the data might come from 'rawScript'.
+      const script = task.command || task.task_params?.rawScript || '';
+      formValues.command = script;
+
+      // The Python editor specifically uses the 'definition' field.
       if (task.task_type === 'PYTHON') {
-        formValues.definition = task.command;
+        formValues.definition = script;
       }
+      
       if (task.task_type === 'SWITCH' && !formValues.switch_conditions) {
         formValues.switch_conditions = [];
       }
@@ -94,10 +101,13 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ open, task, allTasks, gra
       // We map it to the 'command' property for standardization in the YAML.
       const final_command = task?.task_type === 'PYTHON' ? definition : command;
 
+      // Also update rawScript in task_params for compatibility with DolphinScheduler
+      updated_task_params.rawScript = final_command;
+
       let finalTask: Task = {
         ...task!,
         name: name,
-        command: final_command,
+        command: final_command, // Keep command for consistency within our app
         failRetryTimes: failRetryTimes,
         failRetryInterval: failRetryInterval,
         task_params: updated_task_params,
