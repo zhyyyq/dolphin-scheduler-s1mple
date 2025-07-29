@@ -1,91 +1,52 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import {
   Table, Spin, Alert, Typography, Tag, Button, Space, Tooltip,
   App as AntApp,
   Select,
 } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 import type { ColumnsType } from 'antd/es/table';
 import { Graph, Node as X6Node } from '@antv/x6';
-import { Workflow, WorkflowDetail, Task } from '../types';
-import api from '../api';
+import { Workflow, WorkflowDetail, Task } from '../../types';
+import { RootState, AppDispatch } from '../../store';
+import {
+  fetchWorkflows,
+  setSelectedProject,
+  setIsRestoreModalOpen,
+  setIsBackfillModalOpen,
+  setSelectedWorkflow,
+} from '../../store/slices/homeSlice';
+import api from '../../api';
 import yaml from 'yaml';
-import RestoreWorkflowModal from '../components/RestoreWorkflowModal';
-import BackfillModal from '../components/BackfillModal';
-import { compileGraph } from '../utils/graphUtils';
-import '../components/TaskNode'; // Register custom node
+import RestoreWorkflowModal from '../../components/RestoreWorkflowModal';
+import BackfillModal from '../../components/BackfillModal';
+import { compileGraph } from '../../utils/graphUtils';
+import '../../components/TaskNode'; // Register custom node
+import { ActionButtons } from './components/ActionButtons';
 
 const { Title } = Typography;
 
-interface Parameter {
-  name: string;
-  type: string;
-  value: any;
-}
 
-interface ActionButtonsProps {
-  record: Workflow;
-  onDelete: (record: Workflow) => void;
-  onSubmit: (record: Workflow) => void;
-  onExecute: (record: Workflow) => void;
-  onOnline: (record: Workflow) => void;
-}
-
-const ActionButtons: React.FC<ActionButtonsProps> = ({ record, onDelete, onSubmit, onExecute, onOnline }) => {
-  const workflowUuid = record.uuid;
-
-  return (
-    <Space size="middle">
-      {record.releaseState === 'MODIFIED' ? (
-        <Button type="primary" onClick={() => onOnline(record)}>同步</Button>
-      ) : record.releaseState === 'ONLINE' ? (
-        <Button type="primary" onClick={() => onExecute(record)}>立即执行</Button>
-      ) : null}
-      
-      {record.releaseState === 'UNSUBMITTED' && (
-        <Button type="primary" onClick={() => onSubmit(record)}>提交</Button>
-      )}
-      {record.releaseState === 'OFFLINE' && (
-        <Button type="primary" onClick={() => onOnline(record)}>上线</Button>
-      )}
-      <Link to={`/workflow/edit/${workflowUuid}`}>编辑</Link>
-      <Link to={`/workflow/${workflowUuid}/history`}>历史</Link>
-      <Button type="link" danger onClick={() => onDelete(record)}>删除</Button>
-    </Space>
-  );
-};
 
 const HomePage: React.FC = () => {
   const { message } = AntApp.useApp();
   const location = useLocation();
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
-  const [isBackfillModalOpen, setIsBackfillModalOpen] = useState(false);
-  const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
-  const [projects, setProjects] = useState<string[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
-
-  const fetchWorkflows = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const combinedWorkflows = await api.get<Workflow[]>('/api/workflow/combined');
-      setWorkflows(combinedWorkflows);
-      const uniqueProjects = Array.from(new Set(combinedWorkflows.map(w => w.project).filter(Boolean) as string[]));
-      setProjects(uniqueProjects);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const dispatch: AppDispatch = useDispatch();
+  const {
+    workflows,
+    loading,
+    error,
+    projects,
+    selectedProject,
+    isRestoreModalOpen,
+    isBackfillModalOpen,
+    selectedWorkflow,
+  } = useSelector((state: RootState) => state.home);
 
   useEffect(() => {
-    fetchWorkflows();
-  }, [fetchWorkflows, location]);
+    dispatch(fetchWorkflows());
+  }, [dispatch, location]);
 
   const handleDelete = useCallback(async (record: Workflow) => {
     try {
@@ -97,7 +58,7 @@ const HomePage: React.FC = () => {
 
       await api.delete(`/api/workflow/${record.uuid}`, params);
       message.success('工作流删除成功。');
-      fetchWorkflows();
+      dispatch(fetchWorkflows());
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       message.error(errorMessage);
@@ -105,9 +66,9 @@ const HomePage: React.FC = () => {
   }, [fetchWorkflows, message]);
 
   const handleExecute = useCallback((record: Workflow) => {
-    setSelectedWorkflow(record);
-    setIsBackfillModalOpen(true);
-  }, []);
+    dispatch(setSelectedWorkflow(record));
+    dispatch(setIsBackfillModalOpen(true));
+  }, [dispatch]);
 
   const handleOnline = useCallback(async (record: Workflow) => {
     try {
@@ -463,7 +424,7 @@ const HomePage: React.FC = () => {
       await api.createOrUpdateDsWorkflow(payload);
 
       message.success('工作流上线/同步成功。');
-      fetchWorkflows();
+      dispatch(fetchWorkflows());
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -478,8 +439,8 @@ const HomePage: React.FC = () => {
   const columns: ColumnsType<Workflow> = useMemo(() => [
     {
       title: '项目',
-      dataIndex: 'project',
-      key: 'project',
+      dataIndex: 'projectName',
+      key: 'projectName',
     },
     {
       title: '工作流名称',
@@ -534,7 +495,7 @@ const HomePage: React.FC = () => {
     {
       title: '操作',
       key: 'actions',
-      render: (_, record) => <ActionButtons record={record} onDelete={handleDelete} onSubmit={handleSubmit} onExecute={handleExecute} onOnline={handleOnline} />,
+      render: (_, record: Workflow) => <ActionButtons record={record} onDelete={handleDelete} onSubmit={handleSubmit} onExecute={handleExecute} onOnline={handleOnline} />,
     },
   ], [handleDelete, handleSubmit, handleExecute, handleOnline]);
 
@@ -547,7 +508,7 @@ const HomePage: React.FC = () => {
   }
 
   const filteredWorkflows = selectedProject
-    ? workflows.filter(w => w.project === selectedProject)
+    ? workflows.filter(w => w.projectName === selectedProject)
     : workflows;
 
   return (
@@ -559,12 +520,12 @@ const HomePage: React.FC = () => {
             placeholder="按项目筛选"
             allowClear
             style={{ width: 200 }}
-            onChange={setSelectedProject}
+            onChange={(value) => dispatch(setSelectedProject(value))}
             value={selectedProject}
           >
             {projects.map(p => <Select.Option key={p} value={p}>{p}</Select.Option>)}
           </Select>
-          <Button onClick={() => setIsRestoreModalOpen(true)}>恢复工作流</Button>
+          <Button onClick={() => dispatch(setIsRestoreModalOpen(true))}>恢复工作流</Button>
           <Link to="/workflow/edit">
             <Button type="primary">新建工作流</Button>
           </Link>
@@ -578,19 +539,19 @@ const HomePage: React.FC = () => {
       />
       <RestoreWorkflowModal
         open={isRestoreModalOpen}
-        onCancel={() => setIsRestoreModalOpen(false)}
+        onCancel={() => dispatch(setIsRestoreModalOpen(false))}
         onRestored={() => {
-          setIsRestoreModalOpen(false);
-          fetchWorkflows();
+          dispatch(setIsRestoreModalOpen(false));
+          dispatch(fetchWorkflows());
         }}
       />
       <BackfillModal
         open={isBackfillModalOpen}
         workflow={selectedWorkflow}
-        onCancel={() => setIsBackfillModalOpen(false)}
+        onCancel={() => dispatch(setIsBackfillModalOpen(false))}
         onSuccess={() => {
-          setIsBackfillModalOpen(false);
-          fetchWorkflows();
+          dispatch(setIsBackfillModalOpen(false));
+          dispatch(fetchWorkflows());
         }}
       />
     </div>

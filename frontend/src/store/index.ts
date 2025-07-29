@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
 import workflowEditorReducer from './slices/workflowEditorSlice';
+import homeReducer from './slices/homeSlice';
 
 export const store = configureStore({
   reducer: {
     workflowEditor: workflowEditorReducer,
+    home: homeReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
