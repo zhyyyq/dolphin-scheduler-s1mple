@@ -130,7 +130,6 @@ export const initializeGraph = createAsyncThunk(
     graphInstance.on('edge:contextmenu', ({ e }) => e.preventDefault());
 
     dispatch(setGraph(graphInstance));
-    return graphInstance;
   }
 );
 
@@ -626,14 +625,22 @@ export const loadGraphContent = createAsyncThunk(
       
       graph.clearCells();
       allNodes.forEach((nodeData: any) => {
-        const pos = locations?.find((l: any) => l.taskCode === nodeData.name);
-        graph.addNode({
-          id: nodeData.name,
-          shape: 'custom-node',
-          data: nodeData,
-          x: pos?.x,
-          y: pos?.y,
-        });
+        const taskEditor = taskTypes.find((t) => t.type === nodeData.task_type);
+        if (!taskEditor) {
+          console.error(`未找到任务类型 "${nodeData.task_type}" 的编辑器配置。`);
+          return;
+        }
+  
+        const position = locations?.find((l:any) => l.taskCode === nodeData.name) || { x: 0, y: 0 };
+        
+        const newNode = (taskEditor as any).createNode(graph, { ...nodeData, label: nodeData.name }, { px: position.x, py: position.y });
+  
+        if (newNode) {
+          newNode.setData(nodeData);
+          if (locations) {
+            newNode.position(position.x, position.y);
+          }
+        }
       });
 
       relations.forEach((rel: any) => {

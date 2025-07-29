@@ -94,7 +94,6 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({ onImport }) =>
       }
     }
   }, [workflowSchedule]);
-  console.log('WorkflowToolbar rendered');
   return (
     <>
       <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px', background: 'white', padding: '8px', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
