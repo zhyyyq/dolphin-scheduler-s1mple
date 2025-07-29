@@ -111,7 +111,9 @@ const WorkflowEditorPage: React.FC = () => {
   }, [workflow_uuid, message]);
 
   useEffect(() => {
-    if (graph && workflowData) {
+    const loadGraph = async () => {
+      if (!graph || !workflowData) return;
+
       const { name, uuid, yaml_content } = workflowData;
       setWorkflowName(name);
       setWorkflowUuid(uuid);
@@ -126,6 +128,29 @@ const WorkflowEditorPage: React.FC = () => {
           setIsScheduleEnabled(false);
         }
         const tasks = (doc.get('tasks') as any)?.toJSON() || [];
+        
+        // Pre-process DIY_FUNCTION tasks to enrich them with full data
+        const diyFunctionPromises = tasks
+          .filter((task: any) => task.type === 'DIY_FUNCTION')
+          .map(async (task: any) => {
+            const functionId = task.task_params?.functionId;
+            if (functionId) {
+              try {
+                const funcData = await api.get<any>(`/api/diy-functions/${functionId}`);
+                // Enrich the task object with data needed for rendering
+                task.label = funcData.functionName;
+                task.name = funcData.functionName; // Ensure name and label are consistent
+                task.command = funcData.functionContent;
+              } catch (e) {
+                console.error(`Failed to fetch DIY function ${functionId}`, e);
+                task.label = `Error: Func ${functionId} not found`;
+                task.name = `Error: Func ${functionId} not found`;
+              }
+            }
+          });
+
+        await Promise.all(diyFunctionPromises);
+
         const parameters = (doc.get('parameters') as any)?.toJSON() || [];
 
         const globalParamNodes = parameters.map((p: any) => ({
@@ -232,7 +257,9 @@ const WorkflowEditorPage: React.FC = () => {
       } catch (error) {
         message.error('解析工作流 YAML 失败。');
       }
-    }
+    };
+
+    loadGraph();
   }, [graph, workflowData, loadGraphData, message]);
 
   const handleSaveNode = (updatedNode: Task) => {
