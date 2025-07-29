@@ -1,8 +1,9 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Table, Spin, Alert, Typography, Tag, Button, Space, Tooltip,
   App as AntApp,
   Select,
+  Divider,
 } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -23,6 +24,7 @@ import api from '../../api';
 import yaml from 'yaml';
 import RestoreWorkflowModal from '../../components/RestoreWorkflowModal';
 import BackfillModal from '../../components/BackfillModal';
+import CreateProjectModal from './components/CreateProjectModal';
 import { compileGraph } from '../../utils/graphUtils';
 import '../../components/TaskNode'; // Register custom node
 import { ActionButtons } from './components/ActionButtons';
@@ -45,39 +47,12 @@ const HomePage: React.FC = () => {
     isBackfillModalOpen,
     selectedWorkflow,
   } = useSelector((state: RootState) => state.home);
+  const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchWorkflows());
   }, [dispatch, location]);
 
-  const handleDelete = useCallback(async (record: Workflow) => {
-    try {
-      await dispatch(deleteWorkflow(record)).unwrap();
-      message.success('工作流删除成功。');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      message.error(errorMessage);
-    }
-  }, [dispatch, message]);
-
-  const handleExecute = useCallback((record: Workflow) => {
-    dispatch(setSelectedWorkflow(record));
-    dispatch(setIsBackfillModalOpen(true));
-  }, [dispatch]);
-
-  const handleOnline = useCallback(async (record: Workflow) => {
-    try {
-      await dispatch(onlineWorkflow(record)).unwrap();
-      message.success('工作流上线/同步成功。');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      message.error(`上线工作流时出错: ${errorMessage}`);
-    }
-  }, [dispatch, message]);
-
-  const handleSubmit = useCallback((record: Workflow) => {
-    handleOnline(record);
-  }, [handleOnline]);
 
   const columns: ColumnsType<Workflow> = useMemo(() => [
     {
@@ -138,9 +113,9 @@ const HomePage: React.FC = () => {
     {
       title: '操作',
       key: 'actions',
-      render: (_, record: Workflow) => <ActionButtons record={record} onDelete={handleDelete} onSubmit={handleSubmit} onExecute={handleExecute} onOnline={handleOnline} />,
+      render: (_, record: Workflow) => <ActionButtons record={record} />,
     },
-  ], [handleDelete, handleSubmit, handleExecute, handleOnline]);
+  ], []);
 
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><Spin size="large" /></div>;
@@ -160,12 +135,27 @@ const HomePage: React.FC = () => {
         <Title level={2} style={{ margin: 0 }}>所有工作流</Title>
         <Space>
           <Select
-            placeholder="按项目筛选"
-            allowClear
+            placeholder="选择项目"
             style={{ width: 200 }}
-            onChange={(value) => dispatch(setSelectedProject(value))}
-            value={selectedProject}
+            onChange={(value) => {
+              if (value === 'create_new_project') {
+                setIsCreateProjectModalOpen(true);
+              } else {
+                dispatch(setSelectedProject(value));
+              }
+            }}
+            value={selectedProject || 'all'}
+            dropdownRender={(menu) => (
+              <>
+                {menu}
+                <Divider style={{ margin: '8px 0' }} />
+                <Button type="link" onClick={() => setIsCreateProjectModalOpen(true)} style={{ width: '100%' }}>
+                  新建项目
+                </Button>
+              </>
+            )}
           >
+            <Select.Option value="all">所有项目</Select.Option>
             {projects.map(p => <Select.Option key={p} value={p}>{p}</Select.Option>)}
           </Select>
           <Button onClick={() => dispatch(setIsRestoreModalOpen(true))}>恢复工作流</Button>
@@ -194,6 +184,14 @@ const HomePage: React.FC = () => {
         onCancel={() => dispatch(setIsBackfillModalOpen(false))}
         onSuccess={() => {
           dispatch(setIsBackfillModalOpen(false));
+          dispatch(fetchWorkflows());
+        }}
+      />
+      <CreateProjectModal
+        open={isCreateProjectModalOpen}
+        onCancel={() => setIsCreateProjectModalOpen(false)}
+        onSuccess={() => {
+          setIsCreateProjectModalOpen(false);
           dispatch(fetchWorkflows());
         }}
       />
