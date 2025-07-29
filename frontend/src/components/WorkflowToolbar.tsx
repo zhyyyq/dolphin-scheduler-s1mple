@@ -1,11 +1,19 @@
-import React from 'react';
-import { Button, Input, Switch } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Button, Input, Switch, Modal, DatePicker, Typography, List } from 'antd';
+import { Cron } from 'react-js-cron';
+import 'react-js-cron/dist/styles.css';
+import dayjs from 'dayjs';
+import { CronExpressionParser } from 'cron-parser';
+
+const { RangePicker } = DatePicker;
 
 interface WorkflowToolbarProps {
   workflowName: string;
   onWorkflowNameChange: (name: string) => void;
   workflowSchedule: string;
   onWorkflowScheduleChange: (schedule: string) => void;
+  scheduleTimeRange: [string | null, string | null];
+  onScheduleTimeRangeChange: (dates: [string | null, string | null]) => void;
   isScheduleEnabled: boolean;
   onIsScheduleEnabledChange: (enabled: boolean) => void;
   onShowYaml: () => void;
@@ -21,11 +29,34 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
   onWorkflowScheduleChange,
   isScheduleEnabled,
   onIsScheduleEnabledChange,
+  scheduleTimeRange,
+  onScheduleTimeRangeChange,
   onShowYaml,
   onSave,
   onAutoLayout,
   onImportYaml,
 }) => {
+  const [isCronModalVisible, setIsCronModalVisible] = useState(false);
+  const [nextRunTimes, setNextRunTimes] = useState<string[]>([]);
+  const [cronError, setCronError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (workflowSchedule) {
+      try {
+        const interval = CronExpressionParser.parse(workflowSchedule);
+        const nextTimes = [];
+        for (let i = 0; i < 5; i++) {
+          nextTimes.push(dayjs(interval.next().toDate()).format('YYYY-MM-DD HH:mm:ss'));
+        }
+        setNextRunTimes(nextTimes);
+        setCronError(null);
+      } catch (err) {
+        setCronError('Cron 表达式格式错误');
+        setNextRunTimes([]);
+      }
+    }
+  }, [workflowSchedule]);
+
   return (
     <>
       <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px', background: 'white', padding: '8px', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
@@ -37,13 +68,54 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({
           <span style={{ marginRight: '8px', fontWeight: '500', width: '120px' }}>定时设置 (Cron):</span>
           <Input
             value={workflowSchedule}
-            onChange={e => onWorkflowScheduleChange(e.target.value)}
-            style={{ width: '200px', marginRight: '8px' }}
+            style={{ width: '150px', marginRight: '8px' }}
+            disabled={!isScheduleEnabled}
+            readOnly
+          />
+          <Button onClick={() => setIsCronModalVisible(true)} disabled={!isScheduleEnabled}>编辑</Button>
+          <Switch style={{ marginLeft: '8px' }} checked={isScheduleEnabled} onChange={onIsScheduleEnabledChange} />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <span style={{ marginRight: '8px', fontWeight: '500', width: '120px' }}>起止时间:</span>
+          <RangePicker
+            showTime
+            style={{ width: '350px' }}
+            value={scheduleTimeRange[0] && scheduleTimeRange[1] ? [dayjs(scheduleTimeRange[0]), dayjs(scheduleTimeRange[1])] : null}
+            onChange={(dates) => {
+              if (dates) {
+                onScheduleTimeRangeChange([dates[0]?.format('YYYY-MM-DD HH:mm:ss') || null, dates[1]?.format('YYYY-MM-DD HH:mm:ss') || null]);
+              } else {
+                onScheduleTimeRangeChange([null, null]);
+              }
+            }}
             disabled={!isScheduleEnabled}
           />
-          <Switch checked={isScheduleEnabled} onChange={onIsScheduleEnabledChange} />
         </div>
       </div>
+      <Modal
+        title="定时配置"
+        visible={isCronModalVisible}
+        onCancel={() => setIsCronModalVisible(false)}
+        footer={null}
+        width={650}
+      >
+        <Cron
+          value={workflowSchedule}
+          setValue={onWorkflowScheduleChange}
+        />
+        <div style={{ marginTop: '20px' }}>
+          <Typography.Title level={5}>接下来五次执行时间</Typography.Title>
+          {cronError ? (
+            <Typography.Text type="danger">{cronError}</Typography.Text>
+          ) : (
+            <List
+              bordered
+              dataSource={nextRunTimes}
+              renderItem={item => <List.Item>{item}</List.Item>}
+            />
+          )}
+        </div>
+      </Modal>
       <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, display: 'flex', gap: '8px' }}>
         <Button onClick={() => document.getElementById('yaml-importer')?.click()}>
           导入 YAML

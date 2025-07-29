@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 import yaml from 'yaml';
+import dayjs from 'dayjs';
 import '../components/TaskNode'; // Register custom node
 import { Task, WorkflowDetail } from '../types';
 import api from '../api';
@@ -37,8 +38,12 @@ const WorkflowEditorPage: React.FC = () => {
   const [nodeName, setNodeName] = useState('');
   const [nodeCommand, setNodeCommand] = useState('');
   const [workflowName, setWorkflowName] = useState('my-workflow');
-  const [workflowSchedule, setWorkflowSchedule] = useState('0 0 0 * * ? *');
+  const [workflowSchedule, setWorkflowSchedule] = useState('0 0 * * *');
   const [isScheduleEnabled, setIsScheduleEnabled] = useState(true);
+  const [scheduleTimeRange, setScheduleTimeRange] = useState<[string | null, string | null]>([
+    dayjs().format('YYYY-MM-DD HH:mm:ss'),
+    dayjs().add(100, 'year').format('YYYY-MM-DD HH:mm:ss'),
+  ]);
   const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
   const [workflowData, setWorkflowData] = useState<WorkflowDetail | null>(null);
   const [originalYaml, setOriginalYaml] = useState<string>('');
@@ -121,9 +126,22 @@ const WorkflowEditorPage: React.FC = () => {
       try {
         const doc = yaml.parseDocument(yaml_content);
         const schedule = doc.getIn(['workflow', 'schedule']);
+        const startTime = doc.getIn(['workflow', 'startTime']);
+        const endTime = doc.getIn(['workflow', 'endTime']);
+
         if (schedule !== undefined && schedule !== null) {
-          setWorkflowSchedule(String(schedule));
+          let scheduleStr = String(schedule).replace(/\?/g, '*');
+          const parts = scheduleStr.split(' ');
+          // Handle Quartz 6 or 7-part cron expressions by converting to standard 5-part
+          if (parts.length === 6 || parts.length === 7) {
+            // Quartz: s m h d M DOW (Y) -> Standard: m h d M DOW
+            scheduleStr = `${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]}`;
+          }
+          setWorkflowSchedule(scheduleStr);
           setIsScheduleEnabled(true);
+          if (startTime && endTime) {
+            setScheduleTimeRange([String(startTime), String(endTime)]);
+          }
         } else {
           setIsScheduleEnabled(false);
         }
@@ -312,7 +330,7 @@ const WorkflowEditorPage: React.FC = () => {
 
   const handleShowYaml = () => {
     if (!graph) return;
-    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, originalYaml);
+    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml);
     setYamlContent(yamlStr);
     setIsYamlModalVisible(true);
   };
@@ -415,7 +433,7 @@ const WorkflowEditorPage: React.FC = () => {
 
   const handleSave = async () => {
     if (!graph) return;
-    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, originalYaml);
+    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml);
     if (!yamlStr) {
       message.error('画布为空或未初始化。');
       return;
@@ -525,6 +543,8 @@ const WorkflowEditorPage: React.FC = () => {
           onWorkflowScheduleChange={setWorkflowSchedule}
           isScheduleEnabled={isScheduleEnabled}
           onIsScheduleEnabledChange={setIsScheduleEnabled}
+          scheduleTimeRange={scheduleTimeRange}
+          onScheduleTimeRangeChange={setScheduleTimeRange}
           onShowYaml={handleShowYaml}
           onSave={handleSave}
           onAutoLayout={autoLayout}

@@ -6,6 +6,7 @@ export const generateYamlStr = (
   workflowName: string,
   isScheduleEnabled: boolean,
   workflowSchedule: string,
+  scheduleTimeRange: [string | null, string | null],
   originalYaml?: string
 ): string => {
   const doc = yaml.parseDocument(originalYaml || 'workflow:\n  name: new-workflow\ntasks: []\nparameters: []');
@@ -13,8 +14,17 @@ export const generateYamlStr = (
   doc.setIn(['workflow', 'name'], workflowName);
   if (isScheduleEnabled) {
     doc.setIn(['workflow', 'schedule'], workflowSchedule);
+    if (scheduleTimeRange[0] && scheduleTimeRange[1]) {
+      doc.setIn(['workflow', 'startTime'], scheduleTimeRange[0]);
+      doc.setIn(['workflow', 'endTime'], scheduleTimeRange[1]);
+    } else {
+      doc.deleteIn(['workflow', 'startTime']);
+      doc.deleteIn(['workflow', 'endTime']);
+    }
   } else {
     doc.deleteIn(['workflow', 'schedule']);
+    doc.deleteIn(['workflow', 'startTime']);
+    doc.deleteIn(['workflow', 'endTime']);
   }
 
   const { cells } = graph.toJSON();
