@@ -87,28 +87,39 @@ const DiyFunctionTaskEditor: DiyFunctionTaskEditorComponent = ({ task }) => {
 const taskInfo = {
   label: '自定义组件',
   type: 'DIY_FUNCTION',
-  category: 'general', 
+  // This task type is special and shouldn't appear in the general menu.
+  // It's added dynamically via the '自定义组件' submenu.
+  // category: 'general', 
   icon: CodeOutlined,
   editor: DiyFunctionTaskEditor,
-  createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }, func: any) => {
+  createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }, func?: any) => {
+    // When loading from YAML, `func` is undefined.
+    // When creating from context menu, `func` is the full function object.
+    const isNewNode = !!func;
+    const baseName = isNewNode ? func.functionName : task.name;
+    const functionId = isNewNode ? func.functionId : task.task_params?.functionId;
+
     const existingNodes = graph.getNodes();
-    let newNodeName = func.functionName;
+    let newNodeName = baseName;
     let counter = 1;
-    while (existingNodes.some(n => n.getData().label === newNodeName)) {
-      newNodeName = `${func.functionName}_${counter}`;
-      counter++;
+    // Only check for name conflicts if it's a new node from the menu
+    if (isNewNode) {
+      while (existingNodes.some(n => n.getData().label === newNodeName)) {
+        newNodeName = `${baseName}_${counter}`;
+        counter++;
+      }
     }
 
     const nodeData: Partial<Task> = {
       name: newNodeName,
-      label: newNodeName,
+      label: isNewNode ? newNodeName : task.label || baseName,
       task_type: 'DIY_FUNCTION',
       type: 'DIY_FUNCTION',
       task_params: {
-        functionId: func.functionId,
+        functionId: functionId,
       },
       _display_type: 'DIY_FUNCTION',
-      command: '', // Command will be fetched on demand
+      command: task.command || '', // Preserve command if already fetched
     };
 
     return graph.addNode({

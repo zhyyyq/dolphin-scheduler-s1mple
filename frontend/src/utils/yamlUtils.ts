@@ -213,6 +213,19 @@ export const generateYamlStr = (
       taskPayload.failRetryInterval = String(taskPayload.failRetryInterval);
     }
 
+    // For DIY_FUNCTION, never persist the command field to YAML.
+    // It should always be fetched dynamically via functionId.
+    if (taskPayload.type === 'DIY_FUNCTION') {
+      delete taskPayload.command;
+      // But do persist the contentHash for version checking.
+      if (nodeData.task_params?.contentHash) {
+        if (!taskPayload.task_params) {
+          taskPayload.task_params = {};
+        }
+        taskPayload.task_params.contentHash = nodeData.task_params.contentHash;
+      }
+    }
+
     // Clean up empty task_params only if it's truly empty
     if (taskPayload.task_params && Object.keys(taskPayload.task_params).length === 0) {
       delete taskPayload.task_params;

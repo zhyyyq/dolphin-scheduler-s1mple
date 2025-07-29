@@ -137,10 +137,19 @@ const WorkflowEditorPage: React.FC = () => {
             if (functionId) {
               try {
                 const funcData = await api.get<any>(`/api/diy-functions/${functionId}`);
-                // Enrich the task object with data needed for rendering
-                task.label = funcData.functionName;
-                task.name = funcData.functionName; // Ensure name and label are consistent
-                task.command = funcData.functionContent;
+                if (funcData) {
+                  // Enrich the task object with data needed for rendering
+                  task.label = funcData.functionName;
+                  // Do NOT update task.name, as it's the unique identifier for deps
+                  task.command = funcData.functionContent;
+                  if (!task.task_params) {
+                    task.task_params = {};
+                  }
+                  task.task_params.contentHash = funcData.contentHash;
+                } else {
+                  // Handle cases where API returns 2xx but with empty body
+                  throw new Error('API returned empty data');
+                }
               } catch (e) {
                 console.error(`Failed to fetch DIY function ${functionId}`, e);
                 task.label = `Error: Func ${functionId} not found`;
@@ -255,7 +264,7 @@ const WorkflowEditorPage: React.FC = () => {
         }
         loadGraphData(allNodes, relations, locations);
       } catch (error) {
-        message.error('解析工作流 YAML 失败。');
+        message.error(`解析工作流 YAML 失败: ${(error as Error).message}`);
       }
     };
 

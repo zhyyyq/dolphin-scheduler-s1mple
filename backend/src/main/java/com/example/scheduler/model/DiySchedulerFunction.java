@@ -25,7 +25,18 @@ public class DiySchedulerFunction {
     @Column(name = "deleted", nullable = false)
     private boolean deleted = false;
 
+    @Column(name = "content_hash")
+    private String contentHash;
+
     // Getters and Setters
+    public String getContentHash() {
+        return contentHash;
+    }
+
+    public void setContentHash(String contentHash) {
+        this.contentHash = contentHash;
+    }
+
     public boolean isDeleted() {
         return deleted;
     }

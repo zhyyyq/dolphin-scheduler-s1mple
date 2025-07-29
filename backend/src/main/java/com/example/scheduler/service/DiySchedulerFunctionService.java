@@ -23,13 +23,16 @@ public class DiySchedulerFunctionService {
     }
 
     public Optional<DiySchedulerFunction> getFunctionById(Long id) {
-        return repository.findById(id);
+        return repository.findByIdAndDeletedFalse(id);
     }
 
     public DiySchedulerFunction createFunction(DiySchedulerFunction function) {
         // Check for duplicates before creating
         if (repository.findByFunctionNameAndDeletedFalse(function.getFunctionName()).isPresent()) {
             throw new RuntimeException("Function with name '" + function.getFunctionName() + "' already exists.");
+        }
+        if (function.getFunctionContent() != null) {
+            function.setContentHash(String.valueOf(function.getFunctionContent().hashCode()));
         }
         return repository.save(function);
     }
@@ -45,6 +48,7 @@ public class DiySchedulerFunctionService {
             // If a function with the same name exists (regardless of deleted status), update it.
             DiySchedulerFunction existingFunction = existingFunctionOpt.get();
             existingFunction.setFunctionContent(content);
+            existingFunction.setContentHash(String.valueOf(content.hashCode()));
             existingFunction.setDeleted(false); // Undelete it if it was deleted
             return repository.save(existingFunction);
         } else {
@@ -52,6 +56,7 @@ public class DiySchedulerFunctionService {
             DiySchedulerFunction newFunction = new DiySchedulerFunction();
             newFunction.setFunctionName(baseName);
             newFunction.setFunctionContent(content);
+            newFunction.setContentHash(String.valueOf(content.hashCode()));
             newFunction.setDeleted(false);
             return repository.save(newFunction);
         }
@@ -63,6 +68,9 @@ public class DiySchedulerFunctionService {
 
         function.setFunctionName(functionDetails.getFunctionName());
         function.setFunctionContent(functionDetails.getFunctionContent());
+        if (functionDetails.getFunctionContent() != null) {
+            function.setContentHash(String.valueOf(functionDetails.getFunctionContent().hashCode()));
+        }
         
         return repository.save(function);
     }
