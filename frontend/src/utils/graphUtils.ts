@@ -116,6 +116,12 @@ export const compileGraph = (graph: Graph) => {
       const downstreamEdges = currentEdges.filter(edge => edge.getSourceCellId() === logicNode.id);
       for (const edge of downstreamEdges) {
         edge.setSource(compiledDependentNode);
+        const targetNode = currentNodes.find(n => n.id === edge.getTargetCellId());
+        if (targetNode) {
+          const targetNodeData = targetNode.getData();
+          const newDeps = (targetNodeData.deps || []).map((dep: string) => dep === logicNode.getData().name ? newNodeData.name : dep);
+          targetNode.setData({ ...targetNodeData, deps: newDeps });
+        }
       }
 
       // 3. Remove all the nodes and edges that have been merged
