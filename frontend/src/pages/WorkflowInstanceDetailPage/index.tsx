@@ -28,6 +28,7 @@ const STATE_MAP: { [key: string]: { text: string; color: string; icon: React.Rea
 const WorkflowInstanceDetailPage: React.FC = () => {
   const { projectCode, instanceId } = useParams<{ projectCode: string; instanceId: string }>();
   const [instance, setInstance] = useState<any>(null);
+  const [workflowUuid, setWorkflowUuid] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [logVisible, setLogVisible] = useState<boolean>(false);
@@ -52,6 +53,24 @@ const WorkflowInstanceDetailPage: React.FC = () => {
   useEffect(() => {
     fetchInstanceDetail();
   }, [fetchInstanceDetail]);
+
+  useEffect(() => {
+    const findWorkflowUuid = async () => {
+      if (instance && instance.dagData && instance.dagData.processDefinition) {
+        try {
+          const workflows = await api.get<any[]>('/api/workflow/combined');
+          const processDefinitionCode = instance.dagData.processDefinition.code;
+          const matchedWorkflow = workflows.find(wf => wf.code === processDefinitionCode);
+          if (matchedWorkflow) {
+            setWorkflowUuid(matchedWorkflow.uuid);
+          }
+        } catch (err) {
+          console.error('Failed to fetch combined workflows', err);
+        }
+      }
+    };
+    findWorkflowUuid();
+  }, [instance]);
 
   const showLog = useCallback(async (taskInstanceId: number) => {
     setLogVisible(true);
@@ -147,7 +166,11 @@ const WorkflowInstanceDetailPage: React.FC = () => {
               <Descriptions.Item label="运行时长">{instance.duration}</Descriptions.Item>
               <Descriptions.Item label="工作流定义">
                 {instance.dagData && instance.dagData.processDefinition ? (
-                  <Link to={`/workflow/edit/${instance.dagData.processDefinition.code}`}>{instance.dagData.processDefinition.name}</Link>
+                  workflowUuid ? (
+                    <Link to={`/workflow/edit/${workflowUuid}`}>{instance.dagData.processDefinition.name}</Link>
+                  ) : (
+                    <span>{instance.dagData.processDefinition.name}</span>
+                  )
                 ) : (
                   'N/A'
                 )}
