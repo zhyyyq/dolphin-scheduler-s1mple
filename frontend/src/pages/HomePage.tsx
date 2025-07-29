@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Table, Spin, Alert, Typography, Tag, Button, Space, Tooltip,
-  App as AntApp
+  App as AntApp,
+  Select,
 } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
@@ -63,6 +64,8 @@ const HomePage: React.FC = () => {
   const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
   const [isBackfillModalOpen, setIsBackfillModalOpen] = useState(false);
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
+  const [projects, setProjects] = useState<string[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
 
   const fetchWorkflows = useCallback(async () => {
     setLoading(true);
@@ -70,6 +73,8 @@ const HomePage: React.FC = () => {
     try {
       const combinedWorkflows = await api.get<Workflow[]>('/api/workflow/combined');
       setWorkflows(combinedWorkflows);
+      const uniqueProjects = Array.from(new Set(combinedWorkflows.map(w => w.project).filter(Boolean) as string[]));
+      setProjects(uniqueProjects);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
@@ -472,6 +477,11 @@ const HomePage: React.FC = () => {
 
   const columns: ColumnsType<Workflow> = useMemo(() => [
     {
+      title: '项目',
+      dataIndex: 'project',
+      key: 'project',
+    },
+    {
       title: '工作流名称',
       dataIndex: 'name',
       key: 'name',
@@ -536,11 +546,24 @@ const HomePage: React.FC = () => {
     return <Alert message="错误" description={error} type="error" showIcon />;
   }
 
+  const filteredWorkflows = selectedProject
+    ? workflows.filter(w => w.project === selectedProject)
+    : workflows;
+
   return (
     <div style={{ padding: '24px', background: '#fff', borderRadius: '8px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <Title level={2} style={{ margin: 0 }}>所有工作流</Title>
         <Space>
+          <Select
+            placeholder="按项目筛选"
+            allowClear
+            style={{ width: 200 }}
+            onChange={setSelectedProject}
+            value={selectedProject}
+          >
+            {projects.map(p => <Select.Option key={p} value={p}>{p}</Select.Option>)}
+          </Select>
           <Button onClick={() => setIsRestoreModalOpen(true)}>恢复工作流</Button>
           <Link to="/workflow/edit">
             <Button type="primary">新建工作流</Button>
@@ -549,7 +572,7 @@ const HomePage: React.FC = () => {
       </div>
       <Table 
         columns={columns} 
-        dataSource={workflows} 
+        dataSource={filteredWorkflows} 
         rowKey="uuid" 
         bordered
       />

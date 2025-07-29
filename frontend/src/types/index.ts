@@ -2,6 +2,7 @@ export interface Workflow {
   uuid: string;
   code: any; // Can be number from DS or string from local file
   name: string;
+  project: string;
   projectCode: number;
   projectName:string;
   releaseState: 'ONLINE' | 'OFFLINE' | 'UNSUBMITTED' | 'MODIFIED';
