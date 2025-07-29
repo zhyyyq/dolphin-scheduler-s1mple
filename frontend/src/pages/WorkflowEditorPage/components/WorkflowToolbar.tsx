@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Button, Input, Switch, Modal, DatePicker, Typography, List } from 'antd';
 import { Cron } from 'react-js-cron';
@@ -32,10 +32,10 @@ export const WorkflowToolbar: React.FC = () => {
     graph,
   } = useSelector((state: RootState) => state.workflowEditor);
 
-  const scheduleTimeRange = [
+  const scheduleTimeRange = useMemo(() => [
     scheduleTimeRangeISO[0] ? dayjs(scheduleTimeRangeISO[0]) : null,
     scheduleTimeRangeISO[1] ? dayjs(scheduleTimeRangeISO[1]) : null,
-  ] as [dayjs.Dayjs | null, dayjs.Dayjs | null];
+  ] as [dayjs.Dayjs | null, dayjs.Dayjs | null], [scheduleTimeRangeISO]);
 
   const onWorkflowNameChange = (name: string) => dispatch(setWorkflowName(name));
   const onWorkflowScheduleChange = (schedule: string) => dispatch(setWorkflowSchedule(schedule));
@@ -122,7 +122,6 @@ export const WorkflowToolbar: React.FC = () => {
             style={{ width: '350px' }}
             value={scheduleTimeRange}
             onChange={(dates) => {
-              console.log('Selected dates:', dates);
               onScheduleTimeRangeChange(dates as [dayjs.Dayjs | null, dayjs.Dayjs | null]);
             }}
             disabled={!isScheduleEnabled}
