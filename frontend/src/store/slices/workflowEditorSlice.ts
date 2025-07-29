@@ -6,6 +6,8 @@ import { taskTypes } from '../../config/taskTypes';
 import api from '../../api';
 import { generateYamlStr as generateYaml } from '../../utils/yamlUtils';
 import { RootState } from '..';
+import { Graph } from '@antv/x6';
+
 
 interface ContextMenuState {
   visible: boolean;
@@ -31,7 +33,7 @@ interface WorkflowEditorState {
   workflowUuid: string | null;
   workflowData: WorkflowDetail | null;
   originalYaml: string;
-  graph: any | null;
+  graph: Graph | null;
 }
 
 const initialState: WorkflowEditorState = {
@@ -400,7 +402,7 @@ export const handleNodeDoubleClick = createAsyncThunk(
     if (nodeData.type === 'PARAMS') {
       dispatch(setCurrentParamNode({ ...nodeData, id: node.id }));
     } else {
-      const allNodes = graph.getNodes().map((n: any) => n.getData() as Task);
+      const allNodes = graph!.getNodes().map((n: any) => n.getData() as Task);
       dispatch(setAllTasksForModal(allNodes));
       dispatch(setCurrentTaskNode({ ...nodeData, id: node.id }));
     }
@@ -423,7 +425,6 @@ export const fetchWorkflow = createAsyncThunk(
       const schedule = doc.getIn(['workflow', 'schedule']);
       const startTime = doc.getIn(['workflow', 'startTime']);
       const endTime = doc.getIn(['workflow', 'endTime']);
-
       if (schedule !== undefined && schedule !== null) {
         let scheduleStr = String(schedule).replace(/\?/g, '*');
         const parts = scheduleStr.split(' ');
@@ -567,6 +568,7 @@ export const loadGraphContent = createAsyncThunk(
           source: { cell: rel.from, port: rel.sourcePort },
           target: { cell: rel.to, port: rel.targetPort },
           labels: rel.label ? [rel.label] : [],
+          
         })),
       });
     } catch (error) {

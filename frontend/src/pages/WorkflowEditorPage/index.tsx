@@ -21,6 +21,8 @@ import {
 } from '../../store/slices/workflowEditorSlice';
 import { WorkflowDetail } from '../../types';
 
+
+
 const WorkflowEditorPage: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
   const location = useLocation();
@@ -29,8 +31,6 @@ const WorkflowEditorPage: React.FC = () => {
 
   const {
     contextMenu,
-    workflowData,
-    graph,
   } = useSelector((state: RootState) => state.workflowEditor);
 
   useEffect(() => {
