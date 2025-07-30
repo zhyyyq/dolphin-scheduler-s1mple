@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Card, Spin, Alert, DatePicker, Select, Button, Statistic, Modal, Table, Space } from 'antd';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Row, Col, Card, Spin, Alert, DatePicker, Select, Button, Statistic, Modal, Table, Space, Input } from 'antd';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import api from '../api';
@@ -30,6 +30,16 @@ const DashboardPage: React.FC = () => {
   const [modalLoading, setModalLoading] = useState(false);
   const [logViewerVisible, setLogViewerVisible] = useState<boolean>(false);
   const [selectedTaskInstanceId, setSelectedTaskInstanceId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredModalData = useMemo(() => {
+    if (!searchTerm) {
+      return modalData;
+    }
+    return modalData.filter((item: any) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [modalData, searchTerm]);
 
   const showLog = useCallback((taskInstanceId: number) => {
     setSelectedTaskInstanceId(taskInstanceId);
@@ -231,8 +241,13 @@ const DashboardPage: React.FC = () => {
         footer={null}
         width="80%"
       >
+        <Input.Search
+          placeholder="按名称搜索"
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ marginBottom: 16 }}
+        />
         <Spin spinning={modalLoading}>
-          <Table dataSource={modalData} columns={getColumns()} rowKey="id" />
+          <Table dataSource={filteredModalData} columns={getColumns()} rowKey="id" />
         </Spin>
       </Modal>
 
