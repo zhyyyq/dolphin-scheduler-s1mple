@@ -6,10 +6,10 @@ import { Link } from 'react-router-dom';
 const { Title, Paragraph } = Typography;
 
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description: string; link: string; buttonText: string }> = ({ icon, title, description, link, buttonText }) => (
-  <Col xs={24} sm={12} md={8}>
-    <Card hoverable style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ fontSize: '48px', color: '#1677ff', textAlign: 'center', marginBottom: '16px' }}>{icon}</div>
-      <div style={{ textAlign: 'center', flexGrow: 1 }}>
+  <Col xs={24} sm={12} md={6}>
+    <Card hoverable style={{ display: 'flex', flexDirection: 'column', height: '100%', textAlign: 'center' }}>
+      <div style={{ fontSize: '48px', color: '#1677ff', marginBottom: '20px' }}>{icon}</div>
+      <div style={{ flexGrow: 1 }}>
         <Title level={4}>{title}</Title>
         <Paragraph>{description}</Paragraph>
       </div>
@@ -24,17 +24,15 @@ const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description:
 
 const WelcomePage: React.FC = () => {
   return (
-    <div style={{ padding: '24px', background: '#ffffff' }}>
-      <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-        <Title>欢迎使用极简任务调度平台</Title>
-        <Paragraph style={{ fontSize: '16px', color: '#595959' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', background: '#f0f2f5' }}>
+      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <Title level={2}>欢迎使用极简任务调度平台</Title>
+        <Paragraph style={{ fontSize: '16px', color: '#595959', maxWidth: '600px' }}>
           一个强大而易于使用的平台，可帮助您通过可视化的方式，轻松构建、调度和管理复杂的数据工作流。
         </Paragraph>
       </div>
 
-      <Divider>核心功能</Divider>
-
-      <Row gutter={[24, 24]} style={{ marginBottom: '48px' }}>
+      <Row gutter={[32, 32]} style={{ maxWidth: '1200px', width: '100%' }}>
         <FeatureCard
           icon={<ApartmentOutlined />}
           title="可视化工作流"
@@ -49,13 +47,8 @@ const WelcomePage: React.FC = () => {
           link="/functions"
           buttonText="管理组件"
         />
-      </Row>
-
-      <Divider>快速入门</Divider>
-
-      <Row gutter={[24, 24]}>
         <FeatureCard
-          icon={<UploadOutlined />}
+          icon={<PlusOutlined />}
           title="新建工作流"
           description="没有比现在更好的时机了！立即开始构建您的第一个工作流，体验流程自动化的魅力。"
           link="/workflow/edit"
