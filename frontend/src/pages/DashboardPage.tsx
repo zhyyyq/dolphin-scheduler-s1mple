@@ -116,7 +116,7 @@ const DashboardPage: React.FC = () => {
       title: '操作',
       key: 'action',
       render: (_: any, record: any) => (
-        <Link to={`/workflow/instances/${record.id}`}>查看详情</Link>
+        <Link to={`/instances/${record.projectCode}/${record.id}`}>查看详情</Link>
       ),
     },
   ];

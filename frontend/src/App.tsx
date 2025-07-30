@@ -10,13 +10,9 @@ import DashboardPage from './pages/DashboardPage';
 import WorkflowEditorPage from './pages/WorkflowEditorPage';
 import WorkflowViewerPage from './pages/WorkflowViewerPage';
 import WorkflowHistoryPage from './pages/WorkflowHistoryPage';
-import WorkflowInstancesPage from './pages/WorkflowInstancesPage';
-import WorkflowInstanceDetailPage from './pages/WorkflowInstanceDetailPage';
 import FileUploadPage from './pages/FileUploadPage';
 import DiyFunctionPage from './pages/DiyFunctionPage';
 import PythonEditorPage from './pages/PythonEditorPage';
-import DiyFunctionInstancesPage from './pages/DiyFunctionInstancesPage';
-import DiyFunctionInstanceDetailPage from './pages/DiyFunctionInstanceDetailPage';
 
 import './App.css';
 
@@ -43,29 +39,9 @@ const App: React.FC = () => {
       label: <Link to="/workflows">工作流</Link>,
     },
     {
-      key: '/workflow/edit',
-      icon: <PlusOutlined />,
-      label: <Link to="/workflow/edit">新建工作流</Link>,
-    },
-    {
-      key: '/upload',
-      icon: <UploadOutlined />,
-      label: <Link to="/upload">上传资源</Link>,
-    },
-    {
-      key: '/instances',
-      icon: <HistoryOutlined />,
-      label: <Link to="/instances">运行实例</Link>,
-    },
-    {
       key: '/functions',
       icon: <CodeOutlined />,
       label: <Link to="/functions">自定义组件</Link>,
-    },
-    {
-      key: '/functions/runs',
-      icon: <HistoryOutlined />,
-      label: <Link to="/functions/runs">组件运行实例</Link>,
     },
   ];
 
@@ -92,13 +68,9 @@ const App: React.FC = () => {
             <Route path="/workflow/edit/:workflow_uuid" element={<WorkflowEditorPage />} />
             <Route path="/workflow/:workflow_uuid/history" element={<WorkflowHistoryPage />} />
             <Route path="/project/:projectCode/workflow/:workflowCode" element={<WorkflowViewerPage />} />
-            <Route path="/instances" element={<WorkflowInstancesPage />} />
-            <Route path="/instances/:projectCode/:instanceId" element={<WorkflowInstanceDetailPage />} />
             <Route path="/upload" element={<FileUploadPage />} />
             <Route path="/functions" element={<DiyFunctionPage />} />
             <Route path="/functions/edit/:functionId" element={<PythonEditorPage />} />
-            <Route path="/functions/runs" element={<DiyFunctionInstancesPage />} />
-            <Route path="/functions/runs/:runId" element={<DiyFunctionInstanceDetailPage />} />
           </Routes>
         </Content>
       </Layout>

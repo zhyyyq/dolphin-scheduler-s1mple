@@ -112,15 +112,6 @@ const HomePage: React.FC = () => {
       render: (_, record: Workflow) => <ActionButtons record={record} />,
     },
   ], [projects]);
-
-  if (loading) {
-    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><Spin size="large" /></div>;
-  }
-
-  if (error) {
-    return <Alert message="错误" description={error} type="error" showIcon />;
-  }
-
   const filteredWorkflows = useMemo(() => {
     if (selectedProject && selectedProject !== 'all') {
       return workflows.filter(w =>
@@ -129,6 +120,15 @@ const HomePage: React.FC = () => {
     }
     return workflows;
   }, [workflows, selectedProject]);
+  if (loading) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><Spin size="large" /></div>;
+  }
+
+  if (error) {
+    return <Alert message="错误" description={error} type="error" showIcon />;
+  }
+
+  
 
   return (
     <div style={{ padding: '24px', background: '#fff', borderRadius: '8px' }}>
