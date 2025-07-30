@@ -144,18 +144,18 @@ services:
 
   backend:
     build: ./backend
-    profiles: ["all"]
+    profiles: ["diy"]
     ports:
       - "8000:8000"
-    depends_on:
-      dolphinscheduler-postgresql:
-        condition: service_healthy
+    volumes:
+      - ./application.properties:/app/application.properties
+      - ./backend/workflow_repo:/app/workflow_repo
     networks:
       - dolphinscheduler
 
   frontend:
     build: ./frontend
-    profiles: ["all"]
+    profiles: ["diy"]
     ports:
       - "3000:80"
     volumes:
