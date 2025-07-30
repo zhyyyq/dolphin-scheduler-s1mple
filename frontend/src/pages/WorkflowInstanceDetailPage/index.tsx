@@ -4,7 +4,7 @@ import { Spin, Alert, Typography, Row, Col, Card, Descriptions, Tag, Modal, Butt
 import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 // import InstanceDagGraph from './components/InstanceDagGraph';
 import api from '@/api';
-import './index.less';
+
 
 const { Title } = Typography;
 

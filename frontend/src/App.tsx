@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { App as AntApp, Layout, Menu, ConfigProvider, Typography } from 'antd';
-import { DashboardOutlined, ApartmentOutlined, PlusOutlined, UploadOutlined, HistoryOutlined, CodeOutlined } from '@ant-design/icons';
+import { DashboardOutlined, ApartmentOutlined, CodeOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 
 import WelcomePage from './pages/WelcomePage';
@@ -10,10 +10,9 @@ import DashboardPage from './pages/DashboardPage';
 import WorkflowEditorPage from './pages/WorkflowEditorPage';
 import WorkflowViewerPage from './pages/WorkflowViewerPage';
 import WorkflowHistoryPage from './pages/WorkflowHistoryPage';
-import FileUploadPage from './pages/FileUploadPage';
 import DiyFunctionPage from './pages/DiyFunctionPage';
 import PythonEditorPage from './pages/PythonEditorPage';
-
+import WorkflowInstanceDetailPage from './pages/WorkflowInstanceDetailPage';
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
@@ -68,7 +67,7 @@ const App: React.FC = () => {
             <Route path="/workflow/edit/:workflow_uuid" element={<WorkflowEditorPage />} />
             <Route path="/workflow/:workflow_uuid/history" element={<WorkflowHistoryPage />} />
             <Route path="/project/:projectCode/workflow/:workflowCode" element={<WorkflowViewerPage />} />
-            <Route path="/upload" element={<FileUploadPage />} />
+            <Route path="/instances/:projectCode/:instanceId" element={<WorkflowInstanceDetailPage />} />
             <Route path="/functions" element={<DiyFunctionPage />} />
             <Route path="/functions/edit/:functionId" element={<PythonEditorPage />} />
           </Routes>
