@@ -149,7 +149,7 @@ services:
       - "8000:8000"
     volumes:
       - ./application.properties:/app/application.properties
-      - ./backend/workflow_repo:/app/workflow_repo
+      - workflow-repo-data:/app/workflow_repo
     networks:
       - dolphinscheduler
 
@@ -177,3 +177,4 @@ volumes:
   dolphinscheduler-shared-local:
   dolphinscheduler-resource-local:
   mysql_data:
+  workflow-repo-data:
