@@ -43,13 +43,6 @@ const WelcomePage: React.FC = () => {
           buttonText="管理工作流"
         />
         <FeatureCard
-          icon={<HistoryOutlined />}
-          title="任务实例监控"
-          description="实时跟踪和监控所有工作流的运行实例。方便地查看日志、运行状态和历史记录，快速定位问题。"
-          link="/instances"
-          buttonText="查看实例"
-        />
-        <FeatureCard
           icon={<CodeOutlined />}
           title="自定义组件"
           description="使用 Python 创建您自己的可重用组件，封装业务逻辑，扩展平台功能，实现更高程度的复用。"
@@ -69,17 +62,10 @@ const WelcomePage: React.FC = () => {
           buttonText="立即新建"
         />
         <FeatureCard
-          icon={<UploadOutlined />}
-          title="上传资源"
-          description="集中上传和管理您的脚本、JAR 包和其他工作流所需的资源文件，方便在任务中引用。"
-          link="/upload"
-          buttonText="上传资源"
-        />
-        <FeatureCard
           icon={<PlayCircleOutlined />}
           title="查看运行实例"
           description="查看您或其他团队成员已经执行过的任务，了解平台的实际运行情况。"
-          link="/instances"
+          link="/dashboard"
           buttonText="查看运行实例"
         />
       </Row>

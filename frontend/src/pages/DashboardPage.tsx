@@ -3,6 +3,7 @@ import { Row, Col, Card, Spin, Alert, DatePicker, Select, Button, Statistic, Mod
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import api from '../api';
+import LogViewer from '../components/LogViewer';
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
@@ -27,6 +28,18 @@ const DashboardPage: React.FC = () => {
   const [modalTitle, setModalTitle] = useState('');
   const [modalData, setModalData] = useState([]);
   const [modalLoading, setModalLoading] = useState(false);
+  const [logViewerVisible, setLogViewerVisible] = useState<boolean>(false);
+  const [selectedTaskInstanceId, setSelectedTaskInstanceId] = useState<number | null>(null);
+
+  const showLog = useCallback((taskInstanceId: number) => {
+    setSelectedTaskInstanceId(taskInstanceId);
+    setLogViewerVisible(true);
+  }, []);
+
+  const closeLogViewer = () => {
+    setLogViewerVisible(false);
+    setSelectedTaskInstanceId(null);
+  };
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
@@ -121,6 +134,28 @@ const DashboardPage: React.FC = () => {
     },
   ];
 
+  const taskColumns = [
+    { title: 'ID', dataIndex: 'id', key: 'id' },
+    { title: '名称', dataIndex: 'name', key: 'name' },
+    { title: '状态', dataIndex: 'state', key: 'state' },
+    { title: '开始时间', dataIndex: 'startTime', key: 'startTime' },
+    { title: '结束时间', dataIndex: 'endTime', key: 'endTime' },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_: any, record: any) => (
+        <Button type="link" onClick={() => showLog(record.id)}>查看日志</Button>
+      ),
+    },
+  ];
+
+  const getColumns = () => {
+    if (modalTitle.startsWith('任务')) {
+      return taskColumns;
+    }
+    return columns;
+  }
+
   if (error) {
     return <Alert message="错误" description={error} type="error" showIcon />;
   }
@@ -197,9 +232,15 @@ const DashboardPage: React.FC = () => {
         width="80%"
       >
         <Spin spinning={modalLoading}>
-          <Table dataSource={modalData} columns={columns} rowKey="id" />
+          <Table dataSource={modalData} columns={getColumns()} rowKey="id" />
         </Spin>
       </Modal>
+
+      <LogViewer
+        visible={logViewerVisible}
+        onClose={closeLogViewer}
+        taskInstanceId={selectedTaskInstanceId}
+      />
     </div>
   );
 };
