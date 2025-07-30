@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Card, Spin, Alert, DatePicker, Select, Button, Statistic, Modal, Table } from 'antd';
+import { Row, Col, Card, Spin, Alert, DatePicker, Select, Button, Statistic, Modal, Table, Space } from 'antd';
 import { Link } from 'react-router-dom';
 import dayjs from 'dayjs';
 import api from '../api';
@@ -15,12 +15,15 @@ const DashboardPage: React.FC = () => {
     workflowStatusCount: { success: 0, failure: 0, running: 0, waiting: 0 },
     taskStatusCount: { success: 0, failure: 0, running: 0, waiting: 0 },
   });
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    timeRange: [dayjs.Dayjs, dayjs.Dayjs];
+    projectCode: number | undefined;
+  }>({
     timeRange: [dayjs().startOf('day'), dayjs().endOf('day')],
-    projectCode: null,
+    projectCode: undefined,
   });
 
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalData, setModalData] = useState([]);
   const [modalLoading, setModalLoading] = useState(false);
@@ -80,7 +83,7 @@ const DashboardPage: React.FC = () => {
 
   const handleStatusClick = async (type: 'workflow' | 'task', status: string) => {
     setModalTitle(`${type === 'workflow' ? '工作流' : '任务'}实例列表 - ${status}`);
-    setModalVisible(true);
+    setModalOpen(true);
     setModalLoading(true);
     try {
       const params: any = {
@@ -129,18 +132,19 @@ const DashboardPage: React.FC = () => {
           <Col>
             <Select
               style={{ width: 200 }}
-              defaultValue={null}
+              placeholder="全部项目"
+              value={filters.projectCode}
               onChange={(value) => handleFilterChange({ projectCode: value })}
+              allowClear
             >
-              <Option value={null}>全部项目</Option>
               {projects.map(p => <Option key={p.code} value={p.code}>{p.name}</Option>)}
             </Select>
           </Col>
           <Col>
-            <Button.Group>
+            <Space.Compact>
               <Button onClick={() => handleTimeRangeChange('today')}>今日</Button>
               <Button onClick={() => handleTimeRangeChange('yesterday')}>昨日</Button>
-            </Button.Group>
+            </Space.Compact>
           </Col>
           <Col>
             <RangePicker
@@ -187,8 +191,8 @@ const DashboardPage: React.FC = () => {
 
       <Modal
         title={modalTitle}
-        visible={modalVisible}
-        onCancel={() => setModalVisible(false)}
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
         footer={null}
         width="80%"
       >
