@@ -1,6 +1,9 @@
 package com.example.scheduler.service;
 
 import com.example.scheduler.dto.DashboardStatsDto;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +14,7 @@ import java.util.Map;
 
 @Service
 public class DashboardService {
-
+    private static final Logger logger = LoggerFactory.getLogger(DashboardService.class);
     @Autowired
     private DsService dsService;
 
@@ -50,14 +53,28 @@ public class DashboardService {
                 long count = ((Number) statusCount.get("count")).longValue();
 
                 if (state != null) {
-                    if (state.contains("desc='success'")) {
-                        success += count;
-                    } else if (state.contains("desc='failure'")) {
-                        failure += count;
-                    } else if (state.contains("desc='running'")) {
-                        running += count;
-                    } else if (state.contains("desc='submit success'") || state.contains("desc='serial wait'")) {
-                        waiting += count;
+                    switch (state) {
+                        case "SUCCESS":
+                            success += count;
+                            break;
+                        case "FAILURE":
+                            failure += count;
+                            break;
+                        case "RUNNING_EXECUTION":
+                            running += count;
+                            break;
+                        case "SUBMITTED_SUCCESS":
+                        case "SERIAL_WAIT":
+                        case "READY_PAUSE":
+                        case "PAUSE":
+                        case "READY_STOP":
+                        case "STOP":
+                        case "DELAY_EXECUTION":
+                        case "READY_BLOCK":
+                        case "BLOCK":
+                        case "WAIT_TO_RUN":
+                            waiting += count;
+                            break;
                     }
                 }
             }

@@ -125,10 +125,10 @@ const DashboardPage: React.FC = () => {
           <Col>
             <Select
               style={{ width: 200 }}
-              placeholder="选择项目"
+              defaultValue={null}
               onChange={(value) => handleFilterChange({ projectCode: value })}
-              allowClear
             >
+              <Option value={null}>全部项目</Option>
               {projects.map(p => <Option key={p.code} value={p.code}>{p.name}</Option>)}
             </Select>
           </Col>
@@ -141,8 +141,13 @@ const DashboardPage: React.FC = () => {
           <Col>
             <RangePicker
               value={filters.timeRange as any}
-              onChange={(dates) => handleFilterChange({ timeRange: dates })}
-              showTime
+              onChange={(dates) => {
+                if (dates && dates[0] && dates[1]) {
+                  handleFilterChange({ timeRange: [dates[0].startOf('day'), dates[1].endOf('day')] });
+                } else {
+                  handleFilterChange({ timeRange: dates });
+                }
+              }}
             />
           </Col>
           <Col>
