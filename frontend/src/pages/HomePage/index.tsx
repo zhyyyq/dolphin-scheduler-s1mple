@@ -131,8 +131,8 @@ const HomePage: React.FC = () => {
   
 
   return (
-    <div style={{ padding: '24px', background: '#fff', borderRadius: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexShrink: 0 }}>
         <Title level={2} style={{ margin: 0 }}>所有工作流</Title>
         <Space>
           <Select
@@ -185,12 +185,17 @@ const HomePage: React.FC = () => {
           </Link>
         </Space>
       </div>
-      <Table 
-        columns={columns} 
-        dataSource={filteredWorkflows} 
-        rowKey="uuid" 
-        bordered
-      />
+      <div style={{ flex: '1 1 auto', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <Table 
+          columns={columns} 
+          dataSource={filteredWorkflows} 
+          rowKey="uuid" 
+          bordered
+          pagination={{ pageSize: 10 }}
+          style={{ flex: '1 1 auto', overflow: 'hidden' }}
+          scroll={{ y: 'calc(100vh - 340px)' }}
+        />
+      </div>
       <RestoreWorkflowModal
         open={isRestoreModalOpen}
         onCancel={() => dispatch(setIsRestoreModalOpen(false))}

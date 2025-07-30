@@ -44,7 +44,7 @@ const App: React.FC = () => {
     },
   ];
 
-  const isWelcomePage = location.pathname === '/';
+  const isFullPage = location.pathname === '/' || location.pathname === '/workflows' || location.pathname.startsWith('/workflow/edit');
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -60,7 +60,7 @@ const App: React.FC = () => {
         <Header className="site-layout-background" style={{ padding: '0 24px', display: 'flex', alignItems: 'center' }}>
           <Title level={3} style={{ margin: 0 }}>极简任务调度平台</Title>
         </Header>
-        <Content style={isWelcomePage ? { height: '100%', padding: 0, margin: 0 } : { margin: '16px' }}>
+        <Content style={isFullPage ? { height: '100%', padding: 0, margin: 0 } : { margin: '16px' }}>
           <Routes>
             <Route path="/" element={<WelcomePage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
