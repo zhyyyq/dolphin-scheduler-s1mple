@@ -144,20 +144,18 @@ services:
 
   backend:
     build: ./backend
-    profiles: ["diy"]
-    env_file:
-      - ./backend/docker.env
-    environment:
-      - LANG=C.UTF-8
-      - PYTHONPATH=/app/src
+    profiles: ["all"]
     ports:
       - "8000:8000"
+    depends_on:
+      dolphinscheduler-postgresql:
+        condition: service_healthy
     networks:
       - dolphinscheduler
 
   frontend:
     build: ./frontend
-    profiles: ["diy"]
+    profiles: ["all"]
     ports:
       - "3000:80"
     volumes:
