@@ -6,16 +6,16 @@ import { Link } from 'react-router-dom';
 const { Title, Paragraph } = Typography;
 
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description: string; link: string; buttonText: string }> = ({ icon, title, description, link, buttonText }) => (
-  <Col xs={24} sm={12} md={12}>
-    <Card hoverable style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '24px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}>
-      <div style={{ fontSize: '56px', color: '#1677ff', textAlign: 'center', marginBottom: '24px' }}>{icon}</div>
+  <Col xs={24} sm={12} md={8}>
+    <Card hoverable style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ fontSize: '48px', color: '#1677ff', textAlign: 'center', marginBottom: '16px' }}>{icon}</div>
       <div style={{ textAlign: 'center', flexGrow: 1 }}>
-        <Title level={3}>{title}</Title>
-        <Paragraph style={{ fontSize: '16px' }}>{description}</Paragraph>
+        <Title level={4}>{title}</Title>
+        <Paragraph>{description}</Paragraph>
       </div>
       <div style={{ textAlign: 'center', marginTop: 'auto' }}>
         <Link to={link}>
-          <Button type="primary" size="large">{buttonText}</Button>
+          <Button type="primary">{buttonText}</Button>
         </Link>
       </div>
     </Card>
@@ -24,17 +24,17 @@ const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description:
 
 const WelcomePage: React.FC = () => {
   return (
-    <div style={{ padding: '48px', background: '#f0f2f5' }}>
-      <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-        <Title level={1} style={{ marginBottom: '24px' }}>欢迎来到您的任务调度中心</Title>
-        <Paragraph style={{ fontSize: '18px', color: '#595959', maxWidth: '800px', margin: '0 auto' }}>
+    <div style={{ padding: '24px', background: '#ffffff' }}>
+      <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+        <Title>欢迎使用极简任务调度平台</Title>
+        <Paragraph style={{ fontSize: '16px', color: '#595959' }}>
           一个强大而易于使用的平台，可帮助您通过可视化的方式，轻松构建、调度和管理复杂的数据工作流。
         </Paragraph>
       </div>
 
-      <Divider style={{ fontSize: '24px', marginBottom: '48px', marginTop: '48px' }}>核心功能</Divider>
+      <Divider>核心功能</Divider>
 
-      <Row gutter={[48, 48]} justify="center" style={{ marginBottom: '64px' }}>
+      <Row gutter={[24, 24]} style={{ marginBottom: '48px' }}>
         <FeatureCard
           icon={<ApartmentOutlined />}
           title="可视化工作流"
@@ -51,9 +51,9 @@ const WelcomePage: React.FC = () => {
         />
       </Row>
 
-      <Divider style={{ fontSize: '24px', marginBottom: '48px', marginTop: '48px' }}>快速入门</Divider>
+      <Divider>快速入门</Divider>
 
-      <Row gutter={[48, 48]} justify="center">
+      <Row gutter={[24, 24]}>
         <FeatureCard
           icon={<UploadOutlined />}
           title="新建工作流"
