@@ -608,9 +608,15 @@ public class DsService {
         return data.getJSONObject("data").getInnerMap();
     }
 
-    public List<Map<String, Object>> getTopNLongestRunningProcessInstance(Long projectCode, int topN) throws Exception {
+    public List<Map<String, Object>> getTopNLongestRunningProcessInstance(Long projectCode, int topN, String startDate, String endDate) throws Exception {
         URIBuilder builder = new URIBuilder(dsUrl + "/projects/" + projectCode + "/process-instances/top-n");
         builder.setParameter("size", String.valueOf(topN));
+        if (startDate != null) {
+            builder.setParameter("startDate", startDate);
+        }
+        if (endDate != null) {
+            builder.setParameter("endDate", endDate);
+        }
         HttpGet request = new HttpGet(builder.build());
         request.addHeader("token", token);
         CloseableHttpResponse response = httpClient.execute(request);
@@ -694,12 +700,18 @@ public class DsService {
         return stats;
     }
 
-    public Map<String, Object> getWorkflowInstances(Long projectCode, String state, int pageNo, int pageSize) throws Exception {
+    public Map<String, Object> getWorkflowInstances(Long projectCode, String state, int pageNo, int pageSize, String startDate, String endDate) throws Exception {
         URIBuilder builder = new URIBuilder(dsUrl + "/projects/" + projectCode + "/process-instances");
         builder.setParameter("pageNo", String.valueOf(pageNo));
         builder.setParameter("pageSize", String.valueOf(pageSize));
         if (state != null && !state.isEmpty()) {
             builder.setParameter("stateType", state);
+        }
+        if (startDate != null) {
+            builder.setParameter("startDate", startDate);
+        }
+        if (endDate != null) {
+            builder.setParameter("endDate", endDate);
         }
 
         HttpGet request = new HttpGet(builder.build());
