@@ -701,7 +701,10 @@ public class DsService {
     }
 
     public Map<String, Object> getWorkflowInstances(Long projectCode, String state, int pageNo, int pageSize, String startDate, String endDate) throws Exception {
-        URIBuilder builder = new URIBuilder(dsUrl + "/projects/" + projectCode + "/process-instances");
+        String path = (projectCode != null)
+                ? "/projects/" + projectCode + "/process-instances"
+                : "/process-instances";
+        URIBuilder builder = new URIBuilder(dsUrl + path);
         builder.setParameter("pageNo", String.valueOf(pageNo));
         builder.setParameter("pageSize", String.valueOf(pageSize));
         if (state != null && !state.isEmpty()) {
@@ -722,6 +725,36 @@ public class DsService {
 
         if (data.getIntValue("code") != 0) {
             throw new Exception("DS API error (process-instances): " + data.getString("msg"));
+        }
+
+        return data.getJSONObject("data").getInnerMap();
+    }
+
+    public Map<String, Object> getTaskInstances(Long projectCode, String state, int pageNo, int pageSize, String startDate, String endDate) throws Exception {
+        String path = (projectCode != null)
+                ? "/projects/" + projectCode + "/task-instances"
+                : "/task-instances";
+        URIBuilder builder = new URIBuilder(dsUrl + path);
+        builder.setParameter("pageNo", String.valueOf(pageNo));
+        builder.setParameter("pageSize", String.valueOf(pageSize));
+        if (state != null && !state.isEmpty()) {
+            builder.setParameter("stateType", state);
+        }
+        if (startDate != null) {
+            builder.setParameter("startDate", startDate);
+        }
+        if (endDate != null) {
+            builder.setParameter("endDate", endDate);
+        }
+
+        HttpGet request = new HttpGet(builder.build());
+        request.addHeader("token", token);
+        CloseableHttpResponse response = httpClient.execute(request);
+        String responseString = EntityUtils.toString(response.getEntity());
+        JSONObject data = JSON.parseObject(responseString);
+
+        if (data.getIntValue("code") != 0) {
+            throw new Exception("DS API error (task-instances): " + data.getString("msg"));
         }
 
         return data.getJSONObject("data").getInnerMap();

@@ -28,11 +28,13 @@ const DashboardPage: React.FC = () => {
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = {
+      const params: any = {
         startTime: filters.timeRange[0] ? (filters.timeRange[0] as any).format('YYYY-MM-DDTHH:mm:ss') : undefined,
         endTime: filters.timeRange[1] ? (filters.timeRange[1] as any).format('YYYY-MM-DDTHH:mm:ss') : undefined,
-        projectCode: filters.projectCode,
       };
+      if (filters.projectCode) {
+        params.projectCode = filters.projectCode;
+      }
       const data = await api.get('/api/dashboard/stats', params);
       setDashboardData(data);
     } catch (err) {
@@ -81,14 +83,16 @@ const DashboardPage: React.FC = () => {
     setModalVisible(true);
     setModalLoading(true);
     try {
-      const params = {
-        projectCode: filters.projectCode,
-        startTime: filters.timeRange[0] ? (filters.timeRange[0] as any).format('YYYY-MM-DDTHH:mm:ss') : undefined,
-        endTime: filters.timeRange[1] ? (filters.timeRange[1] as any).format('YYYY-MM-DDTHH:mm:ss') : undefined,
+      const params: any = {
+        startTime: filters.timeRange[0] ? (filters.timeRange[0] as any).format('YYYY-MM-DD HH:mm:ss') : undefined,
+        endTime: filters.timeRange[1] ? (filters.timeRange[1] as any).format('YYYY-MM-DD HH:mm:ss') : undefined,
         stateType: status.toUpperCase(),
         pageNo: 1,
         pageSize: 100,
       };
+      if (filters.projectCode) {
+        params.projectCode = filters.projectCode;
+      }
       const endpoint = type === 'workflow' ? '/api/workflow/instances' : '/api/task/instances';
       const res = await api.get<any>(endpoint, params);
       setModalData(res.totalList || []);

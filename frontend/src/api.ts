@@ -31,7 +31,11 @@ const api = {
   async get<T>(path: string, params?: Record<string, any>): Promise<T> {
     const url = new URL(path, window.location.origin);
     if (params) {
-      Object.keys(params).forEach(key => url.searchParams.append(key, params[key]));
+      Object.keys(params).forEach(key => {
+        if (params[key] !== undefined && params[key] !== null) {
+          url.searchParams.append(key, params[key]);
+        }
+      });
     }
     const response = await fetch(url.toString());
     return handleResponse(response);

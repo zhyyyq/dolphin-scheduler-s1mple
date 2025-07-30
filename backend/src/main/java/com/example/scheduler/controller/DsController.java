@@ -103,9 +103,11 @@ public class DsController {
             @PathVariable Long projectCode,
             @RequestParam(required = false) String stateType,
             @RequestParam(defaultValue = "1") int pageNo,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
         try {
-            return ResponseEntity.ok(dsService.getWorkflowInstances(projectCode, stateType, pageNo, pageSize));
+            return ResponseEntity.ok(dsService.getWorkflowInstances(projectCode, stateType, pageNo, pageSize, startDate, endDate));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
