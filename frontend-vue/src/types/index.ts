@@ -17,6 +17,11 @@ export interface Workflow {
   };
 }
 
+export interface Project {
+  code: number;
+  name: string;
+}
+
 export interface Parameter {
   name: string;
   type: 'VARCHAR' | 'INTEGER' | 'LONG' | 'FLOAT' | 'DOUBLE' | 'DATE' | 'TIMESTAMP' | 'BOOLEAN';
