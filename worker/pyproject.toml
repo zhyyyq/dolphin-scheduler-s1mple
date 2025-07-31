@@ -1,0 +1,23 @@
+[project]
+name = "worker"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ibm-db>=3.2.6",
+    "ibm-db-sa>=0.4.2",
+    "mysql-connector-python>=9.4.0",
+    "pandas[excel]>=2.3.1",
+    "paramiko>=3.5.1",
+    "pyhive[hive-pure-sasl]>=0.7.0",
+    "redis>=6.2.0",
+    "requests>=2.32.4",
+    "sqlalchemy>=2.0.42",
+    "tabulate>=0.9.0",
+]
+
+[[tool.uv.index]]
+name = "Tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
