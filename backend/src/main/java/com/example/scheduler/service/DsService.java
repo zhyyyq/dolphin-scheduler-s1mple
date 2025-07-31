@@ -111,8 +111,8 @@ public class DsService {
                     wf.put("projectName", project.get("name"));
                     long workflowCode = ((Number) wf.get("code")).longValue();
                     wf.put("uuid", "ds-" + projectCode + "-" + workflowCode);
-                    wf.put("code", String.valueOf(workflowCode));
-                    wf.put("projectCode", String.valueOf(projectCode));
+                    wf.put("code", workflowCode);
+                    wf.put("projectCode", projectCode);
                     allWorkflows.add(wf);
                 }
             } catch (Exception e) {
