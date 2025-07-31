@@ -24,7 +24,7 @@
             </div>
           </a-select-option>
         </a-select>
-        <a-button @click="store.commit('setIsRestoreModalOpen', true)">恢复工作流</a-button>
+        <a-button @click="store.commit('home/setIsRestoreModalOpen', true)">恢复工作流</a-button>
         <router-link :to="`/workflow/edit${selectedProject && selectedProject !== 'all' ? `?projectName=${projects.find(p => p.code === selectedProject)?.name}&projectCode=${selectedProject}` : ''}`">
           <a-button type="primary">新建工作流</a-button>
         </router-link>
@@ -68,13 +68,13 @@
     </div>
     <RestoreWorkflowModal
       :open="isRestoreModalOpen"
-      @cancel="store.commit('setIsRestoreModalOpen', false)"
+      @cancel="store.commit('home/setIsRestoreModalOpen', false)"
       @restored="onRestored"
     />
     <BackfillModal
       :open="isBackfillModalOpen"
       :workflow="selectedWorkflow"
-      @cancel="store.commit('setIsBackfillModalOpen', false)"
+      @cancel="store.commit('home/setIsBackfillModalOpen', false)"
       @success="onBackfillSuccess"
     />
     <CreateProjectModal
@@ -88,7 +88,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
-import { message } from 'ant-design-vue';
 import type { ColumnsType } from 'ant-design-vue/es/table';
 import { Workflow, Project } from '../../types';
 import RestoreWorkflowModal from '../../components/RestoreWorkflowModal.vue';
@@ -99,20 +98,20 @@ import { State } from '../../store';
 
 const store = useStore<State>();
 
-const workflows = computed(() => store.state.workflows);
-const projects = computed(() => store.state.projects);
-const loading = computed(() => store.state.loading);
-const error = computed(() => store.state.error);
-const selectedProject = computed(() => store.state.selectedProject);
-const isRestoreModalOpen = computed(() => store.state.isRestoreModalOpen);
-const isBackfillModalOpen = computed(() => store.state.isBackfillModalOpen);
-const selectedWorkflow = computed(() => store.state.selectedWorkflow);
+const workflows = computed(() => store.state.home.workflows);
+const projects = computed(() => store.state.home.projects);
+const loading = computed(() => store.state.home.loading);
+const error = computed(() => store.state.home.error);
+const selectedProject = computed(() => store.state.home.selectedProject);
+const isRestoreModalOpen = computed(() => store.state.home.isRestoreModalOpen);
+const isBackfillModalOpen = computed(() => store.state.home.isBackfillModalOpen);
+const selectedWorkflow = computed(() => store.state.home.selectedWorkflow);
 
 const isCreateProjectModalOpen = ref(false);
 
 onMounted(() => {
-  store.dispatch('fetchProjects');
-  store.dispatch('fetchWorkflows');
+  store.dispatch('home/fetchProjects');
+  store.dispatch('home/fetchWorkflows');
 });
 
 const columns: ColumnsType<Workflow> = [
@@ -127,7 +126,7 @@ const columns: ColumnsType<Workflow> = [
 const filteredWorkflows = computed(() => {
   const sp = selectedProject.value;
   if (sp && sp !== 'all') {
-    return workflows.value.filter(w =>
+    return workflows.value.filter((w: Workflow) =>
       w.projectCode === sp || w.releaseState === 'UNSUBMITTED' || w.releaseState === 'MODIFIED'
     );
   }
@@ -135,29 +134,27 @@ const filteredWorkflows = computed(() => {
 });
 
 const handleProjectChange = (value: any) => {
-  store.commit('setSelectedProject', value);
+  store.commit('home/setSelectedProject', value);
 };
 
 const onRestored = () => {
-  store.commit('setIsRestoreModalOpen', false);
-  store.dispatch('fetchWorkflows');
+  store.commit('home/setIsRestoreModalOpen', false);
+  store.dispatch('home/fetchWorkflows');
 };
 
 const onBackfillSuccess = () => {
-  store.commit('setIsBackfillModalOpen', false);
-  store.dispatch('fetchWorkflows');
+  store.commit('home/setIsBackfillModalOpen', false);
+  store.dispatch('home/fetchWorkflows');
 };
 
 const onCreateProjectSuccess = () => {
   isCreateProjectModalOpen.value = false;
-  store.dispatch('fetchProjects');
-  store.dispatch('fetchWorkflows');
+  store.dispatch('home/fetchProjects');
+  store.dispatch('home/fetchWorkflows');
 };
 
 const formatUpdateTime = (time: string | number) => {
   if (!time) return '-';
-  // If it's a string like "2024-07-31 10:53:00", new Date() can parse it directly.
-  // If it's a unix timestamp (number), it needs to be multiplied by 1000.
   const date = new Date(typeof time === 'number' ? time * 1000 : time);
   return isNaN(date.getTime()) ? '-' : date.toLocaleString();
 };

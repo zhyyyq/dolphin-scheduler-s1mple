@@ -26,7 +26,7 @@ const store = useStore<State>();
 
 const handleDelete = async () => {
   try {
-    await store.dispatch('deleteWorkflow', props.record);
+    await store.dispatch('home/deleteWorkflow', props.record);
     message.success('工作流删除成功。');
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -35,13 +35,13 @@ const handleDelete = async () => {
 };
 
 const handleExecute = () => {
-  store.commit('setSelectedWorkflow', props.record);
-  store.commit('setIsBackfillModalOpen', true);
+  store.commit('home/setSelectedWorkflow', props.record);
+  store.commit('home/setIsBackfillModalOpen', true);
 };
 
 const handleOnline = async () => {
   try {
-    await store.dispatch('onlineWorkflow', props.record);
+    await store.dispatch('home/onlineWorkflow', props.record);
     message.success('工作流上线/同步成功。');
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';

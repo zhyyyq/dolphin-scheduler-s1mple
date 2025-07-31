@@ -13,6 +13,7 @@
     "@antv/x6-plugin-keyboard": "^2.2.3",
     "@antv/x6-plugin-selection": "^2.2.2",
     "@antv/x6-plugin-stencil": "^2.1.5",
+    "@vitejs/plugin-vue-jsx": "^5.0.1",
     "ant-design-vue": "^4.0.0",
     "cron-parser": "^5.3.0",
     "dayjs": "^1.11.13",
