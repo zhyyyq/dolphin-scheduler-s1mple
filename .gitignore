@@ -9,3 +9,4 @@ backend/target
 logs
 dolphinscheduler
 doc
+*.tgz
