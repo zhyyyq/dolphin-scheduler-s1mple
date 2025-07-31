@@ -13,21 +13,21 @@
 </template>
 
 <script setup lang="ts">
+import { useStore } from 'vuex';
 import { message } from 'ant-design-vue';
 import { Workflow } from '../../../types';
-import api from '../../../api';
+import { State } from '../../../store';
 
 const props = defineProps<{
   record: Workflow;
 }>();
 
-const emit = defineEmits(['deleted', 'online', 'execute']);
+const store = useStore<State>();
 
 const handleDelete = async () => {
   try {
-    await api.delete(`/workflows/${props.record.uuid}`);
+    await store.dispatch('deleteWorkflow', props.record);
     message.success('工作流删除成功。');
-    emit('deleted');
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
     message.error(errorMessage);
@@ -35,14 +35,14 @@ const handleDelete = async () => {
 };
 
 const handleExecute = () => {
-  emit('execute', props.record);
+  store.commit('setSelectedWorkflow', props.record);
+  store.commit('setIsBackfillModalOpen', true);
 };
 
 const handleOnline = async () => {
   try {
-    await api.post(`/workflows/${props.record.uuid}/online`);
+    await store.dispatch('onlineWorkflow', props.record);
     message.success('工作流上线/同步成功。');
-    emit('online');
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
     message.error(`上线工作流时出错: ${errorMessage}`);

@@ -24,7 +24,7 @@
             </div>
           </a-select-option>
         </a-select>
-        <a-button @click="isRestoreModalOpen = true">恢复工作流</a-button>
+        <a-button @click="store.commit('setIsRestoreModalOpen', true)">恢复工作流</a-button>
         <router-link :to="`/workflow/edit${selectedProject && selectedProject !== 'all' ? `?projectName=${projects.find(p => p.code === selectedProject)?.name}&projectCode=${selectedProject}` : ''}`">
           <a-button type="primary">新建工作流</a-button>
         </router-link>
@@ -57,15 +57,10 @@
                 <a-tag v-else color="default">{{ record.releaseState }}</a-tag>
             </template>
             <template v-if="column.key === 'updateTime'">
-              {{ new Date(record.updateTime * 1000).toLocaleString() }}
+              {{ formatUpdateTime(record.updateTime) }}
             </template>
             <template v-if="column.key === 'actions'">
-              <ActionButtons
-                :record="record"
-                @deleted="fetchWorkflows"
-                @online="fetchWorkflows"
-                @execute="openBackfillModal"
-              />
+              <ActionButtons :record="record" />
             </template>
           </template>
         </a-table>
@@ -73,13 +68,13 @@
     </div>
     <RestoreWorkflowModal
       :open="isRestoreModalOpen"
-      @cancel="isRestoreModalOpen = false"
+      @cancel="store.commit('setIsRestoreModalOpen', false)"
       @restored="onRestored"
     />
     <BackfillModal
       :open="isBackfillModalOpen"
       :workflow="selectedWorkflow"
-      @cancel="isBackfillModalOpen = false"
+      @cancel="store.commit('setIsBackfillModalOpen', false)"
       @success="onBackfillSuccess"
     />
     <CreateProjectModal
@@ -92,53 +87,32 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useStore } from 'vuex';
 import { message } from 'ant-design-vue';
 import type { ColumnsType } from 'ant-design-vue/es/table';
 import { Workflow, Project } from '../../types';
-import api from '../../api';
 import RestoreWorkflowModal from '../../components/RestoreWorkflowModal.vue';
 import BackfillModal from '../../components/BackfillModal.vue';
 import CreateProjectModal from './components/CreateProjectModal.vue';
 import ActionButtons from './components/ActionButtons.vue';
+import { State } from '../../store';
 
-const route = useRoute();
-const workflows = ref<Workflow[]>([]);
-const projects = ref<Project[]>([]);
-const loading = ref(false);
-const error = ref<string | null>(null);
-const selectedProject = ref<number | 'all'>('all');
-const isRestoreModalOpen = ref(false);
-const isBackfillModalOpen = ref(false);
+const store = useStore<State>();
+
+const workflows = computed(() => store.state.workflows);
+const projects = computed(() => store.state.projects);
+const loading = computed(() => store.state.loading);
+const error = computed(() => store.state.error);
+const selectedProject = computed(() => store.state.selectedProject);
+const isRestoreModalOpen = computed(() => store.state.isRestoreModalOpen);
+const isBackfillModalOpen = computed(() => store.state.isBackfillModalOpen);
+const selectedWorkflow = computed(() => store.state.selectedWorkflow);
+
 const isCreateProjectModalOpen = ref(false);
-const selectedWorkflow = ref<Workflow | null>(null);
-
-const fetchProjects = async () => {
-  try {
-    const response = await api.get<Project[]>('/projects');
-    projects.value = response;
-  } catch (e) {
-    message.error('获取项目列表失败');
-  }
-};
-
-const fetchWorkflows = async () => {
-  loading.value = true;
-  error.value = null;
-  try {
-    const response = await api.get<Workflow[]>('/workflows');
-    workflows.value = response;
-  } catch (e) {
-    error.value = '获取工作流列表失败';
-    message.error('获取工作流列表失败');
-  } finally {
-    loading.value = false;
-  }
-};
 
 onMounted(() => {
-  fetchProjects();
-  fetchWorkflows();
+  store.dispatch('fetchProjects');
+  store.dispatch('fetchWorkflows');
 });
 
 const columns: ColumnsType<Workflow> = [
@@ -151,36 +125,40 @@ const columns: ColumnsType<Workflow> = [
 ];
 
 const filteredWorkflows = computed(() => {
-  if (selectedProject.value && selectedProject.value !== 'all') {
+  const sp = selectedProject.value;
+  if (sp && sp !== 'all') {
     return workflows.value.filter(w =>
-      w.projectCode === selectedProject.value || w.releaseState === 'UNSUBMITTED' || w.releaseState === 'MODIFIED'
+      w.projectCode === sp || w.releaseState === 'UNSUBMITTED' || w.releaseState === 'MODIFIED'
     );
   }
   return workflows.value;
 });
 
 const handleProjectChange = (value: any) => {
-  selectedProject.value = value;
+  store.commit('setSelectedProject', value);
 };
 
 const onRestored = () => {
-  isRestoreModalOpen.value = false;
-  fetchWorkflows();
+  store.commit('setIsRestoreModalOpen', false);
+  store.dispatch('fetchWorkflows');
 };
 
 const onBackfillSuccess = () => {
-  isBackfillModalOpen.value = false;
-  fetchWorkflows();
+  store.commit('setIsBackfillModalOpen', false);
+  store.dispatch('fetchWorkflows');
 };
 
 const onCreateProjectSuccess = () => {
   isCreateProjectModalOpen.value = false;
-  fetchProjects();
-  fetchWorkflows();
+  store.dispatch('fetchProjects');
+  store.dispatch('fetchWorkflows');
 };
 
-const openBackfillModal = (workflow: Workflow) => {
-  selectedWorkflow.value = workflow;
-  isBackfillModalOpen.value = true;
+const formatUpdateTime = (time: string | number) => {
+  if (!time) return '-';
+  // If it's a string like "2024-07-31 10:53:00", new Date() can parse it directly.
+  // If it's a unix timestamp (number), it needs to be multiplied by 1000.
+  const date = new Date(typeof time === 'number' ? time * 1000 : time);
+  return isNaN(date.getTime()) ? '-' : date.toLocaleString();
 };
 </script>
