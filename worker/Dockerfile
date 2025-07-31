@@ -1,9 +1,7 @@
-FROM apache/dolphinscheduler-worker:3.2.2
+# Stage 1: Build Python
+FROM apache/dolphinscheduler-worker:3.2.2 AS builder
 
-# install python 3.13
-
-COPY Python-3.13.5.tgz /
-
+# Install build dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
@@ -17,16 +15,23 @@ RUN apt-get update && \
     libsqlite3-dev \
     libbz2-dev \
     pkg-config && \
-    tar -xvf /Python-3.13.5.tgz -C / && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy and build Python
+COPY Python-3.13.5.tgz /
+RUN tar -xvf /Python-3.13.5.tgz -C / && \
     cd /Python-3.13.5 && \
     ./configure --enable-optimizations --with-ensurepip=install && \
     make -j"$(nproc)" && \
-    make install && \
-    cd / && \
-    rm -rf /Python-3.13.5.tgz /Python-3.13.5 && \
-    apt-get purge -y --auto-remove build-essential && \
-    rm -rf /var/lib/apt/lists/*
+    make install
 
+# Stage 2: Final image
+FROM apache/dolphinscheduler-worker:3.2.2
+
+# Copy Python from the builder stage
+COPY --from=builder /usr/local/ /usr/local/
+
+# Create symlink
 RUN ln -s /usr/local/bin/python3 /usr/bin/python
 
 # allow default tenant
