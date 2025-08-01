@@ -351,7 +351,11 @@ public class DsService {
                 schedulePayload.put("warningGroupId", payload.getOrDefault("warningGroupId", 0));
                 schedulePayload.put("workerGroup", payload.getOrDefault("workerGroup", "default"));
                 schedulePayload.put("tenantCode", payload.getOrDefault("tenantCode", "default"));
-                schedulePayload.put("environmentCode", payload.getOrDefault("environmentCode", -1));
+                if (payload.containsKey("environmentCode")) {
+                    schedulePayload.put("environmentCode", payload.get("environmentCode"));
+                } else {
+                    schedulePayload.put("environmentCode", getEnvCode());
+                }
 
                 Map<String, Object> createdSchedule = createSchedule(projectCode, schedulePayload);
                 if (createdSchedule != null && createdSchedule.containsKey("id")) {

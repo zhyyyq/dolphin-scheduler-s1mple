@@ -191,7 +191,6 @@ export const onlineWorkflow = createAsyncThunk(
         const taskCode = baseCode + index;
         taskNameToCodeMap.set(task.name, taskCode);
       });
-      debugger
       // 4. Build taskDefinitionJson from the COMPILED tasks
       const taskDefinitionJson = tasks.map((task: Task) => {
         const taskCode = taskNameToCodeMap.get(task.name);
