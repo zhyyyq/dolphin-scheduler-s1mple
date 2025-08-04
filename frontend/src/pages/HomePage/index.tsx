@@ -17,7 +17,6 @@ import {
   setIsRestoreModalOpen,
   setIsBackfillModalOpen,
 } from '../../store/slices/homeSlice';
-import api from '../../api';
 import RestoreWorkflowModal from '../../components/RestoreWorkflowModal';
 import BackfillModal from '../../components/BackfillModal';
 import CreateProjectModal from './components/CreateProjectModal';

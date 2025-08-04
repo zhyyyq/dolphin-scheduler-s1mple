@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { App as AntApp, Layout, Menu, ConfigProvider, Typography } from 'antd';
-import { DashboardOutlined, ApartmentOutlined, CodeOutlined } from '@ant-design/icons';
+import { DashboardOutlined, ApartmentOutlined, CodeOutlined, SettingOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 
 import WelcomePage from './pages/WelcomePage';
@@ -13,6 +13,7 @@ import WorkflowHistoryPage from './pages/WorkflowHistoryPage';
 import DiyFunctionPage from './pages/DiyFunctionPage';
 import PythonEditorPage from './pages/PythonEditorPage';
 import WorkflowInstanceDetailPage from './pages/WorkflowInstanceDetailPage';
+import MaintainPage from './pages/maintain';
 import './App.css';
 
 const { Header, Content, Sider } = Layout;
@@ -42,6 +43,11 @@ const App: React.FC = () => {
       icon: <CodeOutlined />,
       label: <Link to="/functions">自定义组件</Link>,
     },
+    {
+      key: '/maintain',
+      icon: <SettingOutlined />,
+      label: <Link to="/maintain">维护</Link>,
+    }
   ];
 
   const isFullPage = location.pathname === '/' || location.pathname === '/workflows' || location.pathname.startsWith('/workflow/edit');
@@ -72,6 +78,8 @@ const App: React.FC = () => {
             <Route path="/instances/:projectCode/:instanceId" element={<WorkflowInstanceDetailPage />} />
             <Route path="/functions" element={<DiyFunctionPage />} />
             <Route path="/functions/edit/:functionId" element={<PythonEditorPage />} />
+            <Route path="/maintain" element={<MaintainPage />} />
+            <Route path="*" element={<div>404 Not Found</div>} />
           </Routes>
         </Content>
       </Layout>
