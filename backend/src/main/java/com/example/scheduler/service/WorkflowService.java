@@ -2,7 +2,7 @@ package com.example.scheduler.service;
 
 import com.example.scheduler.dto.WorkflowDto;
 import com.example.scheduler.model.Workflow;
-import com.example.scheduler.repository.WorkflowRepository;
+import com.example.scheduler.mapper.WorkflowMapper;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class WorkflowService {
 
   @Autowired
-  private WorkflowRepository workflowRepository;
+  private WorkflowMapper workflowMapper;
 
   @Autowired
   private DsService dsService;
@@ -40,11 +40,11 @@ public class WorkflowService {
     boolean isCreate = workflowUuid == null;
 
     if (isCreate) {
-      if (workflowRepository.findByName(workflowName).isPresent()) {
+      if (workflowMapper.findByName(workflowName).isPresent()) {
         throw new RuntimeException("A workflow with the name '" + workflowName + "' already exists.");
       }
     } else {
-      if (workflowRepository.findByNameAndUuidNot(workflowName, workflowUuid).isPresent()) {
+      if (workflowMapper.findByNameAndUuidNot(workflowName, workflowUuid).isPresent()) {
         throw new RuntimeException("A workflow with the name '" + workflowName + "' already exists.");
       }
     }
@@ -59,16 +59,16 @@ public class WorkflowService {
       newWorkflow.setLocations(workflowDto.getLocations());
       newWorkflow.setProjectCode(workflowDto.getProjectCode());
       newWorkflow.setProjectName(workflowDto.getProjectName());
-      workflowRepository.save(newWorkflow);
+      workflowMapper.save(newWorkflow);
     } else {
       commitMessage = "Update workflow " + workflowName;
-      Workflow dbWorkflow = workflowRepository.findById(workflowUuid).orElse(new Workflow());
+      Workflow dbWorkflow = workflowMapper.findById(workflowUuid).orElse(new Workflow());
       dbWorkflow.setUuid(workflowUuid);
       dbWorkflow.setName(workflowName);
       dbWorkflow.setLocations(workflowDto.getLocations());
       dbWorkflow.setProjectCode(workflowDto.getProjectCode());
       dbWorkflow.setProjectName(workflowDto.getProjectName());
-      workflowRepository.save(dbWorkflow);
+      workflowMapper.update(dbWorkflow);
     }
 
     String filename = workflowUuid + ".yaml";
@@ -101,7 +101,7 @@ public class WorkflowService {
   }
 
   public List<Map<String, Object>> getLocalWorkflows() {
-    return workflowRepository.findAll().stream()
+    return workflowMapper.findAll().stream()
         .map(workflow -> {
           Map<String, Object> map = new java.util.HashMap<>();
           map.put("name", workflow.getName());
@@ -148,7 +148,7 @@ public class WorkflowService {
   }
 
   public Map<String, Object> getWorkflowDetails(String workflowUuid) throws IOException {
-    Workflow workflow = workflowRepository.findById(workflowUuid)
+    Workflow workflow = workflowMapper.findById(workflowUuid)
         .orElseThrow(() -> new RuntimeException("Workflow not found in database."));
     String filename = workflowUuid + ".yaml";
     Path filePath = Paths.get(workflowRepoDir, filename);
@@ -230,7 +230,7 @@ public class WorkflowService {
 
   public void onlineWorkflow(String workflowUuid) throws Exception {
     String filename = workflowUuid + ".yaml";
-    Workflow workflow = workflowRepository.findById(workflowUuid)
+    Workflow workflow = workflowMapper.findById(workflowUuid)
         .orElseThrow(() -> new RuntimeException("Workflow with UUID " + workflowUuid + " not found in database."));
 
     Path filePath = Paths.get(workflowRepoDir, filename);
@@ -260,7 +260,7 @@ public class WorkflowService {
     gitService.gitCommit(filename, "Online workflow " + workflow.getName());
     String commitId = gitService.getLatestCommit(filename);
     workflow.setOnlineVersion(commitId);
-    workflowRepository.save(workflow);
+    workflowMapper.update(workflow);
   }
 
   public Map<String, Object> createOrUpdateDsWorkflow(Map<String, Object> payload) throws Exception {
@@ -276,7 +276,7 @@ public class WorkflowService {
       return dsResult;
     }
 
-    Workflow workflow = workflowRepository.findById(workflowUuid)
+    Workflow workflow = workflowMapper.findById(workflowUuid)
         .orElseThrow(() -> new RuntimeException(
             "Workflow with UUID " + workflowUuid + " not found in local database after DS update."));
 
@@ -284,7 +284,7 @@ public class WorkflowService {
     String latestCommit = gitService.getLatestCommit(filename);
 
     workflow.setOnlineVersion(latestCommit);
-    workflowRepository.save(workflow);
+    workflowMapper.update(workflow);
 
     return dsResult;
   }
@@ -301,14 +301,14 @@ public class WorkflowService {
       }
     } else {
       // This is a local or synced workflow
-      if (workflowRepository.existsById(workflowUuid)) {
-        Workflow workflow = workflowRepository.findById(workflowUuid).get();
+      if (workflowMapper.findById(workflowUuid).isPresent()) {
+        Workflow workflow = workflowMapper.findById(workflowUuid).get();
         String workflowName = workflow.getName();
         String filename = workflow.getUuid() + ".yaml";
         Path filePath = Paths.get(workflowRepoDir, filename);
 
         // 1. Delete from local DB
-        workflowRepository.delete(workflow);
+        workflowMapper.deleteById(workflow.getUuid());
 
         // 2. Delete from git
         if (Files.exists(filePath)) {
@@ -339,7 +339,7 @@ public class WorkflowService {
   }
 
   public String executeWorkflow(String workflowUuid, Map<String, Object> payload) throws Exception {
-    Workflow workflow = workflowRepository.findById(workflowUuid)
+    Workflow workflow = workflowMapper.findById(workflowUuid)
         .orElseThrow(() -> new RuntimeException("Workflow not found in database."));
 
     List<Map<String, Object>> dsWorkflows = dsService.getWorkflows();
@@ -403,7 +403,7 @@ public class WorkflowService {
     } else {
       workflow.setName(workflowUuid);
     }
-    workflowRepository.save(workflow);
+    workflowMapper.save(workflow);
   }
 
   public void revertToCommit(String workflowUuid, String commitHash) throws GitAPIException, IOException {

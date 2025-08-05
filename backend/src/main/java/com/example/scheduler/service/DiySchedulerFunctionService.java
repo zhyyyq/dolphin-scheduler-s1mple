@@ -1,7 +1,7 @@
 package com.example.scheduler.service;
 
 import com.example.scheduler.model.DiySchedulerFunction;
-import com.example.scheduler.repository.DiySchedulerFunctionRepository;
+import com.example.scheduler.mapper.DiySchedulerFunctionMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,25 +16,26 @@ import java.util.Optional;
 public class DiySchedulerFunctionService {
 
     @Autowired
-    private DiySchedulerFunctionRepository repository;
+    private DiySchedulerFunctionMapper mapper;
 
     public List<DiySchedulerFunction> getAllFunctions() {
-        return repository.findAllByDeletedFalse();
+        return mapper.findAllByDeletedFalse();
     }
 
     public Optional<DiySchedulerFunction> getFunctionById(Long id) {
-        return repository.findByIdAndDeletedFalse(id);
+        return mapper.findByIdAndDeletedFalse(id);
     }
 
     public DiySchedulerFunction createFunction(DiySchedulerFunction function) {
         // Check for duplicates before creating
-        if (repository.findByFunctionNameAndDeletedFalse(function.getFunctionName()).isPresent()) {
+        if (mapper.findByFunctionNameAndDeletedFalse(function.getFunctionName()).isPresent()) {
             throw new RuntimeException("Function with name '" + function.getFunctionName() + "' already exists.");
         }
         if (function.getFunctionContent() != null) {
             function.setContentHash(String.valueOf(function.getFunctionContent().hashCode()));
         }
-        return repository.save(function);
+        mapper.save(function);
+        return function;
     }
 
     public DiySchedulerFunction createFunctionFromUpload(MultipartFile file) throws IOException {
@@ -42,7 +43,7 @@ public class DiySchedulerFunctionService {
         String baseName = FilenameUtils.getBaseName(originalFilename);
         String content = new String(file.getBytes(), StandardCharsets.UTF_8);
 
-        Optional<DiySchedulerFunction> existingFunctionOpt = repository.findByFunctionName(baseName);
+        Optional<DiySchedulerFunction> existingFunctionOpt = mapper.findByFunctionName(baseName);
 
         if (existingFunctionOpt.isPresent()) {
             // If a function with the same name exists (regardless of deleted status), update it.
@@ -50,7 +51,8 @@ public class DiySchedulerFunctionService {
             existingFunction.setFunctionContent(content);
             existingFunction.setContentHash(String.valueOf(content.hashCode()));
             existingFunction.setDeleted(false); // Undelete it if it was deleted
-            return repository.save(existingFunction);
+            mapper.update(existingFunction);
+            return existingFunction;
         } else {
             // If no function with this name has ever existed, create a new one.
             DiySchedulerFunction newFunction = new DiySchedulerFunction();
@@ -58,12 +60,13 @@ public class DiySchedulerFunctionService {
             newFunction.setFunctionContent(content);
             newFunction.setContentHash(String.valueOf(content.hashCode()));
             newFunction.setDeleted(false);
-            return repository.save(newFunction);
+            mapper.save(newFunction);
+            return newFunction;
         }
     }
 
     public DiySchedulerFunction updateFunction(Long id, DiySchedulerFunction functionDetails) {
-        DiySchedulerFunction function = repository.findById(id)
+        DiySchedulerFunction function = mapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("Function not found with id: " + id));
 
         function.setFunctionName(functionDetails.getFunctionName());
@@ -72,13 +75,14 @@ public class DiySchedulerFunctionService {
             function.setContentHash(String.valueOf(functionDetails.getFunctionContent().hashCode()));
         }
         
-        return repository.save(function);
+        mapper.update(function);
+        return function;
     }
 
     public void deleteFunction(Long id) {
-        DiySchedulerFunction function = repository.findById(id)
+        DiySchedulerFunction function = mapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("Function not found with id: " + id));
         function.setDeleted(true);
-        repository.save(function);
+        mapper.update(function);
     }
 }

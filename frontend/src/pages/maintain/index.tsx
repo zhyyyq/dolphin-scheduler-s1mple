@@ -3,9 +3,20 @@ import { Select, Segmented, DatePicker } from 'antd'
 import './index.less';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '@/store';
-import { fetchProjects, fetchStats, setSelectedProject, setSelectedTimeRange } from '@/store/slices/maintainSlice';
+import { fetchProjects, fetchStats, setSelectedProject, setSelectedTimeRange, setSelectedTimeType } from '@/store/slices/maintainSlice';
 import dayjs from 'dayjs';
 const { RangePicker } = DatePicker;
+
+const SegmentedConfig = [
+  {
+    label: '调度时间',
+    value: "0",
+  },
+  {
+    label: '执行时间',
+    value: "1",
+  }
+]
 
 const p_refixCls = 'maintain';
 const MaintainPage: React.FC = () => {
@@ -13,6 +24,7 @@ const MaintainPage: React.FC = () => {
   const {
     projects,
     loading,
+    selectedTimeType,
     error,
     taskStats,
     selectedProject,
@@ -44,6 +56,10 @@ const MaintainPage: React.FC = () => {
     },
     [dispatch]
   );
+  const handleTimeTypeChange = useCallback((value: string) => {
+    dispatch(setSelectedTimeType(value));
+  }
+    , [dispatch]);
   const selectedTimeRangeValue = useMemo(() => {
     return [dayjs(selectedTimeRange[0]), dayjs(selectedTimeRange[1])] as [dayjs.Dayjs, dayjs.Dayjs];
   }, [selectedTimeRange]);
@@ -52,8 +68,9 @@ const MaintainPage: React.FC = () => {
   }, [dispatch]);
   useEffect(() => {
     dispatch(fetchStats());
-  }, [selectedProject, selectedTimeRange]);
-  
+  }, [selectedProject, selectedTimeRange, selectedTimeType, dispatch
+  ]);
+
   return (
     <div>
       <div className={`${p_refixCls}-overview-panel`}>
@@ -64,8 +81,14 @@ const MaintainPage: React.FC = () => {
           </div>
         </div>
         <div className={`${p_refixCls}-overview-panel-filter-by-time`}>
-          <div>执行时间</div>
-          <RangePicker value={selectedTimeRangeValue} onChange={handleTimeRangeChange}/>
+          <div>
+            <Segmented<string>
+              options={SegmentedConfig}
+              value={selectedTimeType}
+              onChange={handleTimeTypeChange}
+            />
+          </div>
+          <RangePicker value={selectedTimeRangeValue} onChange={handleTimeRangeChange} />
         </div>
       </div>
       <div className={`${p_refixCls}-stats-panel`}>

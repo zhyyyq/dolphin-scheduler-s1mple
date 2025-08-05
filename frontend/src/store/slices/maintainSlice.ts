@@ -4,6 +4,7 @@ import api from '../../api';
 import dayjs from 'dayjs';
 import { RootState } from '..';
 import { set } from 'yaml/dist/schema/yaml-1.1/set';
+import { time } from 'console';
 
 interface Project {
   code: number;
@@ -17,6 +18,7 @@ interface MaintainState {
   projects: Project[];
   isRestoreModalOpen: boolean;
   isBackfillModalOpen: boolean;
+  selectedTimeType: string;
   selectedWorkflow: Workflow | null;
   selectedProject: number[]
   selectedTimeRange: [string, string];
@@ -30,6 +32,7 @@ const initialState: MaintainState = {
   projects: [],
   isRestoreModalOpen: false,
   isBackfillModalOpen: false,
+  selectedTimeType: '0', // '0' for scheduling time, '1' for execution time
   selectedWorkflow: null,
   selectedProject: [],
   selectedTimeRange: [dayjs().startOf('day').toISOString(), dayjs().endOf('day').toISOString()],
@@ -69,6 +72,9 @@ export const maintainSlice = createSlice({
     },
     setTaskStats: (state, action: PayloadAction<{ statusDesc: string; count: number; statusCode: string }[]>) => {
       state.taskStats = action.payload;
+    },
+    setSelectedTimeType: (state, action: PayloadAction<string>) => {
+      state.selectedTimeType = action.payload;
     }
   },
 });
@@ -83,7 +89,8 @@ export const {
   setIsBackfillModalOpen,
   setSelectedWorkflow,
   setSelectedTimeRange,
-  setTaskStats
+  setTaskStats,
+  setSelectedTimeType
 } = maintainSlice.actions;
 
 export const fetchProjects = createAsyncThunk(
@@ -108,6 +115,7 @@ export const fetchStats = createAsyncThunk(
     try {
       const stats: any = await api.get('/api/maintain/stats', {
         projectCodes: state.maintain.selectedProject,
+        timeType: state.maintain.selectedTimeType,
         timeRange: state.maintain.selectedTimeRange.map(t => dayjs(t).format('YYYY-MM-DD HH:mm:ss')),
         taskType: undefined
       });

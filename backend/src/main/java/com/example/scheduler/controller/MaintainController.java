@@ -18,11 +18,12 @@ public class MaintainController {
   private MaintainService maintainService;
 
   @GetMapping("/stats")
-  public ResponseEntity<?> stats(@RequestParam(value = "projectCodes", required = false) Long[] projectCodes,
+  public ResponseEntity<?> stats(@RequestParam(value = "projectCodes", required = false) long[] projectCodes,
+      @RequestParam(value = "timeType", required = false) String timeType,
       @RequestParam(value = "timeRange", required = false) String[] timeRange,
       @RequestParam(value = "taskStatus", required = false) String taskStatus) {
     try {
-      JSONObject res = maintainService.getMaintenanceStatus(projectCodes, timeRange, taskStatus);
+      JSONObject res = maintainService.getMaintenanceStatus(projectCodes,timeType, timeRange, taskStatus);
       return ResponseEntity.ok(res);
     } catch (Exception e) {
       e.printStackTrace();
