@@ -10,9 +10,6 @@
         WHERE coalesce(schedule_time, start_time) >= TO_TIMESTAMP(#{startTime}, 'YYYY-MM-DD HH24:MI:SS')
         AND coalesce(schedule_time, start_time) <= TO_TIMESTAMP(#{endTime}, 'YYYY-MM-DD HH24:MI:SS')
         ]]>
-        <if test="status != null">
-            AND state = #{status}
-        </if>
         <if test="projectCodes != null and projectCodes.length > 0">
             AND project_code IN
             <foreach item="item" index="index" collection="projectCodes" open="(" separator="," close=")">
@@ -29,9 +26,6 @@
         WHERE start_time >= TO_TIMESTAMP(#{startTime}, 'YYYY-MM-DD HH24:MI:SS')
         AND start_time <= TO_TIMESTAMP(#{endTime}, 'YYYY-MM-DD HH24:MI:SS')
         ]]>
-        <if test="status != null">
-            AND state = #{status}
-        </if>
         <if test="projectCodes != null and projectCodes.length > 0">
             AND project_code IN
             <foreach item="item" index="index" collection="projectCodes" open="(" separator="," close=")">

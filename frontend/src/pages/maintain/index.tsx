@@ -44,7 +44,8 @@ const MaintainPage: React.FC = () => {
     taskStats,
     selectedProject,
     selectedTimeRange,
-    workflowStats
+    workflowStats,
+    selectedTaskType
   } = useSelector((state: RootState) => state.maintain);
   const project_options = useMemo(() => {
     return projects.map(projects => ({
@@ -106,7 +107,7 @@ const MaintainPage: React.FC = () => {
   }, [dispatch]);
   useEffect(() => {
     dispatch(fetchStats());
-  }, [selectedProject, selectedTimeRange, selectedTimeType, dispatch
+  }, [selectedProject, selectedTimeRange, selectedTimeType, selectedTaskType, dispatch
   ]);
 
   return (

@@ -29,7 +29,7 @@ public class MaintainService {
   // such as cleaning up old data, optimizing database, etc.
   // Currently, it is empty and can be extended as needed.
 
-  public JSONObject getMaintenanceStatus(long[] projectCodes, String timeType, String[] timeRange, String taskStaus)
+  public JSONObject getMaintenanceStatus(long[] projectCodes, String timeType, String[] timeRange)
       throws Exception {
     // This method can return the status of maintenance tasks
     // precheck projectsCodes
@@ -55,7 +55,6 @@ public class MaintainService {
         .orElseThrow(() -> new Exception("Invalid time type: " + timeType));
     logger.info(JSONObject.toJSON(projectCodes).toString());
     logger.info("timeRange: " + timeRange);
-    logger.info("taskStatus: " + taskStaus);
     logger.info("timeType: " + timeType);
     JSONObject res = new JSONObject();
     res.put("workflowStats", new JSONArray());
@@ -70,7 +69,7 @@ public class MaintainService {
               status.getCode()));
     }
     // loop query dsService.getWorkflowInstances
-    List<Map<String, Object>> instancesStats = this.getWorkflowInstancesStats(projectCodes, taskStaus, timeType, timeRange);
+    List<Map<String, Object>> instancesStats = this.getWorkflowInstancesStats(projectCodes, timeType, timeRange);
     logger.info("Instances stats: " + instancesStats);
     // update the response
     for (Map<String, Object> instance : instancesStats) {
@@ -84,7 +83,7 @@ public class MaintainService {
             .ifPresent(stat -> ((JSONObject) stat).put("count", ((JSONObject) stat).getInteger("count") + count));
       }
     }
-    List<Map<String, Object>> taskInstancesStats = this.getTaskInstancesStats(projectCodes, taskStaus, timeType,
+    List<Map<String, Object>> taskInstancesStats = this.getTaskInstancesStats(projectCodes, timeType,
         timeRange);
     logger.info("Task instances stats: " + taskInstancesStats);
     // update the response
@@ -102,49 +101,47 @@ public class MaintainService {
     return res;
   }
 
-  private List<Map<String, Object>> getWorkflowInstancesStats(long[] projectCodes, String taskStatus, String timeType,
+  private List<Map<String, Object>> getWorkflowInstancesStats(long[] projectCodes, String timeType,
       String[] timeRange) {
     // This method can be used to get the statistics of workflow instances
     // based on the project code, task status, and time range.
     // Currently, it is not implemented and can be extended as needed.
-    logger.info("Getting workflow instances stats for project code: " + projectCodes + ", task status: " + taskStatus
-        + ", time type: " + timeType + ", time range: " + String.join(", ", timeRange));
+    logger.info("Getting workflow instances stats for project code: " + projectCodes + ", task status: " + ", time type: " + timeType + ", time range: " + String.join(", ", timeRange));
     if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.SCHEDULE_TIME.getCode()) {
       List<Map<String, Object>> res = this.workflowInstanceMapper
-          .queryProcessInstanceByScheduleTime(timeRange[0], timeRange[1], taskStatus, projectCodes);
+          .queryProcessInstanceByScheduleTime(timeRange[0], timeRange[1], projectCodes);
       logger.info("Workflow instances stats: " + res);
       return res;
     } else if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.START_TIME.getCode()) {
       List<Map<String, Object>> res = this.workflowInstanceMapper
-          .queryProcessInstanceByStartTime(timeRange[0], timeRange[1], taskStatus, projectCodes);
+          .queryProcessInstanceByStartTime(timeRange[0], timeRange[1], projectCodes);
       logger.info("Workflow instances stats: " + res);
       return res;
     } else {
       logger.error("Invalid time type code: " + timeType);
-      throw new IllegalArgumentException("Invalid time type code: " + taskStatus);
+      throw new IllegalArgumentException("Invalid time type code: " + timeType);
     }
   }
 
-  private List<Map<String, Object>> getTaskInstancesStats(long[] projectCodes, String taskStatus, String timeType,
+  private List<Map<String, Object>> getTaskInstancesStats(long[] projectCodes, String timeType,
       String[] timeRange) {
     // This method can be used to get the statistics of workflow instances
     // based on the project code, task status, and time range.
     // Currently, it is not implemented and can be extended as needed.
-    logger.info("Getting workflow instances stats for project code: " + projectCodes + ", task status: " + taskStatus
-        + ", time type: " + timeType + ", time range: " + String.join(", ", timeRange));
+    logger.info("Getting workflow instances stats for project code: " + projectCodes + ", task status: " + ", time type: " + timeType + ", time range: " + String.join(", ", timeRange));
     if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.SCHEDULE_TIME.getCode()) {
       List<Map<String, Object>> res = this.taskInstanceMapper
-          .queryTaskInstanceByScheduleTime(timeRange[0], timeRange[1], taskStatus, projectCodes);
+          .queryTaskInstanceByScheduleTime(timeRange[0], timeRange[1], projectCodes);
       logger.info("Workflow instances stats: " + res);
       return res;
     } else if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.START_TIME.getCode()) {
       List<Map<String, Object>> res = this.taskInstanceMapper
-          .queryTaskInstanceByStartTime(timeRange[0], timeRange[1], taskStatus, projectCodes);
+          .queryTaskInstanceByStartTime(timeRange[0], timeRange[1], projectCodes);
       logger.info("Workflow instances stats: " + res);
       return res;
     } else {
       logger.error("Invalid time type code: " + timeType);
-      throw new IllegalArgumentException("Invalid time type code: " + taskStatus);
+      throw new IllegalArgumentException("Invalid time type code: " + timeType);
     }
   }
 }

@@ -133,7 +133,7 @@ export const fetchStats = createAsyncThunk(
         projectCodes: state.maintain.selectedProject,
         timeType: state.maintain.selectedTimeType,
         timeRange: state.maintain.selectedTimeRange.map(t => dayjs(t).format('YYYY-MM-DD HH:mm:ss')),
-        taskType: undefined
+        taskType: state.maintain.selectedTaskType,
       });
       console.log('Fetched stats:', stats);
       dispatch(setTaskStats(stats.taskStats));

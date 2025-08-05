@@ -13,12 +13,10 @@ public interface WorkflowInstanceMapper {
   List<Map<String, Object>> queryProcessInstanceByScheduleTime(
       @Param("startTime") String startTime,
       @Param("endTime") String endTime,
-      @Nullable @Param("status") String status,
       @Nullable @Param("projectCodes") long[] projectCodes);
 
   List<Map<String, Object>> queryProcessInstanceByStartTime(
       @Param("startTime") String startTime,
       @Param("endTime") String endTime,
-      @Nullable @Param("status") String status,
       @Nullable @Param("projectCodes") long[] projectCodes);
 }

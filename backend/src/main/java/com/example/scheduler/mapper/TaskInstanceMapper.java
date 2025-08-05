@@ -13,12 +13,10 @@ public interface TaskInstanceMapper {
   List<Map<String, Object>> queryTaskInstanceByScheduleTime(
       @Param("startTime") String startTime,
       @Param("endTime") String endTime,
-      @Nullable @Param("status") String status,
       @Nullable @Param("projectCodes") long[] projectCodes);
 
   List<Map<String, Object>> queryTaskInstanceByStartTime(
       @Param("startTime") String startTime,
       @Param("endTime") String endTime,
-      @Nullable @Param("status") String status,
       @Nullable @Param("projectCodes") long[] projectCodes);
 }
