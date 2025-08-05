@@ -64,6 +64,18 @@ public class MaintainService {
     // loop query dsService.getWorkflowInstances
     List<Map<String, Object>> instancesStats = this.getWorkflowInstancesStats(projectCodes, taskStaus, timeType, timeRange);
     logger.info("Instances stats: " + instancesStats);
+    // update the response
+    for (Map<String, Object> instance : instancesStats) {
+      int statusCode = (int) instance.get("state");
+      int count = ((Long) instance.get("count")).intValue();
+      WorkflowRunningStatusEnum status = WorkflowRunningStatusEnum.fromCode(statusCode);
+      if (status != null) {
+        res.getJSONArray("taskStats").stream()
+            .filter(stat -> ((JSONObject) stat).getInteger("statusCode") == status.getCode())
+            .findFirst()
+            .ifPresent(stat -> ((JSONObject) stat).put("count", ((JSONObject) stat).getInteger("count") + count));
+      }
+    }
     res.put("status", "OK");
     res.put("message", "No maintenance tasks running.");
     return res;

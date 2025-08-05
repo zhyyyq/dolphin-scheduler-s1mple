@@ -43,10 +43,20 @@ public enum WorkflowRunningStatusEnum {
     }
     return false;
   }
+
   public String toString() {
     return "WorkflowRunningStatusEnum{" +
         "code=" + code +
         ", desc='" + desc + '\'' +
         '}';
   }
+  
+  public static WorkflowRunningStatusEnum fromCode(int code) {
+        for (WorkflowRunningStatusEnum status : WorkflowRunningStatusEnum.values()) {
+            if (status.getCode() == code) {
+                return status;
+            }
+        }
+        return null;
+    }
 }

@@ -18,6 +18,9 @@ const SegmentedConfig = [
   }
 ]
 
+
+
+
 const p_refixCls = 'maintain';
 const MaintainPage: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -93,7 +96,7 @@ const MaintainPage: React.FC = () => {
       </div>
       <div className={`${p_refixCls}-stats-panel`}>
         <div>
-          饼图
+          pie
         </div>
         <div>
           <div>任务统计信息/任务统计信息</div>
