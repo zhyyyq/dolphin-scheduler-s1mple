@@ -3,8 +3,8 @@ import { Select, Segmented, DatePicker } from 'antd'
 import './index.less';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '@/store';
-import { fetchProjects, fetchStats, setSelectedProject, setSelectedTimeRange, setSelectedTimeType } from '@/store/slices/maintainSlice';
-import { Dayjs } from 'dayjs';
+import { fetchProjects, fetchStats, setSelectedProject, setSelectedTimeRange } from '@/store/slices/maintainSlice';
+import dayjs from 'dayjs';
 const { RangePicker } = DatePicker;
 
 const p_refixCls = 'maintain';
@@ -14,7 +14,7 @@ const MaintainPage: React.FC = () => {
     projects,
     loading,
     error,
-    selectedTimeType,
+    taskStats,
     selectedProject,
     selectedTimeRange
   } = useSelector((state: RootState) => state.maintain);
@@ -29,18 +29,13 @@ const MaintainPage: React.FC = () => {
     if (loading) {
       return <div>Loading...</div>;
     }
-    return null;
-
-
-  }, [loading]);
+    return taskStats ? JSON.stringify(taskStats) : null
+  }, [taskStats, loading]);
   const handleProjectChange = useCallback((value: number[]) => {
     dispatch(setSelectedProject(value));
   }, [dispatch])
-  const handleTimeTypeChange = useCallback((value: string) => {
-    dispatch(setSelectedTimeType(value));
-  }, [dispatch]);
   const handleTimeRangeChange = useCallback(
-    (dates: [Dayjs | null, Dayjs | null] | null, dateStrings: [string, string]) => {
+    (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null, dateStrings: [string, string]) => {
       if (dates && dates[0] && dates[1]) {
         dispatch(setSelectedTimeRange([dates[0], dates[1]]));
       } else {
@@ -49,31 +44,28 @@ const MaintainPage: React.FC = () => {
     },
     [dispatch]
   );
+  const selectedTimeRangeValue = useMemo(() => {
+    return [dayjs(selectedTimeRange[0]), dayjs(selectedTimeRange[1])] as [dayjs.Dayjs, dayjs.Dayjs];
+  }, [selectedTimeRange]);
   useEffect(() => {
     dispatch(fetchProjects());
   }, [dispatch]);
   useEffect(() => {
     dispatch(fetchStats());
-   }, [selectedProject, selectedTimeType, selectedTimeRange]);
+  }, [selectedProject, selectedTimeRange]);
+  
   return (
     <div>
       <div className={`${p_refixCls}-overview-panel`}>
         <div className={`${p_refixCls}-overview-panel-filter-by-project`}>
-          <div>所有任务流</div>
+          <div>项目</div>
           <div>
             <Select mode='multiple' options={project_options} value={selectedProject} onChange={handleProjectChange} />
           </div>
         </div>
         <div className={`${p_refixCls}-overview-panel-filter-by-time`}>
-          <Segmented
-            value={selectedTimeType}
-            options={[
-              { label: '调度时间', value: 'schedule' },
-              { label: '执行时间', value: 'execute' },
-            ]}
-            onChange={handleTimeTypeChange}
-            defaultValue='schedule' />
-          <RangePicker value={selectedTimeRange} onChange={handleTimeRangeChange}/>
+          <div>执行时间</div>
+          <RangePicker value={selectedTimeRangeValue} onChange={handleTimeRangeChange}/>
         </div>
       </div>
       <div className={`${p_refixCls}-stats-panel`}>
@@ -81,7 +73,7 @@ const MaintainPage: React.FC = () => {
           饼图
         </div>
         <div>
-          <div>任务统计信息/任务统计星系</div>
+          <div>任务统计信息/任务统计信息</div>
           {renderWorkflowInstanceStats}
         </div>
       </div>

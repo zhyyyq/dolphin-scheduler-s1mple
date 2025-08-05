@@ -1,7 +1,9 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { Workflow } from '../../types';
 import api from '../../api';
-import { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
+import { RootState } from '..';
+import { set } from 'yaml/dist/schema/yaml-1.1/set';
 
 interface Project {
   code: number;
@@ -17,9 +19,9 @@ interface MaintainState {
   isBackfillModalOpen: boolean;
   selectedWorkflow: Workflow | null;
   selectedProject: number[]
-  selectedTimeType: string; // 'schedule' or 'execute'
-  selectedTimeRange?: [Dayjs, Dayjs];
-}
+  selectedTimeRange: [string, string];
+  taskStats: { statusDesc: string; count: number; statusCode: string }[];
+} 
 
 const initialState: MaintainState = {
   workflows: [],
@@ -30,8 +32,8 @@ const initialState: MaintainState = {
   isBackfillModalOpen: false,
   selectedWorkflow: null,
   selectedProject: [],
-  selectedTimeType: 'schedule', // Default to 'schedule'
-  selectedTimeRange: undefined
+  selectedTimeRange: [dayjs().startOf('day').toISOString(), dayjs().endOf('day').toISOString()],
+  taskStats: []
 };
 
 export const maintainSlice = createSlice({
@@ -62,11 +64,11 @@ export const maintainSlice = createSlice({
     setSelectedWorkflow: (state, action: PayloadAction<Workflow | null>) => {
       state.selectedWorkflow = action.payload;
     },
-    setSelectedTimeType: (state, action: PayloadAction<string>) => {
-      state.selectedTimeType = action.payload;
+    setSelectedTimeRange: (state, action: PayloadAction<[dayjs.Dayjs, dayjs.Dayjs] | undefined>) => {
+      state.selectedTimeRange = action.payload?.map(t => t.toISOString()) as [string, string] || initialState.selectedTimeRange;
     },
-    setSelectedTimeRange: (state, action: PayloadAction<[Dayjs, Dayjs] | undefined>) => {
-      state.selectedTimeRange = action.payload;
+    setTaskStats: (state, action: PayloadAction<{ statusDesc: string; count: number; statusCode: string }[]>) => {
+      state.taskStats = action.payload;
     }
   },
 });
@@ -80,8 +82,8 @@ export const {
   setIsRestoreModalOpen,
   setIsBackfillModalOpen,
   setSelectedWorkflow,
-  setSelectedTimeType,
-  setSelectedTimeRange
+  setSelectedTimeRange,
+  setTaskStats
 } = maintainSlice.actions;
 
 export const fetchProjects = createAsyncThunk(
@@ -99,11 +101,20 @@ export const fetchProjects = createAsyncThunk(
 );
 export const fetchStats = createAsyncThunk(
   'home/fetchStats',
-  async (_, { dispatch }) => {
+  async (_, { getState, dispatch }) => {
+    const state = getState() as RootState;
     dispatch(setLoading(true));
     dispatch(setError(null));
     try {
-      const stats = await api.get('/api/workflow/stats');
+      const stats: any = await api.get('/api/maintain/stats', {
+        projectCodes: state.maintain.selectedProject,
+        timeRange: state.maintain.selectedTimeRange.map(t => dayjs(t).format('YYYY-MM-DD HH:mm:ss')),
+        taskType: undefined
+      });
+      console.log('Fetched stats:', stats);
+      dispatch(setTaskStats(stats.taskStats));
+      dispatch(setError(null));
+      dispatch(setLoading(false));
       // Assuming stats is an object with the required properties
       // Dispatch actions to update the state with stats if needed
     } catch (err) {
