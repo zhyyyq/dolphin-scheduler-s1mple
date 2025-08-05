@@ -3,11 +3,13 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.scheduler.mapper.WorkflowInstanceMapper">
 
-    <select id="queryProcessInstanceByScheduleTime" resultType="java.lang.Object[]">
+    <select id="queryProcessInstanceByScheduleTime" resultType="java.util.Map">
+        <![CDATA[
         SELECT COUNT(*) as count, state
         FROM t_ds_process_instance
         WHERE schedule_time >= TO_TIMESTAMP(#{startTime}, 'YYYY-MM-DD HH:mm:ss')
         AND schedule_time <= TO_TIMESTAMP(#{endTime}, 'YYYY-MM-DD HH:mm:ss')
+        ]]>
         <if test="status != null">
             AND state = #{status}
         </if>
@@ -20,11 +22,13 @@
         GROUP BY state
     </select>
 
-    <select id="queryProcessInstanceByStartTime" resultType="java.lang.Object[]">
+    <select id="queryProcessInstanceByStartTime" resultType="java.util.Map">
+        <![CDATA[
         SELECT COUNT(*) as count, state
         FROM t_ds_process_instance
         WHERE start_time >= TO_TIMESTAMP(#{startTime}, 'YYYY-MM-DD HH:mm:ss')
         AND start_time <= TO_TIMESTAMP(#{endTime}, 'YYYY-MM-DD HH:mm:ss')
+        ]]>
         <if test="status != null">
             AND state = #{status}
         </if>

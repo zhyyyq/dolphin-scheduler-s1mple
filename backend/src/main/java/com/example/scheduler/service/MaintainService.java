@@ -62,14 +62,14 @@ public class MaintainService {
               status.getCode()));
     }
     // loop query dsService.getWorkflowInstances
-    List<Object[]> instancesStats = this.getWorkflowInstancesStats(projectCodes, taskStaus, timeType, timeRange);
+    List<Map<String, Object>> instancesStats = this.getWorkflowInstancesStats(projectCodes, taskStaus, timeType, timeRange);
     logger.info("Instances stats: " + instancesStats);
     res.put("status", "OK");
     res.put("message", "No maintenance tasks running.");
     return res;
   }
 
-  private List<Object[]> getWorkflowInstancesStats(long[] projectCodes, String taskStatus, String timeType,
+  private List<Map<String, Object>> getWorkflowInstancesStats(long[] projectCodes, String taskStatus, String timeType,
       String[] timeRange) {
     // This method can be used to get the statistics of workflow instances
     // based on the project code, task status, and time range.
@@ -77,12 +77,12 @@ public class MaintainService {
     logger.info("Getting workflow instances stats for project code: " + projectCodes + ", task status: " + taskStatus
         + ", time type: " + timeType + ", time range: " + String.join(", ", timeRange));
     if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.SCHEDULE_TIME.getCode()) {
-      List<Object[]> res = this.workflowInstanceMapper
+      List<Map<String, Object>> res = this.workflowInstanceMapper
           .queryProcessInstanceByScheduleTime(timeRange[0], timeRange[1], taskStatus, projectCodes);
       logger.info("Workflow instances stats: " + res);
       return res;
     } else if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.START_TIME.getCode()) {
-      List<Object[]> res = this.workflowInstanceMapper
+      List<Map<String, Object>> res = this.workflowInstanceMapper
           .queryProcessInstanceByStartTime(timeRange[0], timeRange[1], taskStatus, projectCodes);
       logger.info("Workflow instances stats: " + res);
       return res;

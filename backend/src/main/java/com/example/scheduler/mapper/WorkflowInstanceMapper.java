@@ -5,17 +5,18 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.lang.Nullable;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface WorkflowInstanceMapper {
 
-  List<Object[]> queryProcessInstanceByScheduleTime(
+  List<Map<String, Object>> queryProcessInstanceByScheduleTime(
       @Param("startTime") String startTime,
       @Param("endTime") String endTime,
       @Nullable @Param("status") String status,
       @Nullable @Param("projectCodes") long[] projectCodes);
 
-  List<Object[]> queryProcessInstanceByStartTime(
+  List<Map<String, Object>> queryProcessInstanceByStartTime(
       @Param("startTime") String startTime,
       @Param("endTime") String endTime,
       @Nullable @Param("status") String status,
