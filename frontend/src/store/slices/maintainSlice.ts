@@ -3,8 +3,6 @@ import { Workflow } from '../../types';
 import api from '../../api';
 import dayjs from 'dayjs';
 import { RootState } from '..';
-import { set } from 'yaml/dist/schema/yaml-1.1/set';
-import { time } from 'console';
 
 interface Project {
   code: number;
@@ -23,6 +21,7 @@ interface MaintainState {
   selectedProject: number[]
   selectedTimeRange: [string, string];
   selectedDisplayType: string;
+  selectedTaskType?: number;
   taskStats: { statusDesc: string; count: number; statusCode: number }[];
   workflowStats: { statusDesc: string; count: number; statusCode: number }[];
 } 
@@ -41,6 +40,7 @@ const initialState: MaintainState = {
   taskStats: [],
   workflowStats: [],
   selectedDisplayType: '0', // '0' for workflow instance stats, '1' for task stats
+  selectedTaskType: undefined
 };
 
 export const maintainSlice = createSlice({
@@ -85,7 +85,10 @@ export const maintainSlice = createSlice({
     },
     setWorkflowStats: (state, action: PayloadAction<{ statusDesc: string; count: number; statusCode: number }[]>) => {
       state.workflowStats = action.payload;
-    } 
+    },
+    setSelectedTaskType: (state, action: PayloadAction<number | undefined>) => {
+      state.selectedTaskType = action.payload;
+    }
   },
 });
 
@@ -102,7 +105,8 @@ export const {
   setTaskStats,
   setSelectedTimeType,
   setSelectedDisplayType,
-  setWorkflowStats
+  setWorkflowStats,
+  setSelectedTaskType
 } = maintainSlice.actions;
 
 export const fetchProjects = createAsyncThunk(
