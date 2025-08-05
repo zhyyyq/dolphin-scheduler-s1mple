@@ -109,12 +109,12 @@ public class MaintainService {
     logger.info("Getting workflow instances stats for project code: " + projectCodes + ", task status: " + ", time type: " + timeType + ", time range: " + String.join(", ", timeRange));
     if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.SCHEDULE_TIME.getCode()) {
       List<Map<String, Object>> res = this.workflowInstanceMapper
-          .queryProcessInstanceByScheduleTime(timeRange[0], timeRange[1], projectCodes);
+          .queryProcessInstanceStatsByScheduleTime(timeRange[0], timeRange[1], projectCodes);
       logger.info("Workflow instances stats: " + res);
       return res;
     } else if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.START_TIME.getCode()) {
       List<Map<String, Object>> res = this.workflowInstanceMapper
-          .queryProcessInstanceByStartTime(timeRange[0], timeRange[1], projectCodes);
+          .queryProcessInstanceStatsByStartTime(timeRange[0], timeRange[1], projectCodes);
       logger.info("Workflow instances stats: " + res);
       return res;
     } else {
@@ -131,17 +131,23 @@ public class MaintainService {
     logger.info("Getting workflow instances stats for project code: " + projectCodes + ", task status: " + ", time type: " + timeType + ", time range: " + String.join(", ", timeRange));
     if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.SCHEDULE_TIME.getCode()) {
       List<Map<String, Object>> res = this.taskInstanceMapper
-          .queryTaskInstanceByScheduleTime(timeRange[0], timeRange[1], projectCodes);
+          .queryTaskInstanceStatsByScheduleTime(timeRange[0], timeRange[1], projectCodes);
       logger.info("Workflow instances stats: " + res);
       return res;
     } else if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.START_TIME.getCode()) {
       List<Map<String, Object>> res = this.taskInstanceMapper
-          .queryTaskInstanceByStartTime(timeRange[0], timeRange[1], projectCodes);
+          .queryTaskInstanceStatsByStartTime(timeRange[0], timeRange[1], projectCodes);
       logger.info("Workflow instances stats: " + res);
       return res;
     } else {
       logger.error("Invalid time type code: " + timeType);
       throw new IllegalArgumentException("Invalid time type code: " + timeType);
     }
+  }
+
+  public JSONObject getMaintenanceInstances(long[] projectCodes, String timeType, String[] timeRange, String status,
+      int page, int pageSize, String searchW) {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'getMaintenanceInstances'");
   }
 }

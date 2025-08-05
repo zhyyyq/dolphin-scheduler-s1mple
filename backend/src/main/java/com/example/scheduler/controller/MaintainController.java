@@ -21,9 +21,9 @@ public class MaintainController {
   public ResponseEntity<?> stats(@RequestParam(value = "projectCodes", required = false) long[] projectCodes,
       @RequestParam(value = "timeType", required = false) String timeType,
       @RequestParam(value = "timeRange", required = false) String[] timeRange
-      ) {
+  ) {
     try {
-      JSONObject res = maintainService.getMaintenanceStatus(projectCodes,timeType, timeRange);
+      JSONObject res = maintainService.getMaintenanceStatus(projectCodes, timeType, timeRange);
       return ResponseEntity.ok(res);
     } catch (Exception e) {
       e.printStackTrace();
@@ -31,4 +31,21 @@ public class MaintainController {
     }
   }
 
+  @GetMapping("/instances")
+  public ResponseEntity<?> instances(@RequestParam(value = "projectCodes", required = false) long[] projectCodes,
+      @RequestParam(value = "timeType", required = false) String timeType,
+      @RequestParam(value = "timeRange", required = false) String[] timeRange,
+      @RequestParam(value = "status", required = false) String status,
+      @RequestParam(value = "page", required = true) int page,
+      @RequestParam(value = "pageSize", required = true) int pageSize,
+      @RequestParam(value = "searchW", required = false) String searchW
+  ) {
+    try {
+      JSONObject res = maintainService.getMaintenanceInstances(projectCodes, timeType, timeRange, status, page, pageSize, searchW);
+      return ResponseEntity.ok(res);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity.status(500).body(e.getMessage());
+    }
+  }
 }

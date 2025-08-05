@@ -1,11 +1,18 @@
+.maintain-page{
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+.maintain-header {
+  padding: 16px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
 .maintain-overview-panel{
   display: flex;
   flex-direction: row;
   align-items: center;
-  background: #fff;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   font-size: 20px;
 }
 
@@ -18,7 +25,6 @@
   }
 }
 .maintain-overview-panel-filter-by-time{
-
   .ant-picker{
     width: 300px;
   }
@@ -27,17 +33,26 @@
 .maintain-stats-panel{
   display: flex;
   flex-direction: row;
+  font-size: 20px;
+  margin-top: 16px;
+  .maintain-stats-panel-content{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+}
+.maintain-workflows-workspace{
+  display: flex;
+  flex-direction: row;
   background: #fff;
   padding: 16px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   font-size: 20px;
   margin-top: 24px;
-  .maintain-stats-panel-content{
-    margin-top: 20px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 16px;
+  flex: 1;
+  .workflows-list{
+
   }
 }

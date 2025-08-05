@@ -10,12 +10,12 @@ import java.util.Map;
 @Mapper
 public interface WorkflowInstanceMapper {
 
-  List<Map<String, Object>> queryProcessInstanceByScheduleTime(
+  List<Map<String, Object>> queryProcessInstanceStatsByScheduleTime(
       @Param("startTime") String startTime,
       @Param("endTime") String endTime,
       @Nullable @Param("projectCodes") long[] projectCodes);
 
-  List<Map<String, Object>> queryProcessInstanceByStartTime(
+  List<Map<String, Object>> queryProcessInstanceStatsByStartTime(
       @Param("startTime") String startTime,
       @Param("endTime") String endTime,
       @Nullable @Param("projectCodes") long[] projectCodes);
