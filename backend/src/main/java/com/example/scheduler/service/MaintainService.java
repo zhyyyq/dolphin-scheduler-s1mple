@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.example.scheduler.enums.WorkflowRunningStatusEnum;
 import com.example.scheduler.enums.WorkflowQueryTimeTypeEnum;
 import com.example.scheduler.mapper.WorkflowInstanceMapper;
+import com.example.scheduler.mapper.TaskInstanceMapper;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 
@@ -21,6 +22,9 @@ public class MaintainService {
 
   @Autowired
   private WorkflowInstanceMapper workflowInstanceMapper;
+
+  @Autowired
+  private TaskInstanceMapper taskInstanceMapper;
   // This service can be used to implement maintenance tasks
   // such as cleaning up old data, optimizing database, etc.
   // Currently, it is empty and can be extended as needed.
@@ -54,9 +58,13 @@ public class MaintainService {
     logger.info("taskStatus: " + taskStaus);
     logger.info("timeType: " + timeType);
     JSONObject res = new JSONObject();
+    res.put("workflowStats", new JSONArray());
     res.put("taskStats", new JSONArray());
     // init response
     for (WorkflowRunningStatusEnum status : WorkflowRunningStatusEnum.values()) {
+      res.getJSONArray("workflowStats")
+          .add(new JSONObject().fluentPut("statusDesc", status.getDesc()).fluentPut("count", 0).fluentPut("statusCode",
+              status.getCode()));
       res.getJSONArray("taskStats")
           .add(new JSONObject().fluentPut("statusDesc", status.getDesc()).fluentPut("count", 0).fluentPut("statusCode",
               status.getCode()));
@@ -70,14 +78,27 @@ public class MaintainService {
       int count = ((Long) instance.get("count")).intValue();
       WorkflowRunningStatusEnum status = WorkflowRunningStatusEnum.fromCode(statusCode);
       if (status != null) {
+        res.getJSONArray("workflowStats").stream()
+            .filter(stat -> ((JSONObject) stat).getInteger("statusCode") == status.getCode())
+            .findFirst()
+            .ifPresent(stat -> ((JSONObject) stat).put("count", ((JSONObject) stat).getInteger("count") + count));
+      }
+    }
+    List<Map<String, Object>> taskInstancesStats = this.getTaskInstancesStats(projectCodes, taskStaus, timeType,
+        timeRange);
+    logger.info("Task instances stats: " + taskInstancesStats);
+    // update the response
+    for (Map<String, Object> instance : taskInstancesStats) {
+      int statusCode = (int) instance.get("state");
+      int count = ((Long) instance.get("count")).intValue();
+      WorkflowRunningStatusEnum status = WorkflowRunningStatusEnum.fromCode(statusCode);
+      if (status != null) {
         res.getJSONArray("taskStats").stream()
             .filter(stat -> ((JSONObject) stat).getInteger("statusCode") == status.getCode())
             .findFirst()
             .ifPresent(stat -> ((JSONObject) stat).put("count", ((JSONObject) stat).getInteger("count") + count));
       }
     }
-    res.put("status", "OK");
-    res.put("message", "No maintenance tasks running.");
     return res;
   }
 
@@ -96,6 +117,29 @@ public class MaintainService {
     } else if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.START_TIME.getCode()) {
       List<Map<String, Object>> res = this.workflowInstanceMapper
           .queryProcessInstanceByStartTime(timeRange[0], timeRange[1], taskStatus, projectCodes);
+      logger.info("Workflow instances stats: " + res);
+      return res;
+    } else {
+      logger.error("Invalid time type code: " + timeType);
+      throw new IllegalArgumentException("Invalid time type code: " + taskStatus);
+    }
+  }
+
+  private List<Map<String, Object>> getTaskInstancesStats(long[] projectCodes, String taskStatus, String timeType,
+      String[] timeRange) {
+    // This method can be used to get the statistics of workflow instances
+    // based on the project code, task status, and time range.
+    // Currently, it is not implemented and can be extended as needed.
+    logger.info("Getting workflow instances stats for project code: " + projectCodes + ", task status: " + taskStatus
+        + ", time type: " + timeType + ", time range: " + String.join(", ", timeRange));
+    if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.SCHEDULE_TIME.getCode()) {
+      List<Map<String, Object>> res = this.taskInstanceMapper
+          .queryTaskInstanceByScheduleTime(timeRange[0], timeRange[1], taskStatus, projectCodes);
+      logger.info("Workflow instances stats: " + res);
+      return res;
+    } else if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.START_TIME.getCode()) {
+      List<Map<String, Object>> res = this.taskInstanceMapper
+          .queryTaskInstanceByStartTime(timeRange[0], timeRange[1], taskStatus, projectCodes);
       logger.info("Workflow instances stats: " + res);
       return res;
     } else {
