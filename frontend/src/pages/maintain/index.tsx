@@ -43,7 +43,8 @@ const MaintainPage: React.FC = () => {
     selectedDisplayType,
     taskStats,
     selectedProject,
-    selectedTimeRange
+    selectedTimeRange,
+    workflowStats
   } = useSelector((state: RootState) => state.maintain);
   const project_options = useMemo(() => {
     return projects.map(projects => ({
@@ -52,11 +53,12 @@ const MaintainPage: React.FC = () => {
     }));
   }
     , [projects]);
-  const renderWorkflowInstanceStats = useMemo(() => {
+  const renderStats = useMemo(() => {
     if (loading) {
       return <div>Loading...</div>;
     }
-    const total = taskStats.reduce((acc, item) => acc + item.count, 0);
+    const stats = selectedDisplayType === '0' ? workflowStats : taskStats;
+    const total = stats.reduce((acc, item) => acc + item.count, 0);
     if (total === 0) {
       return <div>No workflow instance stats available</div>;
     }
@@ -64,7 +66,7 @@ const MaintainPage: React.FC = () => {
       <div className={`${p_refixCls}-stats-panel-content`}>
         <StatsItem statusCode={-1} value={total}></StatsItem>
         {
-          taskStats.map((item) => (
+          stats.map((item) => (
             <StatsItem
               key={item.statusCode}
               value={item.count}
@@ -74,7 +76,7 @@ const MaintainPage: React.FC = () => {
         }
       </div>
     )
-  }, [taskStats, loading]);
+  }, [taskStats, loading, selectedDisplayType]);
   const handleProjectChange = useCallback((value: number[]) => {
     dispatch(setSelectedProject(value));
   }, [dispatch])
@@ -139,7 +141,7 @@ const MaintainPage: React.FC = () => {
               onChange={handleDisplayTypeChange}
             />
           </div>
-          {renderWorkflowInstanceStats}
+          {renderStats}
         </div>
       </div>
       <h1>维护页面</h1>

@@ -7,8 +7,8 @@
         <![CDATA[
         SELECT COUNT(*) as count, mid.state
         FROM (select ds_t.*, schedule_time from t_ds_task_instance as ds_t  left JOIN t_ds_process_instance as ds_i ON ds_t.process_instance_id = ds_i.id) as mid
-        WHERE schedule_time >= TO_TIMESTAMP(#{startTime}, 'YYYY-MM-DD HH24:MI:SS')
-        AND schedule_time <= TO_TIMESTAMP(#{endTime}, 'YYYY-MM-DD HH24:MI:SS')
+        WHERE coalesce(schedule_time, start_time) >= TO_TIMESTAMP(#{startTime}, 'YYYY-MM-DD HH24:MI:SS')
+        AND coalesce(schedule_time, start_time) <= TO_TIMESTAMP(#{endTime}, 'YYYY-MM-DD HH24:MI:SS')
         ]]>
         <if test="status != null">
             AND state = #{status}

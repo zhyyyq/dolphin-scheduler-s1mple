@@ -24,6 +24,7 @@ interface MaintainState {
   selectedTimeRange: [string, string];
   selectedDisplayType: string;
   taskStats: { statusDesc: string; count: number; statusCode: number }[];
+  workflowStats: { statusDesc: string; count: number; statusCode: number }[];
 } 
 
 const initialState: MaintainState = {
@@ -38,6 +39,7 @@ const initialState: MaintainState = {
   selectedProject: [],
   selectedTimeRange: [dayjs().startOf('day').toISOString(), dayjs().endOf('day').toISOString()],
   taskStats: [],
+  workflowStats: [],
   selectedDisplayType: '0', // '0' for workflow instance stats, '1' for task stats
 };
 
@@ -80,7 +82,10 @@ export const maintainSlice = createSlice({
     },
     setSelectedDisplayType: (state, action: PayloadAction<string>) => {
       state.selectedDisplayType = action.payload;
-    }
+    },
+    setWorkflowStats: (state, action: PayloadAction<{ statusDesc: string; count: number; statusCode: number }[]>) => {
+      state.workflowStats = action.payload;
+    } 
   },
 });
 
@@ -96,7 +101,8 @@ export const {
   setSelectedTimeRange,
   setTaskStats,
   setSelectedTimeType,
-  setSelectedDisplayType
+  setSelectedDisplayType,
+  setWorkflowStats
 } = maintainSlice.actions;
 
 export const fetchProjects = createAsyncThunk(
@@ -127,6 +133,7 @@ export const fetchStats = createAsyncThunk(
       });
       console.log('Fetched stats:', stats);
       dispatch(setTaskStats(stats.taskStats));
+      dispatch(setWorkflowStats(stats.workflowStats));
       dispatch(setError(null));
       dispatch(setLoading(false));
       // Assuming stats is an object with the required properties

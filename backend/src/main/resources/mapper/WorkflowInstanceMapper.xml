@@ -7,8 +7,8 @@
         <![CDATA[
         SELECT COUNT(*) as count, state
         FROM t_ds_process_instance
-        WHERE schedule_time >= TO_TIMESTAMP(#{startTime}, 'YYYY-MM-DD HH24:MI:SS')
-        AND schedule_time <= TO_TIMESTAMP(#{endTime}, 'YYYY-MM-DD HH24:MI:SS')
+        WHERE coalesce(schedule_time, start_time) >= TO_TIMESTAMP(#{startTime}, 'YYYY-MM-DD HH24:MI:SS')
+        AND coalesce(schedule_time, start_time) <= TO_TIMESTAMP(#{endTime}, 'YYYY-MM-DD HH24:MI:SS')
         ]]>
         <if test="status != null">
             AND state = #{status}
