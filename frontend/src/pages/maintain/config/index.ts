@@ -1,13 +1,3 @@
-// SUBMITTED_SUCCESS(0, "submitted"),
-// RUNNING_EXECUTION(1, "running"),
-// READY_PAUSE(2, "ready pause"),
-// PAUSE(3, "pause"),
-// READY_STOP(4, "ready stop"),
-// STOP(5, "stop"),
-// FAILURE(6, "failure"),
-// SUCCESS(7, "success"),
-// SERIAL_WAIT(14, "serial wait"),
-// FAILOVER(18, "failover");
 
 export enum workflow_instance_status {
   SUBMITTED = 0,
@@ -24,6 +14,8 @@ export enum workflow_instance_status {
 
 export const get_chinese_workflow_instance_status = (status: number): string => {
   switch (status) {
+    case -1:
+      return '执行记录';
     case workflow_instance_status.SUBMITTED:
       return '已提交';
     case workflow_instance_status.RUNNING:
@@ -48,3 +40,4 @@ export const get_chinese_workflow_instance_status = (status: number): string => 
       return '未知状态';
   }
 }
+

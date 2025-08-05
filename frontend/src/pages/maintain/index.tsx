@@ -3,8 +3,10 @@ import { Select, Segmented, DatePicker } from 'antd'
 import './index.less';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '@/store';
-import { fetchProjects, fetchStats, setSelectedProject, setSelectedTimeRange, setSelectedTimeType } from '@/store/slices/maintainSlice';
+import { fetchProjects, fetchStats, setSelectedDisplayType, setSelectedProject, setSelectedTimeRange, setSelectedTimeType } from '@/store/slices/maintainSlice';
 import dayjs from 'dayjs';
+import Pie from './components/pieGraph'
+import StatsItem from './components/statsItem';
 const { RangePicker } = DatePicker;
 
 const SegmentedConfig = [
@@ -19,6 +21,16 @@ const SegmentedConfig = [
 ]
 
 
+const SegmentedConfig2 = [
+  {
+    label: '任务流统计信息',
+    value: "0",
+  },
+  {
+    label: '任务统计信息',
+    value: "1",
+  }
+]
 
 
 const p_refixCls = 'maintain';
@@ -28,7 +40,7 @@ const MaintainPage: React.FC = () => {
     projects,
     loading,
     selectedTimeType,
-    error,
+    selectedDisplayType,
     taskStats,
     selectedProject,
     selectedTimeRange
@@ -44,7 +56,24 @@ const MaintainPage: React.FC = () => {
     if (loading) {
       return <div>Loading...</div>;
     }
-    return taskStats ? JSON.stringify(taskStats) : null
+    const total = taskStats.reduce((acc, item) => acc + item.count, 0);
+    if (total === 0) {
+      return <div>No workflow instance stats available</div>;
+    }
+    return (
+      <div className={`${p_refixCls}-stats-panel-content`}>
+        <StatsItem statusCode={-1} value={total}></StatsItem>
+        {
+          taskStats.map((item) => (
+            <StatsItem
+              key={item.statusCode}
+              value={item.count}
+              statusCode={item.statusCode}
+            />
+          ))
+        }
+      </div>
+    )
   }, [taskStats, loading]);
   const handleProjectChange = useCallback((value: number[]) => {
     dispatch(setSelectedProject(value));
@@ -66,6 +95,10 @@ const MaintainPage: React.FC = () => {
   const selectedTimeRangeValue = useMemo(() => {
     return [dayjs(selectedTimeRange[0]), dayjs(selectedTimeRange[1])] as [dayjs.Dayjs, dayjs.Dayjs];
   }, [selectedTimeRange]);
+  const handleDisplayTypeChange = useCallback((value: string) => {
+    dispatch(setSelectedDisplayType(value));
+  }
+    , [dispatch]);
   useEffect(() => {
     dispatch(fetchProjects());
   }, [dispatch]);
@@ -96,10 +129,16 @@ const MaintainPage: React.FC = () => {
       </div>
       <div className={`${p_refixCls}-stats-panel`}>
         <div>
-          pie
+          <Pie />
         </div>
         <div>
-          <div>任务统计信息/任务统计信息</div>
+          <div>
+            <Segmented<string>
+              options={SegmentedConfig2}
+              value={selectedDisplayType}
+              onChange={handleDisplayTypeChange}
+            />
+          </div>
           {renderWorkflowInstanceStats}
         </div>
       </div>

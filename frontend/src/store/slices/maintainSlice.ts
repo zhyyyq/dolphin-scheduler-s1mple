@@ -22,7 +22,8 @@ interface MaintainState {
   selectedWorkflow: Workflow | null;
   selectedProject: number[]
   selectedTimeRange: [string, string];
-  taskStats: { statusDesc: string; count: number; statusCode: string }[];
+  selectedDisplayType: string;
+  taskStats: { statusDesc: string; count: number; statusCode: number }[];
 } 
 
 const initialState: MaintainState = {
@@ -36,7 +37,8 @@ const initialState: MaintainState = {
   selectedWorkflow: null,
   selectedProject: [],
   selectedTimeRange: [dayjs().startOf('day').toISOString(), dayjs().endOf('day').toISOString()],
-  taskStats: []
+  taskStats: [],
+  selectedDisplayType: '0', // '0' for workflow instance stats, '1' for task stats
 };
 
 export const maintainSlice = createSlice({
@@ -70,11 +72,14 @@ export const maintainSlice = createSlice({
     setSelectedTimeRange: (state, action: PayloadAction<[dayjs.Dayjs, dayjs.Dayjs] | undefined>) => {
       state.selectedTimeRange = action.payload?.map(t => t.toISOString()) as [string, string] || initialState.selectedTimeRange;
     },
-    setTaskStats: (state, action: PayloadAction<{ statusDesc: string; count: number; statusCode: string }[]>) => {
+    setTaskStats: (state, action: PayloadAction<{ statusDesc: string; count: number; statusCode: number }[]>) => {
       state.taskStats = action.payload;
     },
     setSelectedTimeType: (state, action: PayloadAction<string>) => {
       state.selectedTimeType = action.payload;
+    },
+    setSelectedDisplayType: (state, action: PayloadAction<string>) => {
+      state.selectedDisplayType = action.payload;
     }
   },
 });
@@ -90,7 +95,8 @@ export const {
   setSelectedWorkflow,
   setSelectedTimeRange,
   setTaskStats,
-  setSelectedTimeType
+  setSelectedTimeType,
+  setSelectedDisplayType
 } = maintainSlice.actions;
 
 export const fetchProjects = createAsyncThunk(
