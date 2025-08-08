@@ -24,7 +24,7 @@ interface MaintainState {
   selectedTaskType?: number;
   taskStats: { statusDesc: string; count: number; statusCode: number }[];
   workflowStats: { statusDesc: string; count: number; statusCode: number }[];
-} 
+}
 
 const initialState: MaintainState = {
   workflows: [],
@@ -139,6 +139,7 @@ export const fetchStats = createAsyncThunk(
       dispatch(setWorkflowStats(stats.workflowStats));
       dispatch(setError(null));
       dispatch(setLoading(false));
+      dispatch(fetchWorkflows())
       // Assuming stats is an object with the required properties
       // Dispatch actions to update the state with stats if needed
     } catch (err) {
@@ -151,11 +152,16 @@ export const fetchStats = createAsyncThunk(
 );
 export const fetchWorkflows = createAsyncThunk(
   'home/fetchWorkflows',
-  async (_, { dispatch }) => {
+  async (_, { dispatch, getState }) => {
     dispatch(setLoading(true));
     dispatch(setError(null));
     try {
-      const combinedWorkflows = await api.get<Workflow[]>('/api/workflow/combined');
+      const state = getState() as RootState;
+      const combinedWorkflows = await api.get<Workflow[]>('/api/maintain/instances', {
+        page: 1, pageSize: 10, timeType: state.maintain.selectedTimeType,
+        timeRange: state.maintain.selectedTimeRange.map(t => dayjs(t).format('YYYY-MM-DD HH:mm:ss')),
+        projectCodes: state.maintain.selectedProject,
+      });
       const sortedWorkflows = combinedWorkflows.sort((a, b) => new Date(b.updateTime).getTime() - new Date(a.updateTime).getTime());
       dispatch(setWorkflows(sortedWorkflows));
     } catch (err) {

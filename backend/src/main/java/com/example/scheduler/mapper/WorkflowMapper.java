@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Mapper
-public interface WorkflowMapper {
+public interface WorkflowMapper extends Mapper {
 
     @Results(id = "workflowResultMap", value = {
         @Result(property = "uuid", column = "uuid"),

@@ -3,7 +3,7 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.scheduler.mapper.WorkflowInstanceMapper">
 
-    <select id="queryProcessInstanceByScheduleTime" resultType="java.util.Map">
+    <select id="queryProcessInstanceStatsByScheduleTime" resultType="java.util.Map">
         <![CDATA[
         SELECT COUNT(*) as count, state
         FROM t_ds_process_instance
@@ -19,7 +19,38 @@
         GROUP BY state
     </select>
 
-    <select id="queryProcessInstanceByStartTime" resultType="java.util.Map">
+    <select id="queryProcessInstanceByScheduleTimePagination" resultType="java.util.Map">
+        WITH filtered_data AS (
+            SELECT *, 
+                  count(*) OVER() AS total_count
+            FROM t_ds_process_instance
+            WHERE coalesce(schedule_time, start_time) &gt;= TO_TIMESTAMP(#{startTime}, 'YYYY-MM-DD HH24:MI:SS')
+            AND coalesce(schedule_time, start_time) &lt;= TO_TIMESTAMP(#{endTime}, 'YYYY-MM-DD HH24:MI:SS')
+            <if test="status != null">
+              AND state = #{status}
+            </if>
+            <if test="projectCodes != null and projectCodes.length > 0">
+                AND project_code IN
+                <foreach item="item" index="index" collection="projectCodes" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        )
+        SELECT 
+            #{currentPage} AS current_page,
+            #{pageSize} AS page_size,
+            (SELECT total_count FROM filtered_data LIMIT 1) AS total_count,
+            (SELECT ceil(total_count::float / #{pageSize}) FROM filtered_data LIMIT 1) AS total_pages,
+            array_to_json(array_agg(row_to_json(t))) AS data
+        FROM (
+            SELECT * 
+            FROM filtered_data
+            LIMIT #{pageSize} 
+            OFFSET (#{currentPage} - 1) * #{pageSize}
+        ) t
+    </select>
+
+    <select id="queryProcessInstanceStatsByStartTime" resultType="java.util.Map">
         <![CDATA[
         SELECT COUNT(*) as count, state
         FROM t_ds_process_instance

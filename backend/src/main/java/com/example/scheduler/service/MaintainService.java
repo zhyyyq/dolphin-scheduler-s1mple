@@ -13,6 +13,7 @@ import com.example.scheduler.mapper.WorkflowInstanceMapper;
 import com.example.scheduler.mapper.TaskInstanceMapper;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import org.postgresql.util.PGobject;
 
 @Service
 public class MaintainService {
@@ -146,8 +147,32 @@ public class MaintainService {
   }
 
   public JSONObject getMaintenanceInstances(long[] projectCodes, String timeType, String[] timeRange, String status,
-      int page, int pageSize, String searchW) {
+      Long page, Long pageSize, String searchW) {
     // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'getMaintenanceInstances'");
+    Map<String, Object> res = workflowInstanceMapper.queryProcessInstanceByScheduleTimePagination(timeRange[0],
+        timeRange[1], pageSize, page,
+        status, projectCodes);
+    logger.info("getMaintenanceInstances");
+    logger.info(res.toString());
+    String dataString = ((PGobject) res.get("data")).getValue();
+    JSONArray data = (JSONArray) JSONArray.parse(dataString);
+    res.put("data", data);
+
+    return (JSONObject) JSONObject.toJSON(res);
+  }
+  
+  public JSONObject getMaintainanceProcesss(long[] projectCodes, String timeType, String[] timeRange, String status,
+      Long page, Long pageSize, String searchW) {
+    // TODO Auto-generated method stub
+    Map<String, Object> res = workflowInstanceMapper.queryProcessInstanceByScheduleTimePagination(timeRange[0],
+        timeRange[1], pageSize, page,
+        status, projectCodes);
+    logger.info("getMaintenanceInstances");
+    logger.info(res.toString());
+    String dataString = ((PGobject) res.get("data")).getValue();
+    JSONArray data = (JSONArray) JSONArray.parse(dataString);
+    res.put("data", data);
+
+    return (JSONObject) JSONObject.toJSON(res);
   }
 }

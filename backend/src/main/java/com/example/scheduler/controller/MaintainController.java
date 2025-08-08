@@ -33,11 +33,11 @@ public class MaintainController {
 
   @GetMapping("/instances")
   public ResponseEntity<?> instances(@RequestParam(value = "projectCodes", required = false) long[] projectCodes,
-      @RequestParam(value = "timeType", required = false) String timeType,
-      @RequestParam(value = "timeRange", required = false) String[] timeRange,
+      @RequestParam(value = "timeType", required = true) String timeType,
+      @RequestParam(value = "timeRange", required = true) String[] timeRange,
       @RequestParam(value = "status", required = false) String status,
-      @RequestParam(value = "page", required = true) int page,
-      @RequestParam(value = "pageSize", required = true) int pageSize,
+      @RequestParam(value = "page", required = true) Long page,
+      @RequestParam(value = "pageSize", required = true) Long pageSize,
       @RequestParam(value = "searchW", required = false) String searchW
   ) {
     try {

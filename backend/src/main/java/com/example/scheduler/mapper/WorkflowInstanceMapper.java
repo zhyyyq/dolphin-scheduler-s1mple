@@ -14,9 +14,19 @@ public interface WorkflowInstanceMapper {
       @Param("startTime") String startTime,
       @Param("endTime") String endTime,
       @Nullable @Param("projectCodes") long[] projectCodes);
+  
+ Map<String, Object> queryProcessInstanceByScheduleTimePagination(
+      @Param("startTime") String startTime,
+      @Param("endTime") String endTime,
+      @Param("pageSize") Long pageSize,
+      @Param("currentPage") Long currentPage,
+      @Nullable @Param("status") String status,
+      @Nullable @Param("projectCodes") long[] projectCodes);
 
   List<Map<String, Object>> queryProcessInstanceStatsByStartTime(
       @Param("startTime") String startTime,
       @Param("endTime") String endTime,
       @Nullable @Param("projectCodes") long[] projectCodes);
+  
+  
 }

@@ -3,7 +3,7 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.scheduler.mapper.TaskInstanceMapper">
 
-    <select id="queryTaskInstanceByScheduleTime" resultType="java.util.Map">
+    <select id="queryTaskInstanceStatsByScheduleTime" resultType="java.util.Map">
         <![CDATA[
         SELECT COUNT(*) as count, mid.state
         FROM (select ds_t.*, schedule_time from t_ds_task_instance as ds_t  left JOIN t_ds_process_instance as ds_i ON ds_t.process_instance_id = ds_i.id) as mid
@@ -19,7 +19,7 @@
         GROUP BY state
     </select>
 
-    <select id="queryTaskInstanceByStartTime" resultType="java.util.Map">
+    <select id="queryTaskInstanceStatsByStartTime" resultType="java.util.Map">
         <![CDATA[
         SELECT COUNT(*) as count, mid.state
         FROM (select ds_t.*, schedule_time from t_ds_task_instance as ds_t  left JOIN t_ds_process_instance as ds_i ON ds_t.process_instance_id = ds_i.id) as mid
