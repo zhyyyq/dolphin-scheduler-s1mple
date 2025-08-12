@@ -3,19 +3,20 @@ import { Form, Select, SelectProps } from 'antd';
 import { Graph } from '@antv/x6';
 import { Task } from '@/types';
 import { CodeOutlined } from '@ant-design/icons';
+import { AlertEnum } from '@/utils/alertUtils';
 
 const options: SelectProps['options'] = [
   {
     label: "短信",
-    value: "sms"
+    value: AlertEnum.sms
   },
   {
     label: 'OA',
-    value: 'oa'
+    value: AlertEnum.oa
   },
   {
     label: '企业微信',
-    value: 'companyWechat'
+    value: AlertEnum.companyWechat
   }
 ];
 

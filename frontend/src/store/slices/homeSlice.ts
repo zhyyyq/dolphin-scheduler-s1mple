@@ -4,6 +4,7 @@ import api from '../../api';
 import yaml from 'yaml';
 import { Graph, Node as X6Node } from '@antv/x6';
 import { compileGraph } from '../../utils/graphUtils';
+import { getAlertCommandByAlertChannel } from '@/utils/alertUtils';
 
 interface Project {
   code: number;
@@ -160,7 +161,15 @@ export const onlineWorkflow = createAsyncThunk(
 
       // Wait for all DIY functions to be processed
       await Promise.all(diyFunctionPromises);
-
+      // pre-process ALERT tasks
+      originalTasks
+        .filter((task: any) => task.type === 'ALERT')
+        .map((task: any) => {
+          // Mutate the task object in place
+          task.command = getAlertCommandByAlertChannel(task.task_params.channels)
+          task.type = 'PYTHON'; 
+          task.task_type = 'PYTHON';
+        });
       const relations: { from: string, to: string }[] = [];
       for (const task of originalTasks) {
         if (task.deps) {
@@ -276,6 +285,8 @@ export const onlineWorkflow = createAsyncThunk(
             localParams,
             resourceList: [],
           };
+        } else if (task.type === 'ALERT') { 
+          // 编译成python 节点
         } else {
           const rawScript = task.command || task.task_params?.rawScript || '';
           const localParams = originalTaskParams.localParams || [];
