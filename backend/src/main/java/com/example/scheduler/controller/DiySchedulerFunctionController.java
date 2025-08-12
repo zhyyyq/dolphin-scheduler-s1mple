@@ -24,9 +24,9 @@ public class DiySchedulerFunctionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<DiySchedulerFunction> getFunctionById(@PathVariable Long id) {
-        return service.getFunctionById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+      return service.getFunctionById(id)
+          .map(ResponseEntity::ok)
+          .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping

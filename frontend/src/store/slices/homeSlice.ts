@@ -4,7 +4,6 @@ import api from '../../api';
 import yaml from 'yaml';
 import { Graph, Node as X6Node } from '@antv/x6';
 import { compileGraph } from '../../utils/graphUtils';
-import { getAlertCommandByAlertChannel } from '@/utils/alertUtils';
 
 interface Project {
   code: number;
@@ -162,11 +161,12 @@ export const onlineWorkflow = createAsyncThunk(
       // Wait for all DIY functions to be processed
       await Promise.all(diyFunctionPromises);
       // pre-process ALERT tasks
+      const funcs: any[] = await api.get<any>(`/api/diy-functions`);
       originalTasks
         .filter((task: any) => task.type === 'ALERT')
         .map((task: any) => {
           // Mutate the task object in place
-          task.command = getAlertCommandByAlertChannel(task.task_params.channels)
+          task.command = funcs.find(item => item?.functionName === task.task_params.channels).functionContent
           task.type = 'PYTHON'; 
           task.task_type = 'PYTHON';
         });
@@ -247,14 +247,25 @@ export const onlineWorkflow = createAsyncThunk(
           };
         } else if (task.type === 'CONDITIONS') {
           const params = { ...originalTaskParams, ...(task.task_params || {}) };
+          const prevNode = taskNameToCodeMap.get(task.deps && task.deps.length > 0 ? task.deps[0] : '') 
           const successNode = (params.dependence?.dependTaskList?.[0]?.conditionResult?.successNode || []).map((name: string) => taskNameToCodeMap.get(name));
           const failedNode = (params.dependence?.dependTaskList?.[0]?.conditionResult?.failedNode || []).map((name: string) => taskNameToCodeMap.get(name));
 
           taskParams = {
             localParams: originalTaskParams.localParams || [],
             dependence: {
-              relation: "AND",
-              dependTaskList: []
+              "relation": "AND",
+              "dependTaskList": [
+                {
+                  "relation": "AND",
+                  "dependItemList": [
+                    {
+                      "depTaskCode": prevNode,
+                      "status": "SUCCESS"
+                    }
+                  ]
+                }
+              ]
             },
             conditionResult: {
               successNode: successNode,

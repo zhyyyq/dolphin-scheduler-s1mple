@@ -16,7 +16,7 @@ const options: SelectProps['options'] = [
   },
   {
     label: '企业微信',
-    value: AlertEnum.companyWechat
+    value: AlertEnum.wechat
   }
 ];
 
