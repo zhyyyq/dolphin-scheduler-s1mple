@@ -10,6 +10,7 @@ import DependentTaskEditor from '../pages/WorkflowEditorPage/components/tasks/de
 import LogicGateTaskEditor from '../pages/WorkflowEditorPage/components/tasks/logic/LogicGateTaskEditor';
 import SubWorkflowTaskEditor from '../pages/WorkflowEditorPage/components/tasks/logic/SubProcessTaskEditor';
 import DiyFunctionTaskEditor from '../pages/WorkflowEditorPage/components/tasks/DiyFunctionTaskEditor';
+import AlertTaskEditor from '@/pages/WorkflowEditorPage/components/tasks/general/AlertTaskEditor';
 
 const AndTask = { taskInfo: LogicGateTaskEditor.taskInfo.AND };
 const OrTask = { taskInfo: LogicGateTaskEditor.taskInfo.OR };
@@ -28,6 +29,7 @@ const editors = [
   DiyFunctionTaskEditor,
   AndTask,
   OrTask,
+  AlertTaskEditor
 ];
 
 export const taskTypes = editors.map(editor => editor.taskInfo);

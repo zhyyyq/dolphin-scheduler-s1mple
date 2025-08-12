@@ -1,47 +1,65 @@
 import React from 'react';
-import { Form, Input } from 'antd';
+import { Form, Input, Select, SelectProps } from 'antd';
 import { Graph } from '@antv/x6';
 import { Task } from '@/types';
 import { CodeOutlined } from '@ant-design/icons';
 
-const { TextArea } = Input;
+const options: SelectProps['options'] = [
+  {
+    label: "短信",
+    value: "sms"
+  },
+  {
+    label: 'OA',
+    value: 'oa'
+  },
+  {
+    label: '企业微信',
+    value: 'companyWechat'
+  }
+];
 
+const handleChange = (value: string[]) => {
+  console.log(`selected ${value}`);
+};
 interface PythonTaskEditorProps {
   isCustom?: boolean;
 }
 
-interface PythonTaskEditorComponent extends React.FC<PythonTaskEditorProps> {
+interface AlertTaskEditorComponent extends React.FC<PythonTaskEditorProps> {
   taskInfo: any;
 }
 
-const PythonTaskEditor: PythonTaskEditorComponent = ({ isCustom = false }) => {
+const AlertTaskEditor:AlertTaskEditorComponent = ({ isCustom = false }) => {
   return (
     <Form.Item
-      label="Python Definition"
-      name="definition"
-      rules={[{ required: true, message: '请输入 Python 代码' }]}
+      label="告警渠道配置"
+      name="channel"
+      rules={[{ required: true, message: '请选择告警渠道' }]}
     >
-      <TextArea
-        rows={15}
-        placeholder="在此输入您的 Python 脚本"
-        style={{ fontFamily: 'monospace' }}
-        readOnly={isCustom}
-      />
+       <Select
+          mode="multiple"
+          allowClear
+          style={{ width: '100%' }}
+          placeholder="请选择告警渠道"
+          defaultValue={['sms']}
+          onChange={handleChange}
+          options={options}
+        />
     </Form.Item>
   );
 };
 
-PythonTaskEditor.taskInfo = {
-  label: 'Python',
-  type: 'PYTHON',
+AlertTaskEditor.taskInfo = {
+  label: 'alert',
+  type: 'ALERT',
   default_params: {
     failRetryTimes: 0,
     failRetryInterval: 1,
   },
-  command: 'print("Hello")',
   category: 'general',
   icon: CodeOutlined,
-  editor: PythonTaskEditor,
+  editor: AlertTaskEditor,
   createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }) => {
     const existingNodes = graph.getNodes();
     let newNodeName = task.label;
@@ -70,4 +88,4 @@ PythonTaskEditor.taskInfo = {
   },
 };
 
-export default PythonTaskEditor;
+export default AlertTaskEditor;

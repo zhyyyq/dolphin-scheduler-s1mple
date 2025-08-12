@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, Typography } from 'antd';
 import { Graph } from '@antv/x6';
-import { Task } from '../../../types';
+import { Task } from '@/types';
 import { ProfileOutlined } from '@ant-design/icons';
 
 const { Title } = Typography;

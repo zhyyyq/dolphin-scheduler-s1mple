@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Form, Input, Select, Button, Space, FormInstance } from 'antd';
 import { MinusCircleOutlined, PlusOutlined, CloudServerOutlined } from '@ant-design/icons';
 import { Graph } from '@antv/x6';
-import { Task } from '../../../types';
+import { Task } from '@/types';
 
 const { TextArea } = Input;
 const { Option } = Select;

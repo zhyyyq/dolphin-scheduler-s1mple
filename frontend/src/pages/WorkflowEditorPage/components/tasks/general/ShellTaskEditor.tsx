@@ -1,7 +1,7 @@
 import React from 'react';
 import { Input, Form } from 'antd';
 import { Graph } from '@antv/x6';
-import { Task } from '../../../types';
+import { Task } from '@/types';
 import { CodeOutlined } from '@ant-design/icons';
 
 const { TextArea } = Input;
