@@ -58,6 +58,7 @@ const initialState: WorkflowEditorState = {
 import { Keyboard } from '@antv/x6-plugin-keyboard';
 import { Selection } from '@antv/x6-plugin-selection';
 import { History } from '@antv/x6-plugin-history';
+import { AlertEnum } from '@/utils/alertUtils';
 
 export const initializeGraph = createAsyncThunk<void, HTMLDivElement, { state: RootState }>(
   'workflowEditor/initializeGraph',
@@ -366,7 +367,7 @@ export const fetchDiyFunctions = createAsyncThunk<any[], void, { state: RootStat
   'workflowEditor/fetchDiyFunctions',
   async (_, { dispatch }) => {
     const funcs = await api.get<any[]>('/api/diy-functions');
-    dispatch(setDiyFunctions(funcs));
+    dispatch(setDiyFunctions(funcs.filter(func => func.functionName !== AlertEnum.oa && func.functionName !== AlertEnum.sms && func.functionName !== AlertEnum.wechat)));
     return funcs;
   }
 );
