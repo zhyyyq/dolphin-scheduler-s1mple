@@ -531,6 +531,7 @@ export const loadGraphContent = createAsyncThunk<void, void, { state: RootState 
   'workflowEditor/loadGraphContent',
   async (_, { getState, dispatch }) => {
     const state = getState();
+    debugger
     const { graph, workflowData } = state.workflowEditor;
 
     if (!graph || !workflowData) {
@@ -602,7 +603,9 @@ export const loadGraphContent = createAsyncThunk<void, void, { state: RootState 
       for (const task of tasks) {
         if (task.deps) {
           for (const dep of task.deps) {
-            relations.push({ from: dep, to: task.name, sourcePort: 'out', targetPort: 'in' });
+            if (!conditionTasks.has(dep)) {
+              relations.push({ from: dep, to: task.name, sourcePort: 'out', targetPort: 'in' });
+            }
           }
         }
         if (task.type === 'SWITCH' && task.task_params?.switchResult) {
