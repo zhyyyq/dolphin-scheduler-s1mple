@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Select, SelectProps } from 'antd';
+import { Form, Select, SelectProps } from 'antd';
 import { Graph } from '@antv/x6';
 import { Task } from '@/types';
 import { CodeOutlined } from '@ant-design/icons';
@@ -19,14 +19,12 @@ const options: SelectProps['options'] = [
   }
 ];
 
-const handleChange = (value: string[]) => {
-  console.log(`selected ${value}`);
-};
-interface PythonTaskEditorProps {
+
+interface AlertTaskEditorProps {
   isCustom?: boolean;
 }
 
-interface AlertTaskEditorComponent extends React.FC<PythonTaskEditorProps> {
+interface AlertTaskEditorComponent extends React.FC<AlertTaskEditorProps> {
   taskInfo: any;
 }
 
@@ -34,16 +32,12 @@ const AlertTaskEditor:AlertTaskEditorComponent = ({ isCustom = false }) => {
   return (
     <Form.Item
       label="告警渠道配置"
-      name="channel"
+      name="channels"
       rules={[{ required: true, message: '请选择告警渠道' }]}
     >
        <Select
-          mode="multiple"
-          allowClear
           style={{ width: '100%' }}
           placeholder="请选择告警渠道"
-          defaultValue={['sms']}
-          onChange={handleChange}
           options={options}
         />
     </Form.Item>
@@ -56,6 +50,7 @@ AlertTaskEditor.taskInfo = {
   default_params: {
     failRetryTimes: 0,
     failRetryInterval: 1,
+    channels: 'sms'
   },
   category: 'general',
   icon: CodeOutlined,

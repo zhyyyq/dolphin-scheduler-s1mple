@@ -460,9 +460,10 @@ export const saveNode = createAsyncThunk<void, Task, { state: RootState }>(
       if (newData.name) {
         newData.label = newData.name;
       }
+      console.log("setting node", nodeToUpdate, newData);
       nodeToUpdate.setData(newData);
     }
-    
+    window.graph = graph
     dispatch(setCurrentTaskNode(null));
     dispatch(setCurrentParamNode(null));
   }

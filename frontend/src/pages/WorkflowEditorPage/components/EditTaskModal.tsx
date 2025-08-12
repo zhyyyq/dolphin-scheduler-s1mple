@@ -5,7 +5,6 @@ import { Task } from '../../../types';
 import DefaultTaskEditor from './tasks/DefaultTaskEditor';
 import yaml from 'js-yaml';
 import { taskTypes } from '../../../config/taskTypes';
-import { Graph } from '@antv/x6';
 import { RootState, AppDispatch } from '../../../store';
 import { setCurrentTaskNode, saveNode } from '../../../store/slices/workflowEditorSlice';
 
@@ -164,7 +163,7 @@ const EditTaskModal: React.FC = () => {
       // Remove temporary fields
       delete (finalTask as any).yaml_content;
       delete (finalTask as any).conditions_yaml;
-
+      console.log("on save", finalTask)
       onSave(finalTask);
 
     }).catch(info => {
