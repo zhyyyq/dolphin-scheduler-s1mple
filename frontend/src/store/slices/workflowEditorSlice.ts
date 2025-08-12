@@ -59,9 +59,9 @@ import { Keyboard } from '@antv/x6-plugin-keyboard';
 import { Selection } from '@antv/x6-plugin-selection';
 import { History } from '@antv/x6-plugin-history';
 
-export const initializeGraph = createAsyncThunk(
+export const initializeGraph = createAsyncThunk<void, HTMLDivElement, { state: RootState }>(
   'workflowEditor/initializeGraph',
-  async (container: HTMLDivElement, { dispatch }) => {
+  async (container, { dispatch }) => {
     const graphInstance = new Graph({
       container,
       autoResize: true,
@@ -200,10 +200,14 @@ export const workflowEditorSlice = createSlice({
   },
 });
 
-export const saveWorkflow = createAsyncThunk(
+export const saveWorkflow = createAsyncThunk<
+  { filename: string; uuid: string },
+  void,
+  { state: RootState }
+>(
   'workflowEditor/saveWorkflow',
   async (_, { getState, dispatch }) => {
-    const state = getState() as RootState;
+    const state = getState();
     const {
       graph,
       workflowName,
@@ -250,10 +254,14 @@ export const saveWorkflow = createAsyncThunk(
   }
 );
 
-export const syncYamlToGraph = createAsyncThunk(
+export const syncYamlToGraph = createAsyncThunk<
+  { allNodes: any[]; relations: { from: string; to: string; sourcePort?: string; targetPort?: string; label?: string }[] },
+  void,
+  { state: RootState }
+>(
   'workflowEditor/syncYamlToGraph',
   async (_, { getState, dispatch }) => {
-    const state = getState() as RootState;
+    const state = getState();
     const { graph, yamlContent } = state.workflowEditor;
 
     if (!graph) {
@@ -354,7 +362,7 @@ export const syncYamlToGraph = createAsyncThunk(
   }
 );
 
-export const fetchDiyFunctions = createAsyncThunk(
+export const fetchDiyFunctions = createAsyncThunk<any[], void, { state: RootState }>(
   'workflowEditor/fetchDiyFunctions',
   async (_, { dispatch }) => {
     const funcs = await api.get<any[]>('/api/diy-functions');
@@ -363,9 +371,9 @@ export const fetchDiyFunctions = createAsyncThunk(
   }
 );
 
-export const importYaml = createAsyncThunk(
+export const importYaml = createAsyncThunk<void, File, { state: RootState }>(
   'workflowEditor/importYaml',
-  async (file: File, { dispatch }) => {
+  async (file, { dispatch }) => {
     const content = await file.text();
     dispatch(setOriginalYaml(content));
 
@@ -385,10 +393,10 @@ export const importYaml = createAsyncThunk(
   }
 );
 
-export const handleMenuClick = createAsyncThunk(
+export const handleMenuClick = createAsyncThunk<void, { key: string }, { state: RootState }>(
   'workflowEditor/handleMenuClick',
-  async (e: { key: string }, { getState, dispatch }) => {
-    const state = getState() as RootState;
+  async (e, { getState, dispatch }) => {
+    const state = getState();
     const { graph, contextMenu, diyFunctions } = state.workflowEditor;
 
     if (!graph) {
@@ -420,9 +428,9 @@ export const handleMenuClick = createAsyncThunk(
   }
 );
 
-export const saveEdgeLabel = createAsyncThunk(
+export const saveEdgeLabel = createAsyncThunk<void, { edge: any, newLabel: string }, { state: RootState }>(
   'workflowEditor/saveEdgeLabel',
-  async ({ edge, newLabel }: { edge: any, newLabel: string }, { dispatch }) => {
+  async ({ edge, newLabel }, { dispatch }) => {
     edge.setLabelAt(0, {
       attrs: {
         label: {
@@ -434,10 +442,10 @@ export const saveEdgeLabel = createAsyncThunk(
   }
 );
 
-export const saveNode = createAsyncThunk(
+export const saveNode = createAsyncThunk<void, Task, { state: RootState }>(
   'workflowEditor/saveNode',
-  async (updatedNode: Task, { getState, dispatch }) => {
-    const state = getState() as RootState;
+  async (updatedNode, { getState, dispatch }) => {
+    const state = getState();
     const { graph } = state.workflowEditor;
 
     if (!graph) {
@@ -460,12 +468,12 @@ export const saveNode = createAsyncThunk(
   }
 );
 
-export const handleNodeDoubleClick = createAsyncThunk(
+export const handleNodeDoubleClick = createAsyncThunk<void, { node: any }, { state: RootState }>(
   'workflowEditor/handleNodeDoubleClick',
-  async (args: { node: any }, { getState, dispatch }) => {
+  async (args, { getState, dispatch }) => {
     const { node } = args;
     const nodeData = node.getData();
-    const state = getState() as RootState;
+    const state = getState();
     const { graph } = state.workflowEditor;
 
     if (nodeData.type === 'PARAMS') {
@@ -478,7 +486,7 @@ export const handleNodeDoubleClick = createAsyncThunk(
   }
 );
 
-export const fetchWorkflow = createAsyncThunk(
+export const fetchWorkflow = createAsyncThunk<WorkflowDetail, string, { state: RootState }>(
   'workflowEditor/fetchWorkflow',
   async (workflow_uuid: string, { dispatch }) => {
     const response = await api.get<WorkflowDetail>(`/api/workflow/${workflow_uuid}`);
@@ -518,10 +526,10 @@ export const fetchWorkflow = createAsyncThunk(
   }
 );
 
-export const loadGraphContent = createAsyncThunk(
+export const loadGraphContent = createAsyncThunk<void, void, { state: RootState }>(
   'workflowEditor/loadGraphContent',
   async (_, { getState, dispatch }) => {
-    const state = getState() as RootState;
+    const state = getState();
     const { graph, workflowData } = state.workflowEditor;
 
     if (!graph || !workflowData) {
@@ -667,10 +675,10 @@ export const loadGraphContent = createAsyncThunk(
   }
 );
 
-export const showYaml = createAsyncThunk(
+export const showYaml = createAsyncThunk<void, void, { state: RootState }>(
   'workflowEditor/showYaml',
   async (_, { getState, dispatch }) => {
-    const state = getState() as RootState;
+    const state = getState();
     const {
       graph,
       workflowName,
@@ -695,10 +703,10 @@ export const showYaml = createAsyncThunk(
   }
 );
 
-export const autoLayout = createAsyncThunk(
+export const autoLayout = createAsyncThunk<void, void, { state: RootState }>(
   'workflowEditor/autoLayout',
   async (_, { getState }) => {
-    const state = getState() as RootState;
+    const state = getState();
     const { graph } = state.workflowEditor;
     if (!graph) return;
 
