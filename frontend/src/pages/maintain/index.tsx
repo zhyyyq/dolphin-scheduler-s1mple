@@ -14,6 +14,8 @@ import {
 import dayjs from "dayjs";
 import Pie from "./components/pieGraph";
 import StatsItem from "./components/statsItem";
+import WorkflowRunningView from "./components/workflow-running-view";
+import WorkflowList from "./components/workflow-list";
 const { RangePicker } = DatePicker;
 
 const SegmentedConfig = [
@@ -172,8 +174,8 @@ const MaintainPage: React.FC = () => {
       </div>
 
       <div className={`${p_refixCls}-workflows-workspace`}>
-        <div className="workflows-list">workflows</div>
-        <div className="workflow-detail">workflow-details</div>
+        <WorkflowList />
+        <WorkflowRunningView />
       </div>
     </div>
   );

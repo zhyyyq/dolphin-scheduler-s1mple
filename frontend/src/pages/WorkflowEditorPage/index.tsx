@@ -18,7 +18,6 @@ import {
   fetchWorkflow,
   setWorkflowData,
   clearWorkflow,
-  importYaml,
   initializeGraph,
 } from '../../store/slices/workflowEditorSlice';
 import { WorkflowDetail } from '../../types';
@@ -75,15 +74,11 @@ const WorkflowEditorPage: React.FC = () => {
     }
   }, [workflow_uuid, message, dispatch, location.search]);
 
-  const handleImport = (file: File) => {
-    dispatch(importYaml(file)).unwrap()
-      .catch(() => message.error('导入 YAML 失败'));
-  };
 
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
       <div style={{ flex: 1, position: 'relative' }} onClick={() => dispatch(setContextMenu({ ...contextMenu, visible: false }))}>
-        <WorkflowToolbar onImport={handleImport} />
+        <WorkflowToolbar />
         <EditorDagGraph containerRef={containerRefCallback} />
         <EditTaskModal />
         <EditParamNodeModal />

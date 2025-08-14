@@ -6,9 +6,9 @@ import 'react-diff-view/style/index.css';
 import * as diff from 'diff';
 import { RootState, AppDispatch } from '../../../store';
 import {
+  loadGraphContent,
   setIsYamlModalVisible,
-  setYamlContent,
-  syncYamlToGraph,
+  setYamlContent
 } from '../../../store/slices/workflowEditorSlice';
 
 export const ViewYamlModal: React.FC = () => {
@@ -20,7 +20,7 @@ export const ViewYamlModal: React.FC = () => {
   } = useSelector((state: RootState) => state.workflowEditor);
 
   const onCancel = () => dispatch(setIsYamlModalVisible(false));
-  const onSync = () => dispatch(syncYamlToGraph());
+  const onSync = () => dispatch(loadGraphContent(yamlContent));
   const onYamlContentChange = (content: string) => dispatch(setYamlContent(content));
   const renderDiff = () => {
     if (!originalYaml) {

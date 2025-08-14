@@ -255,113 +255,6 @@ export const saveWorkflow = createAsyncThunk<
   }
 );
 
-export const syncYamlToGraph = createAsyncThunk<
-  { allNodes: any[]; relations: { from: string; to: string; sourcePort?: string; targetPort?: string; label?: string }[] },
-  void,
-  { state: RootState }
->(
-  'workflowEditor/syncYamlToGraph',
-  async (_, { getState, dispatch }) => {
-    const state = getState();
-    const { graph, yamlContent } = state.workflowEditor;
-
-    if (!graph) {
-      throw new Error('Graph not initialized');
-    }
-
-    const doc = yaml.parseDocument(yamlContent);
-    const workflowNameFromYaml = doc.getIn(['workflow', 'name']) as string || 'my-workflow';
-    const tasks = (doc.get('tasks') as any)?.toJSON() || [];
-    const parameters = (doc.get('parameters') as any)?.toJSON() || [];
-
-    const globalParamNodes = parameters.map((p: any) => ({
-      name: p.name,
-      label: p.name,
-      type: 'PARAMS',
-      task_type: 'PARAMS',
-      task_params: {
-        prop: p.name,
-        type: p.type,
-        value: p.value,
-        direction: p.direction,
-      },
-    }));
-
-    const localParamNodes: any[] = [];
-    tasks.forEach((task: any) => {
-      const params = task.localParams || task.task_params?.localParams;
-      if (params) {
-        params.forEach((p: any) => {
-          if (!globalParamNodes.some((gp: any) => gp.name === p.prop) && !localParamNodes.some((lp: any) => lp.name === p.prop)) {
-            localParamNodes.push({
-              name: p.prop,
-              label: p.prop,
-              type: 'PARAMS',
-              task_type: 'PARAMS',
-              task_params: {
-                prop: p.prop,
-                type: p.type,
-                value: p.value,
-                direction: p.direction,
-              },
-            });
-          }
-        });
-      }
-    });
-
-    const allNodes = [...tasks, ...globalParamNodes, ...localParamNodes];
-    const relations: { from: string, to: string, sourcePort?: string, targetPort?: string, label?: string }[] = [];
-
-      for (const task of tasks) {
-        if (task.deps) {
-          for (const dep of task.deps) {
-            relations.push({ from: dep, to: task.name, sourcePort: 'out', targetPort: 'in' });
-          }
-        }
-      if (task.type === 'SWITCH' && task.task_params?.switchResult) {
-        const { dependTaskList, nextNode } = task.task_params.switchResult;
-        if (dependTaskList) {
-          for (const item of dependTaskList) {
-            if (item.nextNode) {
-              relations.push({
-                from: task.name,
-                to: item.nextNode,
-                label: item.condition,
-              });
-            }
-          }
-        }
-        if (nextNode) {
-          relations.push({
-            from: task.name,
-            to: nextNode,
-            label: '', // Default branch
-          });
-        }
-      }
-      const params = task.localParams || task.task_params?.localParams;
-      if (params) {
-        for (const param of params) {
-          if (param.direct === 'IN') {
-            relations.push({ from: param.prop, to: task.name });
-          } else { // OUT
-            relations.push({ from: task.name, to: param.prop });
-          }
-        }
-      }
-    }
-
-    graph.clearCells();
-    // This is a side effect and cannot be dispatched. It must be called from the component.
-    // We will return the data and let the component call loadGraphData.
-    // loadGraphData(allNodes, relations); 
-    dispatch(setWorkflowName(workflowNameFromYaml));
-    dispatch(setIsYamlModalVisible(false));
-
-    return { allNodes, relations };
-  }
-);
 
 export const fetchDiyFunctions = createAsyncThunk<any[], void, { state: RootState }>(
   'workflowEditor/fetchDiyFunctions',
@@ -372,27 +265,6 @@ export const fetchDiyFunctions = createAsyncThunk<any[], void, { state: RootStat
   }
 );
 
-export const importYaml = createAsyncThunk<void, File, { state: RootState }>(
-  'workflowEditor/importYaml',
-  async (file, { dispatch }) => {
-    const content = await file.text();
-    dispatch(setOriginalYaml(content));
-
-    const doc = yaml.parseDocument(content);
-    const name = doc.getIn(['workflow', 'name']) as string || 'imported-workflow';
-    const schedule = doc.getIn(['workflow', 'schedule']);
-
-    dispatch(setWorkflowName(name));
-    if (schedule !== undefined && schedule !== null) {
-      dispatch(setWorkflowSchedule(String(schedule)));
-      dispatch(setIsScheduleEnabled(true));
-    } else {
-      dispatch(setIsScheduleEnabled(false));
-    }
-
-    dispatch(loadGraphContent());
-  }
-);
 
 export const handleMenuClick = createAsyncThunk<void, { key: string }, { state: RootState }>(
   'workflowEditor/handleMenuClick',
@@ -464,7 +336,6 @@ export const saveNode = createAsyncThunk<void, Task, { state: RootState }>(
       console.log("setting node", nodeToUpdate, newData);
       nodeToUpdate.setData(newData);
     }
-    window.graph = graph
     dispatch(setCurrentTaskNode(null));
     dispatch(setCurrentParamNode(null));
   }
@@ -528,20 +399,19 @@ export const fetchWorkflow = createAsyncThunk<WorkflowDetail, string, { state: R
   }
 );
 
-export const loadGraphContent = createAsyncThunk<void, void, { state: RootState }>(
+export const loadGraphContent = createAsyncThunk<void, string | undefined, { state: RootState }>(
   'workflowEditor/loadGraphContent',
-  async (_, { getState, dispatch }) => {
+  async ( yaml_content_p, { getState, dispatch }) => {
     const state = getState();
-    debugger
     const { graph, workflowData } = state.workflowEditor;
-
+    dispatch(setIsYamlModalVisible(false))
     if (!graph || !workflowData) {
       return;
     }
 
     const { yaml_content, locations: locationsStr } = workflowData;
     try {
-      const doc = yaml.parseDocument(yaml_content);
+      const doc = yaml.parseDocument(yaml_content_p || yaml_content);
       const tasks = (doc.get('tasks') as any)?.toJSON() || [];
       
       const diyFunctionPromises = tasks

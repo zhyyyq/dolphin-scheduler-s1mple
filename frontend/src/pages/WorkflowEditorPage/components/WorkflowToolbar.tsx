@@ -20,10 +20,9 @@ import { useNavigate } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 
 interface WorkflowToolbarProps {
-  onImport: (file: File) => void;
 }
 
-export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({ onImport }) => {
+export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({ }) => {
   const { message } = AntApp.useApp();
   const navigate = useNavigate();
   const dispatch: AppDispatch = useDispatch();
@@ -67,13 +66,6 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({ onImport }) =>
     }
   };
 
-  const onImportYaml = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      onImport(file);
-    }
-    event.target.value = '';
-  };
   const [isCronModalVisible, setIsCronModalVisible] = useState(false);
   const [nextRunTimes, setNextRunTimes] = useState<string[]>([]);
   const [cronError, setCronError] = useState<string | null>(null);
@@ -150,16 +142,6 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({ onImport }) =>
         </div>
       </Modal>
       <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 10, display: 'flex', gap: '8px' }}>
-        <Button onClick={() => document.getElementById('yaml-importer')?.click()}>
-          导入 YAML
-        </Button>
-        <input
-          type="file"
-          id="yaml-importer"
-          style={{ display: 'none' }}
-          accept=".yaml,.yml"
-          onChange={onImportYaml}
-        />
         <Button onClick={onAutoLayout}>自动布局</Button>
         <Button onClick={onShowYaml}>查看 YAML</Button>
         <Button type="primary" onClick={onSave}>保存工作流</Button>
