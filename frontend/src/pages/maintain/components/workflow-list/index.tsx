@@ -33,24 +33,6 @@ const data: DataType[] = [
     age: 32,
     address: 'New York No. 1 Lake Park',
   },
-  {
-    key: '2',
-    name: 'Jim Green',
-    age: 42,
-    address: 'London No. 1 Lake Park',
-  },
-  {
-    key: '3',
-    name: 'Joe Black',
-    age: 32,
-    address: 'Sydney No. 1 Lake Park',
-  },
-  {
-    key: '4',
-    name: 'Disabled User',
-    age: 99,
-    address: 'Sydney No. 1 Lake Park',
-  },
 ];
 
 // rowSelection object indicates the need for row selection
@@ -65,20 +47,21 @@ const rowSelection: TableProps<DataType>['rowSelection'] = {
 };
 const WorkflowList: React.FC = () => {
   const [selectionType, setSelectionType] = useState<'checkbox' | 'radio'>('checkbox');
-  return <div className="workflows-list">
-    <div>
-      <div>按关键词搜算</div>
+  return (
+    <div className="workflows-list">
       <div>
-        <Input></Input>
+        <div>
+          <Input placeholder="搜索"></Input>
+        </div>
       </div>
-    </div>
       <Divider />
       <Table<DataType>
         rowSelection={{ type: selectionType, ...rowSelection }}
         columns={columns}
         dataSource={data}
       />
-  </div>
+    </div>
+  )
 }
 
 
