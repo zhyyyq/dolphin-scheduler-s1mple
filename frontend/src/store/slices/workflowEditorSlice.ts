@@ -540,6 +540,16 @@ export const loadGraphContent = createAsyncThunk<void, string | undefined, { sta
             source: { cell: sourceId, port: rel.sourcePort },
             target: { cell: targetId, port: rel.targetPort },
             labels: rel.label ? [rel.label] : [],
+            attrs: {
+                line: {
+                  stroke: '#8f8f8f',
+                  strokeWidth: 1,
+                },
+              },
+            zIndex: -1,
+            label: {
+              text: '',
+            },
           });
         }
       });
