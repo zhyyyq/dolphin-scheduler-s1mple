@@ -1,52 +1,39 @@
-import React, { useState } from "react";
+import React, { useMemo } from "react";
 import './index.less'
-import { Table, Input, TableProps, TableColumnsType, Radio, Divider } from 'antd';
+import { Table, Input, TableColumnsType } from 'antd';
+import { setSelectedWorkflow, WorkflowDataType } from "@/store/slices/maintainSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 
-interface DataType {
-  key: React.Key;
-  name: string;
-  age: number;
-  address: string;
-}
 
-const columns: TableColumnsType<DataType> = [
-  {
-    title: 'Name',
-    dataIndex: 'name',
-    render: (text: string) => <a>{text}</a>,
-  },
-  {
-    title: 'Age',
-    dataIndex: 'age',
-  },
-  {
-    title: 'Address',
-    dataIndex: 'address',
-  },
-];
 
-const data: DataType[] = [
-  {
-    key: '1',
-    name: 'John Brown',
-    age: 32,
-    address: 'New York No. 1 Lake Park',
-  },
-];
 
-// rowSelection object indicates the need for row selection
-const rowSelection: TableProps<DataType>['rowSelection'] = {
-  onChange: (selectedRowKeys: React.Key[], selectedRows: DataType[]) => {
-    console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-  },
-  getCheckboxProps: (record: DataType) => ({
-    disabled: record.name === 'Disabled User', // Column configuration not to be checked
-    name: record.name,
-  }),
-};
+
+
+
 const WorkflowList: React.FC = () => {
-  const [selectionType, setSelectionType] = useState<'checkbox' | 'radio'>('checkbox');
+  const {
+    workflows
+  } = useSelector((state: RootState) => state.maintain);
+  const dispatch = useDispatch();
+  const columns: TableColumnsType<WorkflowDataType> = useMemo(() => {
+    return [
+      {
+        title: '工作流ID',
+        dataIndex: 'workflowId',
+        render: (text, record) => <a onClick={()=>{dispatch(setSelectedWorkflow(record))}}>{text}</a>,
+      },
+      {
+        title: '工作流名称',
+        dataIndex: 'workflowName',
+      },
+      {
+        title: '项目名称',
+        dataIndex: 'projectName',
+      },
+    ]
+  }, []);
   return (
     <div className="workflows-list">
       <div>
@@ -54,11 +41,14 @@ const WorkflowList: React.FC = () => {
           <Input placeholder="搜索"></Input>
         </div>
       </div>
-      <Divider />
-      <Table<DataType>
-        rowSelection={{ type: selectionType, ...rowSelection }}
+      <Table<WorkflowDataType>
         columns={columns}
-        dataSource={data}
+        dataSource={workflows}
+        pagination={
+          {
+            pageSize: 5
+          }
+        }
       />
     </div>
   )

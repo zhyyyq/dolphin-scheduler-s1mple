@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { Workflow } from '../../types';
 import api from '../../api';
 import dayjs from 'dayjs';
 import { RootState } from '..';
@@ -9,15 +8,22 @@ interface Project {
   name: string;
 }
 
+export interface WorkflowDataType {
+  key: React.Key;
+  workflowId: string;
+  workflowName: string;
+  projectName: string;
+}
+
 interface MaintainState {
-  workflows: Workflow[];
+  workflows: WorkflowDataType[];
   loading: boolean;
   error: string | null;
   projects: Project[];
   isRestoreModalOpen: boolean;
   isBackfillModalOpen: boolean;
   selectedTimeType: string;
-  selectedWorkflow: Workflow | null;
+  selectedWorkflow: WorkflowDataType | null;
   selectedProject: number[]
   selectedTimeRange: [string, string];
   selectedDisplayType: string;
@@ -47,7 +53,7 @@ export const maintainSlice = createSlice({
   name: 'maintain',
   initialState,
   reducers: {
-    setWorkflows: (state, action: PayloadAction<Workflow[]>) => {
+    setWorkflows: (state, action: PayloadAction<WorkflowDataType[]>) => {
       state.workflows = action.payload;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -68,7 +74,7 @@ export const maintainSlice = createSlice({
     setIsBackfillModalOpen: (state, action: PayloadAction<boolean>) => {
       state.isBackfillModalOpen = action.payload;
     },
-    setSelectedWorkflow: (state, action: PayloadAction<Workflow | null>) => {
+    setSelectedWorkflow: (state, action: PayloadAction<WorkflowDataType | null>) => {
       state.selectedWorkflow = action.payload;
     },
     setSelectedTimeRange: (state, action: PayloadAction<[dayjs.Dayjs, dayjs.Dayjs] | undefined>) => {
@@ -157,13 +163,20 @@ export const fetchWorkflows = createAsyncThunk(
     dispatch(setError(null));
     try {
       const state = getState() as RootState;
-      const combinedWorkflows = await api.get<Workflow[]>('/api/maintain/instances', {
-        page: 1, pageSize: 10, timeType: state.maintain.selectedTimeType,
-        timeRange: state.maintain.selectedTimeRange.map(t => dayjs(t).format('YYYY-MM-DD HH:mm:ss')),
-        projectCodes: state.maintain.selectedProject,
+      // const combinedWorkflows = await api.get<Workflow[]>('/api/maintain/instances', {
+      //   page: 1, pageSize: 10, timeType: state.maintain.selectedTimeType,
+      //   timeRange: state.maintain.selectedTimeRange.map(t => dayjs(t).format('YYYY-MM-DD HH:mm:ss')),
+      //   projectCodes: state.maintain.selectedProject,
+      // });
+      const data: WorkflowDataType[] = Array(30).fill(1).map((_, index) => {
+        return {
+          key: `mockId${index}`,
+          workflowId: `mockId${index}`,
+          workflowName: `mockName${index}`,
+          projectName: 'default',
+        }
       });
-      const sortedWorkflows = combinedWorkflows.sort((a, b) => new Date(b.updateTime).getTime() - new Date(a.updateTime).getTime());
-      dispatch(setWorkflows(sortedWorkflows));
+      dispatch(setWorkflows(data));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       dispatch(setError(errorMessage));
