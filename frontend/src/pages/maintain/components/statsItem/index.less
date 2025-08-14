@@ -1,5 +1,12 @@
 .stats-item{
+  width: 200px;
+  flex-shrink: 0;
   border-radius: 4px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   &.active{
     background-color: #d1ecf9;
   }
@@ -7,17 +14,17 @@
     background-color: #d1ecf9;
   }
   cursor: pointer;
-  width: 100px;
   .stats-item-title{
     display: flex;
     flex-direction: row;
     align-items: center;
-    font-size: 12px;
+    font-size: 24px;
     .stats-item-icon{
       margin-right: 5px;
     }
   }
   .stats-item-value{
+    font-size: 32px;
     font-weight: bold;
   }
 }
