@@ -169,6 +169,26 @@ export const onlineWorkflow = createAsyncThunk(
           task.command = funcs.find(item => item?.functionName === task.task_params.channels).functionContent
           task.type = 'PYTHON'; 
           task.task_type = 'PYTHON';
+          // 手机号参数转化成 localparam
+          let mobiles = task.task_params.mobiles;
+          // 去重
+          mobiles = new Set(mobiles.split("\n")).values().toArray()
+          const localParams = task.task_params.localParams || [];
+          localParams.push({
+            prop: "mobiles",
+            direct: 'IN',
+            type: 'VARCHAR',
+            value: JSON.stringify(mobiles),
+          })
+          // 自定义消息
+          let msg = task.task_params.msg;
+          localParams.push({
+            prop: "msg",
+            direct: 'IN',
+            type: 'VARCHAR',
+            value: msg,
+          })
+          task.task_params.localParams = localParams
         });
       const relations: { from: string, to: string }[] = [];
       for (const task of originalTasks) {
@@ -296,8 +316,6 @@ export const onlineWorkflow = createAsyncThunk(
             localParams,
             resourceList: [],
           };
-        } else if (task.type === 'ALERT') { 
-          // 编译成python 节点
         } else {
           const rawScript = task.command || task.task_params?.rawScript || '';
           const localParams = originalTaskParams.localParams || [];

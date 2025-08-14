@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Select, SelectProps } from 'antd';
+import { Form, Select, SelectProps, Input } from 'antd';
 import { Graph } from '@antv/x6';
 import { Task } from '@/types';
 import { CodeOutlined } from '@ant-design/icons';
@@ -10,14 +10,14 @@ const options: SelectProps['options'] = [
     label: "短信",
     value: AlertEnum.sms
   },
-  {
-    label: 'OA',
-    value: AlertEnum.oa
-  },
-  {
-    label: '企业微信',
-    value: AlertEnum.wechat
-  }
+  // {
+  //   label: 'OA',
+  //   value: AlertEnum.oa
+  // },
+  // {
+  //   label: '企业微信',
+  //   value: AlertEnum.wechat
+  // }
 ];
 
 
@@ -29,19 +29,43 @@ interface AlertTaskEditorComponent extends React.FC<AlertTaskEditorProps> {
   taskInfo: any;
 }
 
-const AlertTaskEditor:AlertTaskEditorComponent = ({ isCustom = false }) => {
+const AlertTaskEditor: AlertTaskEditorComponent = ({ isCustom = false }) => {
   return (
-    <Form.Item
-      label="告警渠道配置"
-      name="channels"
-      rules={[{ required: true, message: '请选择告警渠道' }]}
-    >
-       <Select
+    <>
+      <Form.Item
+        label="告警渠道配置"
+        name="channels"
+        rules={[{ required: true, message: '请选择告警渠道' }]}
+      >
+        <Select
           style={{ width: '100%' }}
           placeholder="请选择告警渠道"
           options={options}
         />
-    </Form.Item>
+      </Form.Item>
+      <Form.Item
+        label="手机号配置"
+        name="mobiles"
+        help="支持配置多个，换行输入"
+        rules={[{ required: true, message: '请配置手机号' }]}
+      >
+        <Input.TextArea
+          style={{ width: '100%' }}
+          placeholder="请配置手机号"
+        />
+      </Form.Item>
+      <Form.Item
+        label="自定义消息"
+        name="msg"
+        rules={[{ required: false }]}
+      >
+        <Input.TextArea
+          style={{ width: '100%' }}
+          placeholder="请配置自定义消息"
+        />
+      </Form.Item>
+    </>
+
   );
 };
 
@@ -51,7 +75,9 @@ AlertTaskEditor.taskInfo = {
   default_params: {
     failRetryTimes: 0,
     failRetryInterval: 1,
-    channels: 'sms'
+    channels: 'sms',
+    mobiles: '',
+    msg: ''
   },
   category: 'general',
   icon: CodeOutlined,
