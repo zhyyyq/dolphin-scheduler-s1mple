@@ -10,3 +10,4 @@ logs
 dolphinscheduler
 doc
 *.tgz
+.idea
