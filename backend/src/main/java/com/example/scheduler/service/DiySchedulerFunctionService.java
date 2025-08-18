@@ -1,40 +1,39 @@
 package com.example.scheduler.service;
 
 import com.example.scheduler.model.DiySchedulerFunction;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.scheduler.mapper.DiySchedulerFunctionMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.apache.commons.io.FilenameUtils;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class DiySchedulerFunctionService {
 
     @Autowired
-    private DiySchedulerFunctionMapper mapper;
+    private DiySchedulerFunctionMapper diySchedulerFunctionMapper;
 
     public List<DiySchedulerFunction> getAllFunctions() {
-        return mapper.findAllByDeletedFalse();
+        return  diySchedulerFunctionMapper.selectList(new QueryWrapper<DiySchedulerFunction>().eq("deleted", false).orderByAsc("function_id"));
     }
 
-    public Optional<DiySchedulerFunction> getFunctionById(Long id) {
-        return mapper.findByIdAndDeletedFalse(id);
+    public DiySchedulerFunction getFunctionById(Long id) {
+        return diySchedulerFunctionMapper.selectOne(new QueryWrapper<DiySchedulerFunction>().eq("deleted", false).eq("function_id", id));
     }
 
     public DiySchedulerFunction createFunction(DiySchedulerFunction function) {
         // Check for duplicates before creating
-        if (mapper.findByFunctionNameAndDeletedFalse(function.getFunctionName()).isPresent()) {
+        if (diySchedulerFunctionMapper.exists(new QueryWrapper<DiySchedulerFunction>().eq("function_name", function.getFunctionName()))) {
             throw new RuntimeException("Function with name '" + function.getFunctionName() + "' already exists.");
         }
         if (function.getFunctionContent() != null) {
-            function.setContentHash(String.valueOf(function.getFunctionContent().hashCode()));
+          function.setContentHash(String.valueOf(function.getFunctionContent().hashCode()));
         }
-        mapper.save(function);
+        diySchedulerFunctionMapper.insert(function);
         return function;
     }
 
@@ -43,16 +42,9 @@ public class DiySchedulerFunctionService {
         String baseName = FilenameUtils.getBaseName(originalFilename);
         String content = new String(file.getBytes(), StandardCharsets.UTF_8);
 
-        Optional<DiySchedulerFunction> existingFunctionOpt = mapper.findByFunctionName(baseName);
 
-        if (existingFunctionOpt.isPresent()) {
-            // If a function with the same name exists (regardless of deleted status), update it.
-            DiySchedulerFunction existingFunction = existingFunctionOpt.get();
-            existingFunction.setFunctionContent(content);
-            existingFunction.setContentHash(String.valueOf(content.hashCode()));
-            existingFunction.setDeleted(false); // Undelete it if it was deleted
-            mapper.update(existingFunction);
-            return existingFunction;
+        if (diySchedulerFunctionMapper.exists(new QueryWrapper<DiySchedulerFunction>().eq("function_name", baseName))) {
+            throw new RuntimeException("Function with name '" + baseName + "' already exists.");
         } else {
             // If no function with this name has ever existed, create a new one.
             DiySchedulerFunction newFunction = new DiySchedulerFunction();
@@ -60,29 +52,32 @@ public class DiySchedulerFunctionService {
             newFunction.setFunctionContent(content);
             newFunction.setContentHash(String.valueOf(content.hashCode()));
             newFunction.setDeleted(false);
-            mapper.save(newFunction);
+            diySchedulerFunctionMapper.insert(newFunction);
             return newFunction;
         }
     }
 
     public DiySchedulerFunction updateFunction(Long id, DiySchedulerFunction functionDetails) {
-        DiySchedulerFunction function = mapper.findById(id)
-                .orElseThrow(() -> new RuntimeException("Function not found with id: " + id));
-
-        function.setFunctionName(functionDetails.getFunctionName());
-        function.setFunctionContent(functionDetails.getFunctionContent());
+        DiySchedulerFunction curFunction = diySchedulerFunctionMapper.selectById(id);
+        if (curFunction == null) {
+            throw new RuntimeException("Function with id '" + id + "' not exists.");
+        }
+        curFunction.setFunctionName(functionDetails.getFunctionName());
+        curFunction.setFunctionContent(functionDetails.getFunctionContent());
         if (functionDetails.getFunctionContent() != null) {
-            function.setContentHash(String.valueOf(functionDetails.getFunctionContent().hashCode()));
+            curFunction.setContentHash(String.valueOf(functionDetails.getFunctionContent().hashCode()));
         }
         
-        mapper.update(function);
-        return function;
+        diySchedulerFunctionMapper.updateById(curFunction);
+        return curFunction;
     }
 
     public void deleteFunction(Long id) {
-        DiySchedulerFunction function = mapper.findById(id)
-                .orElseThrow(() -> new RuntimeException("Function not found with id: " + id));
+        DiySchedulerFunction function = diySchedulerFunctionMapper.selectById(id);
+        if (function == null) {
+            throw new RuntimeException("Function with id '" + id + "' not exists.");
+        }
         function.setDeleted(true);
-        mapper.update(function);
+        diySchedulerFunctionMapper.updateById(function);
     }
 }

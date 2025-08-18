@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.example.scheduler.service.MaintainService;
 
@@ -33,15 +33,11 @@ public class MaintainController {
 
   @GetMapping("/instances")
   public ResponseEntity<?> instances(@RequestParam(value = "projectCodes", required = false) long[] projectCodes,
-      @RequestParam(value = "timeType", required = true) String timeType,
-      @RequestParam(value = "timeRange", required = true) String[] timeRange,
-      @RequestParam(value = "status", required = false) String status,
-      @RequestParam(value = "page", required = true) Long page,
-      @RequestParam(value = "pageSize", required = true) Long pageSize,
-      @RequestParam(value = "searchW", required = false) String searchW
+      @RequestParam(value = "timeType", required = false) String timeType,
+      @RequestParam(value = "timeRange", required = false) String[] timeRange
   ) {
     try {
-      JSONObject res = maintainService.getMaintenanceInstances(projectCodes, timeType, timeRange, status, page, pageSize, searchW);
+      JSONArray res = maintainService.getMaintenanceInstances(projectCodes, timeType, timeRange);
       return ResponseEntity.ok(res);
     } catch (Exception e) {
       e.printStackTrace();

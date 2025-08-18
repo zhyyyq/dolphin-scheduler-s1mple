@@ -18,11 +18,6 @@
     </properties>
     <dependencies>
 		<dependency>
-			<groupId>org.mybatis.spring.boot</groupId>
-			<artifactId>mybatis-spring-boot-starter</artifactId>
-			<version>2.2.2</version>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
@@ -101,19 +96,18 @@
                     </excludes>
                 </configuration>
             </plugin>
-            <plugin>
+            <!-- <plugin>
                 <groupId>org.mybatis.generator</groupId>
                 <artifactId>mybatis-generator-maven-plugin</artifactId>
                 <version>1.4.2</version>
                 <dependencies>
-                    <!-- PostgreSQL JDBC Driver -->
                     <dependency>
                         <groupId>org.postgresql</groupId>
                         <artifactId>postgresql</artifactId>
-                        <version>42.6.0</version> <!-- Use latest version -->
+                        <version>42.6.0</version>
                     </dependency>
                 </dependencies>
-            </plugin>
+            </plugin> -->
         </plugins>
     </build>
 

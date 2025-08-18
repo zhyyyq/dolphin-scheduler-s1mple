@@ -10,10 +10,13 @@ import org.springframework.stereotype.Service;
 import com.example.scheduler.enums.WorkflowRunningStatusEnum;
 import com.example.scheduler.enums.WorkflowQueryTimeTypeEnum;
 import com.example.scheduler.mapper.WorkflowInstanceMapper;
+import com.example.scheduler.model.TDsTaskInstance;
+import com.example.scheduler.mapper.TDsProcessInstanceMapper;
+import com.example.scheduler.mapper.TDsTaskInstanceMapper;
 import com.example.scheduler.mapper.TaskInstanceMapper;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import org.postgresql.util.PGobject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 
 @Service
 public class MaintainService {
@@ -26,6 +29,12 @@ public class MaintainService {
 
   @Autowired
   private TaskInstanceMapper taskInstanceMapper;
+
+  @Autowired
+  private TDsTaskInstanceMapper tdsTaskInstanceMapper;
+
+  @Autowired
+  private TDsProcessInstanceMapper tDsProcessInstanceMapper;
   // This service can be used to implement maintenance tasks
   // such as cleaning up old data, optimizing database, etc.
   // Currently, it is empty and can be extended as needed.
@@ -33,30 +42,6 @@ public class MaintainService {
   public JSONObject getMaintenanceStatus(long[] projectCodes, String timeType, String[] timeRange)
       throws Exception {
     // This method can return the status of maintenance tasks
-    // precheck projectsCodes
-    List<Map<String, Object>> projectlist = dsService.getProjects();
-    logger.info(projectlist.toString());
-    if (projectCodes == null || projectCodes.length == 0) {
-      // default to all projects
-      logger.info("No project codes provided, defaulting to all projects.");
-      projectCodes = projectlist.stream()
-          .mapToLong(project -> (Long) project.get("code"))
-          .toArray();
-    } else {
-      for (Long projectCode : projectCodes) {
-        if (projectlist.stream().noneMatch(project -> ((Long) project.get("code")).equals(projectCode))) {
-          throw new Exception("Project code " + projectCode + " does not exist.");
-        }
-      }
-    }
-    // precheck timeType
-    java.util.Arrays.stream(WorkflowQueryTimeTypeEnum.values())
-        .filter(type -> type.getCode() == Integer.parseInt(timeType))
-        .findFirst()
-        .orElseThrow(() -> new Exception("Invalid time type: " + timeType));
-    logger.info(JSONObject.toJSON(projectCodes).toString());
-    logger.info("timeRange: " + timeRange);
-    logger.info("timeType: " + timeType);
     JSONObject res = new JSONObject();
     res.put("workflowStats", new JSONArray());
     res.put("taskStats", new JSONArray());
@@ -146,33 +131,12 @@ public class MaintainService {
     }
   }
 
-  public JSONObject getMaintenanceInstances(long[] projectCodes, String timeType, String[] timeRange, String status,
-      Long page, Long pageSize, String searchW) {
-    // TODO Auto-generated method stub
-    Map<String, Object> res = workflowInstanceMapper.queryProcessInstanceByScheduleTimePagination(timeRange[0],
-        timeRange[1], pageSize, page,
-        status, projectCodes);
-    logger.info("getMaintenanceInstances");
-    logger.info(res.toString());
-    String dataString = ((PGobject) res.get("data")).getValue();
-    JSONArray data = (JSONArray) JSONArray.parse(dataString);
-    res.put("data", data);
-
-    return (JSONObject) JSONObject.toJSON(res);
+  public JSONArray getMaintenanceInstances(long[] projectCodes, String timeType, String[] timeRange) {
+    QueryWrapper<TDsTaskInstance> queryWrapper = new QueryWrapper<TDsTaskInstance>();
+    if (projectCodes != null && projectCodes.length > 0)
+      queryWrapper.in("project_code", projectCodes);
+    List<TDsTaskInstance> res = tdsTaskInstanceMapper.selectList(queryWrapper);
+    return (JSONArray) JSONArray.toJSON(res);
   }
   
-  public JSONObject getMaintainanceProcesss(long[] projectCodes, String timeType, String[] timeRange, String status,
-      Long page, Long pageSize, String searchW) {
-    // TODO Auto-generated method stub
-    Map<String, Object> res = workflowInstanceMapper.queryProcessInstanceByScheduleTimePagination(timeRange[0],
-        timeRange[1], pageSize, page,
-        status, projectCodes);
-    logger.info("getMaintenanceInstances");
-    logger.info(res.toString());
-    String dataString = ((PGobject) res.get("data")).getValue();
-    JSONArray data = (JSONArray) JSONArray.parse(dataString);
-    res.put("data", data);
-
-    return (JSONObject) JSONObject.toJSON(res);
-  }
 }
