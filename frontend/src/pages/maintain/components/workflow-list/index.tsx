@@ -1,21 +1,21 @@
 import React, { useMemo } from "react";
 import './index.less'
 import { Table, TableColumnsType } from 'antd';
-import { setSelectedWorkflow, WorkflowDataType } from "@/store/slices/maintainSlice";
+import { fetchWorkflowDetail, WorkflowDataType } from "@/store/slices/maintainSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/store";
+import { AppDispatch, RootState } from "@/store";
 
 const WorkflowList: React.FC = () => {
   const {
     workflows, projects
   } = useSelector((state: RootState) => state.maintain);
-  const dispatch = useDispatch();
+  const dispatch: AppDispatch = useDispatch();
   const columns: TableColumnsType<WorkflowDataType> = useMemo(() => {
     return [
       {
         title: '工作流ID',
         dataIndex: 'id',
-        render: (text, record) => <a onClick={() => { dispatch(setSelectedWorkflow(record)) }}>{text}</a>,
+        render: (text, record) => <a onClick={() => { dispatch(fetchWorkflowDetail(record.id)) }}>{text}</a>,
       },
       {
         title: '工作流名称',
@@ -31,6 +31,7 @@ const WorkflowList: React.FC = () => {
   return (
     <div className="workflows-list">
       <Table<WorkflowDataType>
+        rowKey="id"
         columns={columns}
         dataSource={workflows}
         pagination={

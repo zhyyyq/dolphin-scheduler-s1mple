@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import dayjs from 'dayjs';
 import yaml from 'yaml';
-import { Task, WorkflowDetail } from '../../types';
+import { Task, Workflow } from '../../types';
 import { taskTypes } from '../../config/taskTypes';
 import api from '../../api';
 import { generateYamlStr as generateYaml } from '../../utils/yamlUtils';
@@ -15,6 +15,10 @@ interface ContextMenuState {
   y: number;
   px: number;
   py: number;
+}
+
+export interface WorkflowData extends Workflow{
+  yaml_content_raw: string
 }
 
 interface WorkflowEditorState {
@@ -31,7 +35,7 @@ interface WorkflowEditorState {
   isScheduleEnabled: boolean;
   scheduleTimeRange: [string | null, string | null];
   workflowUuid: string | null;
-  workflowData: WorkflowDetail | null;
+  workflowData: WorkflowData | null;
   originalYaml: string;
   graph: Graph | null;
 }
@@ -177,7 +181,7 @@ export const workflowEditorSlice = createSlice({
     setWorkflowUuid: (state, action: PayloadAction<string | null>) => {
       state.workflowUuid = action.payload;
     },
-    setWorkflowData: (state, action: PayloadAction<WorkflowDetail | null>) => {
+    setWorkflowData: (state, action: PayloadAction<WorkflowData| null>) => {
       state.workflowData = action.payload;
     },
     setOriginalYaml: (state, action: PayloadAction<string>) => {
@@ -228,26 +232,22 @@ export const saveWorkflow = createAsyncThunk<
       scheduleTimeRangeISO[0] ? dayjs(scheduleTimeRangeISO[0]) : null,
       scheduleTimeRangeISO[1] ? dayjs(scheduleTimeRangeISO[1]) : null,
     ] as [dayjs.Dayjs | null, dayjs.Dayjs | null];
+    
 
-    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml, workflowData?.projectName, workflowData?.projectCode);
+
+    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml, workflowData?.yaml_content.workflow?.projectName, workflowData?.yaml_content.workflow?.projectCode);
     if (!yamlStr) {
       throw new Error('Canvas is empty or not initialized.');
     }
 
-    const locations = graph.getNodes().map((node: any) => {
-      const { x, y } = node.getPosition();
-      const data = node.getData();
-      return { taskCode: data.name, x, y };
-    });
 
     const response = await api.post<{ filename: string; uuid: string }>('/api/workflow/yaml', {
       name: workflowName,
       content: yamlStr,
       original_filename: workflowUuid ? `${workflowUuid}.yaml` : undefined,
       uuid: workflowUuid,
-      locations: JSON.stringify(locations),
-      projectCode: workflowData?.projectCode,
-      projectName: workflowData?.projectName,
+      projectCode: workflowData?.yaml_content.workflow.projectCode,
+      projectName: workflowData?.yaml_content.workflow.projectName,
     });
 
     dispatch(setWorkflowUuid(response.uuid));
@@ -333,7 +333,6 @@ export const saveNode = createAsyncThunk<void, Task, { state: RootState }>(
       if (newData.name) {
         newData.label = newData.name;
       }
-      console.log("setting node", nodeToUpdate, newData);
       nodeToUpdate.setData(newData);
     }
     dispatch(setCurrentTaskNode(null));
@@ -359,19 +358,19 @@ export const handleNodeDoubleClick = createAsyncThunk<void, { node: any }, { sta
   }
 );
 
-export const fetchWorkflow = createAsyncThunk<WorkflowDetail, string, { state: RootState }>(
+export const fetchWorkflow = createAsyncThunk<WorkflowData, string, { state: RootState }>(
   'workflowEditor/fetchWorkflow',
   async (workflow_uuid: string, { dispatch }) => {
-    const response = await api.get<WorkflowDetail>(`/api/workflow/${workflow_uuid}`);
+    const response = await api.get<WorkflowData>(`/api/workflow/${workflow_uuid}`);
     dispatch(setWorkflowData(response));
-    dispatch(setOriginalYaml(response.yaml_content));
+    dispatch(setOriginalYaml(response.yaml_content_raw));
 
-    const { name, uuid, yaml_content } = response;
-    dispatch(setWorkflowName(name));
-    dispatch(setWorkflowUuid(uuid));
+    const { id, yaml_content_raw, yaml_content } = response;
+    dispatch(setWorkflowName(yaml_content.workflow.name));
+    dispatch(setWorkflowUuid(id));
 
     try {
-      const doc = yaml.parseDocument(yaml_content);
+      const doc = yaml.parseDocument(yaml_content_raw);
       const schedule = doc.getIn(['workflow', 'schedule']);
       const startTime = doc.getIn(['workflow', 'startTime']);
       const endTime = doc.getIn(['workflow', 'endTime']);
@@ -409,9 +408,9 @@ export const loadGraphContent = createAsyncThunk<void, string | undefined, { sta
       return;
     }
 
-    const { yaml_content, locations: locationsStr } = workflowData;
+    const { yaml_content_raw } = workflowData;
     try {
-      const doc = yaml.parseDocument(yaml_content_p || yaml_content);
+      const doc = yaml.parseDocument(yaml_content_p ? yaml_content_p : yaml_content_raw) ;
       const tasks = (doc.get('tasks') as any)?.toJSON() || [];
       
       const diyFunctionPromises = tasks
@@ -467,7 +466,7 @@ export const loadGraphContent = createAsyncThunk<void, string | undefined, { sta
       });
 
       const allNodes = [...tasks, ...globalParamNodes, ...localParamNodes];
-      const locations = locationsStr ? JSON.parse(locationsStr) : null;
+      const locations = workflowData.yaml_content.locations;
       const relations: { from: string, to: string, sourcePort?: string, targetPort?: string, label?: string }[] = [];
       const conditionTasks = new Set(tasks.filter((t: any) => t.type === 'CONDITIONS').map((t: any) => t.name));
 
@@ -581,8 +580,7 @@ export const showYaml = createAsyncThunk<void, void, { state: RootState }>(
       scheduleTimeRangeISO[0] ? dayjs(scheduleTimeRangeISO[0]) : null,
       scheduleTimeRangeISO[1] ? dayjs(scheduleTimeRangeISO[1]) : null,
     ] as [dayjs.Dayjs | null, dayjs.Dayjs | null];
-
-    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml, workflowData?.projectName, workflowData?.projectCode);
+    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml, workflowData?.yaml_content.workflow.projectName, workflowData?.yaml_content.workflow.projectCode);
     dispatch(setYamlContent(yamlStr));
     dispatch(setIsYamlModalVisible(true));
   }

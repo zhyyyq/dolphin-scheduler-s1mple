@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import './index.less'
 import { Button, Divider, Result, Table, TableColumnsType } from "antd";
 import { WorkflowDataType } from "@/store/slices/maintainSlice";
-import { DashboardTwoTone, PlayCircleTwoTone, QuestionCircleTwoTone, RedoOutlined } from "@ant-design/icons";
+import { DashboardTwoTone } from "@ant-design/icons";
 const WorkflowRunningView: React.FC = () => {
   const {
     selectedWorkflow,
@@ -16,15 +16,16 @@ const WorkflowRunningView: React.FC = () => {
     return [
       {
         title: '工作流ID',
-        dataIndex: 'workflowId',
+        dataIndex: 'id',
       },
       {
         title: '工作流名称',
-        dataIndex: 'workflowName',
+        dataIndex: 'name',
       },
       {
         title: '项目名称',
-        dataIndex: 'projectName',
+        render: (_, item) =>
+          projects.find(pred => pred.code == item.projectCode)?.name
       },
       {
         title: '操作'
@@ -83,10 +84,6 @@ const WorkflowRunningView: React.FC = () => {
           <div>0 0 0 ? * * *</div>
         </div>
         <div>
-          <div>发布状态</div>
-          <div>已发布</div>
-        </div>
-        <div>
           <div>任务流UUID</div>
           <div>{selectedWorkflow?.code}</div>
         </div>
@@ -98,6 +95,7 @@ const WorkflowRunningView: React.FC = () => {
       <Table<WorkflowDataType>
         columns={columns}
         dataSource={workflows}
+        rowKey="id"
         pagination={
           {
             pageSize: 5

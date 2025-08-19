@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Table, Spin, Alert, Typography, Tag, Button, Space, Tooltip,
-  App as AntApp,
+  Table, Spin, Alert, Typography, Tag, Button, Space,
   Select,
   Divider,
 } from 'antd';
@@ -14,10 +13,8 @@ import {
   fetchProjects,
   fetchWorkflows,
   setSelectedProject,
-  setIsRestoreModalOpen,
   setIsBackfillModalOpen,
 } from '../../store/slices/homeSlice';
-import RestoreWorkflowModal from '../../components/RestoreWorkflowModal';
 import BackfillModal from '../../components/BackfillModal';
 import CreateProjectModal from './components/CreateProjectModal';
 import '../../components/TaskNode'; // Register custom node
@@ -28,7 +25,6 @@ const { Title } = Typography;
 
 
 const HomePage: React.FC = () => {
-  const { message } = AntApp.useApp();
   const location = useLocation();
   const dispatch: AppDispatch = useDispatch();
   const {
@@ -37,7 +33,6 @@ const HomePage: React.FC = () => {
     error,
     projects,
     selectedProject,
-    isRestoreModalOpen,
     isBackfillModalOpen,
     selectedWorkflow,
   } = useSelector((state: RootState) => state.home);
@@ -52,23 +47,21 @@ const HomePage: React.FC = () => {
   const columns: ColumnsType<Workflow> = useMemo(() => [
     {
       title: '项目',
-      dataIndex: 'projectName',
-      key: 'projectName',
+      render: (_, record) => {
+        return record.yaml_content.workflow.project || 'default'
+      }
     },
     {
       title: '工作流名称',
-      dataIndex: 'name',
-      key: 'name',
+      render: (_, record) => {
+        return record.yaml_content.workflow.name
+      }
     },
     {
       title: '定时设置',
-      dataIndex: 'schedule_human_readable',
-      key: 'schedule_human_readable',
-      render: (text: string, record: Workflow) => (
-        <Tooltip title={record.schedule_text}>
-          <span>{text || '-'}</span>
-        </Tooltip>
-      ),
+      render: (_, record) => {
+        return record.yaml_content.workflow.schedule
+      }
     },
     {
       title: '状态',
@@ -114,7 +107,7 @@ const HomePage: React.FC = () => {
   const filteredWorkflows = useMemo(() => {
     if (selectedProject && selectedProject !== 'all') {
       return workflows.filter(w =>
-        w.projectCode === selectedProject || w.releaseState === 'UNSUBMITTED' || w.releaseState === 'MODIFIED'
+        w.yaml_content.workflow.projectCode === selectedProject
       );
     }
     return workflows;
@@ -127,7 +120,7 @@ const HomePage: React.FC = () => {
     return <Alert message="错误" description={error} type="error" showIcon />;
   }
 
-  
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: '24px' }}>
@@ -157,51 +150,24 @@ const HomePage: React.FC = () => {
               <Select.Option key={p.code} value={p.code}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>{p.name}</span>
-                  {/* <Button
-                    type="text"
-                    danger
-                    size="small"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      try {
-                        await api.delete(`/api/projects/${p.code}`);
-                        message.success('项目删除成功');
-                        dispatch(fetchProjects());
-                      } catch (error) {
-                        message.error('删除项目失败');
-                      }
-                    }}
-                  >
-                    X
-                  </Button> */}
                 </div>
               </Select.Option>
             ))}
           </Select>
-          <Button onClick={() => dispatch(setIsRestoreModalOpen(true))}>恢复工作流</Button>
           <Link to={`/workflow/edit${selectedProject && selectedProject !== 'all' ? `?projectName=${projects.find(p => p.code === selectedProject)?.name}&projectCode=${selectedProject}` : ''}`}>
             <Button type="primary">新建工作流</Button>
           </Link>
         </Space>
       </div>
-      <div style={{ flex: '1 1 auto', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <Table 
-          columns={columns} 
-          dataSource={filteredWorkflows} 
-          rowKey="uuid" 
-          bordered
-          pagination={{ pageSize: 10 }}
-          style={{ flex: '1 1 auto', overflow: 'hidden' }}
-          scroll={{ y: 'calc(100vh - 340px)' }}
-        />
-      </div>
-      <RestoreWorkflowModal
-        open={isRestoreModalOpen}
-        onCancel={() => dispatch(setIsRestoreModalOpen(false))}
-        onRestored={() => {
-          dispatch(setIsRestoreModalOpen(false));
-          dispatch(fetchWorkflows());
+      <Table
+        scroll={{
+          x: true
         }}
+        columns={columns}
+        dataSource={filteredWorkflows}
+        rowKey="id"
+        bordered
+        pagination={{ pageSize: 10 }}
       />
       <BackfillModal
         open={isBackfillModalOpen}

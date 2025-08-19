@@ -64,7 +64,7 @@ const BackfillModal: React.FC<BackfillModalProps> = ({
       }
       
       // This endpoint needs to be created on the backend
-      await api.post(`/api/workflow/${workflow.uuid}/execute`, payload);
+      await api.post(`/api/workflow/${workflow.id}/execute`, payload);
 
       message.success('执行任务已成功提交。');
       onSuccess();

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Modal, Button, Input, Tabs } from 'antd';
 import { Diff, parseDiff } from 'react-diff-view';
@@ -16,23 +16,23 @@ export const ViewYamlModal: React.FC = () => {
   const {
     isYamlModalVisible,
     yamlContent,
-    originalYaml,
+    workflowData,
   } = useSelector((state: RootState) => state.workflowEditor);
 
   const onCancel = () => dispatch(setIsYamlModalVisible(false));
   const onSync = () => dispatch(loadGraphContent(yamlContent));
   const onYamlContentChange = (content: string) => dispatch(setYamlContent(content));
   const renderDiff = () => {
-    if (!originalYaml) {
+    if (!workflowData?.yaml_content) {
       return null;
     }
 
-    if (originalYaml === yamlContent) {
+    if (workflowData.yaml_content_raw === yamlContent) {
       return <div>无变更</div>;
     }
 
-    const patch = diff.createPatch('workflow.yaml', originalYaml, yamlContent, '', '', { context: 3 });
-    
+    const patch = diff.createPatch('workflow.yaml', workflowData.yaml_content_raw, yamlContent, '', '', { context: 3 });
+
     // react-diff-view's parseDiff expects a full git diff format.
     // We prepend a git diff header to the patch created by the diff library.
     const gitDiff = `diff --git a/workflow.yaml b/workflow.yaml\nindex 0000000..0000000 100644\n${patch}`;
@@ -52,25 +52,28 @@ export const ViewYamlModal: React.FC = () => {
     );
   };
 
-  const items = [
-    {
-      key: '1',
-      label: '编辑',
-      children: (
-        <Input.TextArea
-          value={yamlContent}
-          onChange={(e) => onYamlContentChange(e.target.value)}
-          rows={20}
-          style={{ fontFamily: 'monospace', background: '#f5f5f5' }}
-        />
-      ),
-    },
-    ...(originalYaml ? [{
-      key: '2',
-      label: '差异',
-      children: renderDiff(),
-    }] : []),
-  ];
+  const items = useMemo(() => {
+    if (workflowData == null) return []
+    return [
+      {
+        key: '1',
+        label: '编辑',
+        children: (
+          <Input.TextArea
+            value={yamlContent}
+            onChange={(e) => onYamlContentChange(e.target.value)}
+            rows={20}
+            style={{ fontFamily: 'monospace', background: '#f5f5f5' }}
+          />
+        ),
+      },
+      ...(workflowData.yaml_content_raw ? [{
+        key: '2',
+        label: '差异',
+        children: renderDiff(),
+      }] : []),
+    ];
+  }, [yamlContent, workflowData]);
 
   return (
     <Modal

@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Button, Space, App as AntApp } from 'antd';
 import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -13,7 +13,7 @@ interface ActionButtonsProps {
 export const ActionButtons: React.FC<ActionButtonsProps> = ({ record }) => {
   const dispatch: AppDispatch = useDispatch();
   const { message } = AntApp.useApp();
-  const workflowUuid = record.uuid;
+  const workflowUuid = record.id;
 
   const handleDelete = useCallback(async () => {
     try {
@@ -43,7 +43,6 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({ record }) => {
   const handleSubmit = useCallback(() => {
     handleOnline();
   }, [handleOnline]);
-
   return (
     <Space size="middle">
       {record.releaseState === 'MODIFIED' ? (

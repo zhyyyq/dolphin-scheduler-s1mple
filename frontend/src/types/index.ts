@@ -1,36 +1,17 @@
 export interface Workflow {
-  uuid: string;
-  code: any; // Can be number from DS or string from local file
-  name: string;
-  project: string;
-  projectCode: number;
-  projectName:string;
-  releaseState: 'ONLINE' | 'OFFLINE' | 'UNSUBMITTED' | 'MODIFIED';
+  id: string;
+  process_definition_code: any;
+  version: number;
+  releaseState: string;
   updateTime: string | number;
-  isLocal?: boolean;
-  schedule_text?: string;
-  schedule_human_readable?: string;
-  local_status?: 'new' | 'modified' | 'synced' | 'ahead' | 'behind' | 'diverged' | 'unknown';
-  schedule?: {
-    id: number;
-    [key: string]: any;
-  };
+  yaml_content: LocalWorkflow['yaml_content'];
+  related_ds_workflow?: DsWorkflow
 }
 
 export interface Parameter {
   name: string;
   type: 'VARCHAR' | 'INTEGER' | 'LONG' | 'FLOAT' | 'DOUBLE' | 'DATE' | 'TIMESTAMP' | 'BOOLEAN';
   value: any;
-}
-
-export interface WorkflowDetail extends Workflow {
-  tasks?: Task[];
-  parameters?: Parameter[];
-  relations?: Relation[];
-  filename: string;
-  yaml_content: string;
-  schedule?: any;
-  locations?: string;
 }
 
 export interface HttpParam {
@@ -143,4 +124,49 @@ export interface Commit {
   message: string;
   author: string;
   timestamp: number;
+}
+
+export interface LocalWorkflow {
+  "yaml_content": {
+    "workflow": any,
+    "tasks": any[],
+    "locations": any,
+    "parameters": any
+  },
+  "updateTime": string,
+  "id": string,
+  "remark1": string,
+  "processDefinitionCode": number,
+  "version": number,
+  "remark3": string,
+  "remark2": string
+}
+
+export interface DsWorkflow {
+
+  "scheduleReleaseState": string,
+  "modifyBy": string,
+  "code": number,
+  "flag": string,
+  "globalParamMap": any,
+  "executionType": string,
+  "description": string,
+  "updateTime": string,
+  "warningGroupId": any,
+  "globalParams": string,
+  "userName": string,
+  "version": number,
+  "userId": number,
+  "uuid": string,
+  "timeout": number,
+  "schedule": any,
+  "projectCode": number,
+  "createTime": string,
+  "name": string,
+  "globalParamList": any,
+  "locations": string,
+  "id": number,
+  "releaseState": string,
+  "projectName": string
+
 }

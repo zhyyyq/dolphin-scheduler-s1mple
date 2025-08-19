@@ -17,18 +17,16 @@ import java.util.Map;
 @RequestMapping("/api/workflow")
 public class WorkflowController {
 
+    private static final Logger logger = LoggerFactory.getLogger(WorkflowController.class);
     @Autowired
     private WorkflowService workflowService;
-
     @Autowired
     private com.example.scheduler.service.DsService dsService;
-
-    private static final Logger logger = LoggerFactory.getLogger(WorkflowController.class);
 
     @PostMapping("/yaml")
     public ResponseEntity<?> saveWorkflowYaml(@RequestBody WorkflowDto workflowDto) {
         try {
-            return ResponseEntity.ok(workflowService.saveWorkflowYaml(workflowDto));
+            return ResponseEntity.ok(this.workflowService.saveWorkflowYaml(workflowDto));
         } catch (Exception e) {
             logger.error("Error saving workflow yaml", e);
             return ResponseEntity.status(500).body(e.getMessage());
@@ -65,27 +63,11 @@ public class WorkflowController {
         }
     }
 
-    @PostMapping("/{workflowUuid}/online")
-    public ResponseEntity<?> onlineWorkflow(@PathVariable String workflowUuid) {
-        try {
-            workflowService.onlineWorkflow(workflowUuid);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            logger.error("Error onlining workflow {}", workflowUuid, e);
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
-
     @DeleteMapping("/{workflowUuid}")
     public ResponseEntity<?> deleteWorkflow(@PathVariable String workflowUuid,
-                                             @RequestParam(required = false) Long projectCode,
-                                             @RequestParam(required = false) Long workflowCode) {
+                                            @RequestParam(required = false) Long projectCode,
+                                            @RequestParam(required = false) Long workflowCode) {
         try {
-            if (workflowUuid.startsWith("ds-")) {
-                String[] parts = workflowUuid.split("-");
-                projectCode = Long.parseLong(parts[1]);
-                workflowCode = Long.parseLong(parts[2]);
-            }
             workflowService.deleteWorkflow(workflowUuid, projectCode, workflowCode);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -94,15 +76,6 @@ public class WorkflowController {
         }
     }
 
-    @GetMapping("/deleted")
-    public ResponseEntity<?> getDeletedWorkflows() {
-        try {
-            return ResponseEntity.ok(workflowService.getDeletedWorkflows());
-        } catch (Exception e) {
-            logger.error("Error getting deleted workflows", e);
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
 
     @PostMapping("/{workflowUuid}/execute")
     public ResponseEntity<?> executeWorkflow(@PathVariable String workflowUuid, @RequestBody Map<String, Object> payload) {
@@ -144,18 +117,6 @@ public class WorkflowController {
         }
     }
 
-    @PostMapping("/restore")
-    public ResponseEntity<?> restoreWorkflow(@RequestBody Map<String, String> payload) {
-        try {
-            String path = payload.get("path");
-            String commitHash = payload.get("commit");
-            workflowService.restoreWorkflow(path, commitHash);
-            return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            logger.error("Error restoring workflow", e);
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
 
     @GetMapping("/content/{commitHash}/{filename}")
     public ResponseEntity<?> getWorkflowContentAtCommit(@PathVariable String commitHash, @PathVariable String filename) {

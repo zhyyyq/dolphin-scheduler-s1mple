@@ -2,6 +2,7 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../api';
 import dayjs from 'dayjs';
 import { RootState } from '..';
+import { WorkflowData } from './workflowEditorSlice';
 
 interface Project {
   code: number;
@@ -144,6 +145,28 @@ export const fetchStats = createAsyncThunk(
       dispatch(setTaskStats(stats.taskStats));
       dispatch(setWorkflowStats(stats.workflowStats));
       dispatch(setWorkflows(stats.processDefinitionList))
+      dispatch(setError(null));
+      dispatch(setLoading(false));
+      // Assuming stats is an object with the required properties
+      // Dispatch actions to update the state with stats if needed
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      dispatch(setError(errorMessage));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }
+);
+
+export const fetchWorkflowDetail = createAsyncThunk<void, number, { state: RootState } >(
+  'home/fetchWorkflowDetail',
+  async (workflowId: number, { dispatch }) => {
+    dispatch(setLoading(true));
+    dispatch(setError(null));
+    try {
+      const response = await api.get<WorkflowData>(`/api/workflow/${workflowId}`);
+      console.log('Fetched fetchWorkflowDetail:', response);
+
       dispatch(setError(null));
       dispatch(setLoading(false));
       // Assuming stats is an object with the required properties

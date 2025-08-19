@@ -3,22 +3,21 @@ package com.example.scheduler.service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,15 +27,12 @@ import java.util.Map;
 @Service
 public class DsService {
 
+    private static final Logger logger = LoggerFactory.getLogger(DsService.class);
+    private final CloseableHttpClient httpClient = HttpClients.createDefault();
     @Value("${ds.url}")
     private String dsUrl;
-
     @Value("${ds.token}")
     private String token;
-
-    private final CloseableHttpClient httpClient = HttpClients.createDefault();
-    private static final Logger logger = LoggerFactory.getLogger(DsService.class);
-
     @Value("${workflow.repo.dir}")
     private String workflowRepoDir;
 
@@ -234,9 +230,9 @@ public class DsService {
 
         // 2. Check if workflow exists to decide between create and update
         Map<String, Object> existingDsWorkflow = getWorkflows().stream()
-            .filter(wf -> wf.get("name").equals(workflowName) && Long.parseLong(wf.get("projectCode").toString()) == projectCode)
-            .findFirst()
-            .orElse(null);
+                .filter(wf -> wf.get("name").equals(workflowName) && Long.parseLong(wf.get("projectCode").toString()) == projectCode)
+                .findFirst()
+                .orElse(null);
 
         boolean isNew = (boolean) payload.getOrDefault("isNew", false);
         if (isNew && existingDsWorkflow != null) {
@@ -252,7 +248,7 @@ public class DsService {
         }
 
         logger.info("Sending create/update request for workflow '{}' with params:", workflowName);
-        for(NameValuePair nvp : params) {
+        for (NameValuePair nvp : params) {
             logger.info("  - {}: {}", nvp.getName(), nvp.getValue());
         }
 
@@ -276,7 +272,7 @@ public class DsService {
             JSONObject releaseDataOffline = JSON.parseObject(releaseResponseStringOffline);
             // We can ignore the error if it's already offline, but log a warning.
             if (releaseDataOffline.getIntValue("code") != 0) {
-                 logger.warn("Could not set workflow to OFFLINE before update (it might be already offline): " + releaseDataOffline.getString("msg"));
+                logger.warn("Could not set workflow to OFFLINE before update (it might be already offline): " + releaseDataOffline.getString("msg"));
             }
 
             // Step 2: Perform the update
@@ -301,7 +297,7 @@ public class DsService {
         if (responseData.getIntValue("code") != 0) {
             throw new Exception("DS API error (create/update workflow): " + responseData.getString("msg"));
         }
-        
+
         JSONObject processDefinition = responseData.getJSONObject("data");
         long processCode = processDefinition.getLongValue("code");
 
@@ -324,7 +320,6 @@ public class DsService {
         Map<String, Object> result = new HashMap<>();
         result.put("projectCode", projectCode);
         result.put("processDefinitionCode", processCode);
-
         // 6. Handle schedule if present
         if (payload.containsKey("schedule")) {
             // First, delete any existing schedule for this workflow
@@ -384,7 +379,7 @@ public class DsService {
         if (responseData.getIntValue("code") != 0) {
             throw new Exception("DS API error (create schedule): " + responseData.getString("msg"));
         }
-        
+
         // Return the created schedule object
         return responseData.getJSONObject("data").getInnerMap();
     }
@@ -470,15 +465,15 @@ public class DsService {
         params.add(new BasicNameValuePair("description", description));
         params.add(new BasicNameValuePair("userName", userName));
         createRequest.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
-        
+
         CloseableHttpResponse createResponse = httpClient.execute(createRequest);
         String createResponseString = EntityUtils.toString(createResponse.getEntity());
         JSONObject createData = JSON.parseObject(createResponseString);
-        
+
         if (createData.getIntValue("code") != 0) {
             throw new Exception("DS API error (create project): " + createData.getString("msg"));
         }
-        
+
         JSONObject createDataElement = createData.getJSONObject("data");
         if (createDataElement == null) {
             throw new Exception("DS API error (create project): response did not contain project data.");

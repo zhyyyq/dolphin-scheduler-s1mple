@@ -10,7 +10,7 @@ export const generateYamlStr = (
   scheduleTimeRange: [dayjs.Dayjs | null, dayjs.Dayjs | null],
   originalYaml?: string,
   projectName?: string,
-  projectCode?: number,
+  projectCode?: number
 ): string => {
   const doc = yaml.parseDocument(originalYaml || 'workflow:\n  name: new-workflow\ntasks: []\nparameters: []');
   doc.setIn(['workflow', 'name'], workflowName);
@@ -146,7 +146,7 @@ export const generateYamlStr = (
           }
         }
       }
-      
+
       if (successNode.length > 0 || failedNode.length > 0) {
         if (!taskPayload.task_params) {
           taskPayload.task_params = {};
@@ -202,7 +202,7 @@ export const generateYamlStr = (
     if (taskPayload.command !== undefined && taskPayload.type === 'SUB_PROCESS') {
       delete taskPayload.command;
     }
-    
+
     // For script-based tasks, ensure command is in task_params.rawScript
     if (['SHELL', 'PYTHON'].includes(taskPayload.type)) {
       if (taskPayload.command) {
@@ -210,14 +210,14 @@ export const generateYamlStr = (
         delete taskPayload.command;
       }
     }
-    
+
     if (localParams.length > 0) {
       if (!taskPayload.task_params) {
         taskPayload.task_params = {};
       }
       taskPayload.task_params.localParams = localParams;
     }
-    
+
     // Add the deps array to the payload if it's not empty
     if (uniqueDeps.length > 0) {
       taskPayload.deps = uniqueDeps;
@@ -258,6 +258,11 @@ export const generateYamlStr = (
   } else {
     doc.delete('parameters');
   }
-
+  const locations = graph.getNodes().map((node: any) => {
+    const { x, y } = node.getPosition();
+    const data = node.getData();
+    return { taskCode: data.name, x, y };
+  });
+  doc.set("locations", locations);
   return doc.toString();
 };

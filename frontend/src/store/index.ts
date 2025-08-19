@@ -4,6 +4,7 @@ import homeReducer from './slices/homeSlice';
 import maintainReducer from './slices/maintainSlice';
 
 export const store = configureStore({
+  devTools:true,
   reducer: {
     workflowEditor: workflowEditorReducer,
     home: homeReducer,

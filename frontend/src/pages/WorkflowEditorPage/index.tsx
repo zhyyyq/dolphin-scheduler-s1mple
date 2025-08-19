@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import './index.less';
 import { useParams, useLocation } from 'react-router-dom';
@@ -19,8 +19,9 @@ import {
   setWorkflowData,
   clearWorkflow,
   initializeGraph,
+  WorkflowData,
 } from '../../store/slices/workflowEditorSlice';
-import { WorkflowDetail } from '../../types';
+import { Workflow } from '../../types';
 
 const WorkflowEditorPage: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -49,25 +50,19 @@ const WorkflowEditorPage: React.FC = () => {
       const projectName = searchParams.get('projectName');
       const projectCode = searchParams.get('projectCode');
       if (projectName && projectCode) {
-        const initialWorkflowData: WorkflowDetail = {
-          code: 0,
-          name: 'new-workflow',
-          uuid: '',
-          project: projectName,
-          projectCode: parseInt(projectCode, 10),
-          projectName: projectName,
-          releaseState: 'UNSUBMITTED',
+        const initialWorkflowData: WorkflowData = {
+          id: '',
+          process_definition_code: undefined,
+          version: 0,
+          releaseState: '',
           updateTime: '',
-          schedule_text: '',
-          schedule_human_readable: '',
-          tasks: [],
-          parameters: [],
-          relations: [],
-          filename: '',
-          yaml_content: '',
-          locations: '',
-          schedule: '',
-          local_status: 'new',
+          yaml_content: {
+            workflow: undefined,
+            tasks: [],
+            locations: undefined,
+            parameters: undefined
+          },
+          yaml_content_raw: ''
         };
         dispatch(setWorkflowData(initialWorkflowData));
       }

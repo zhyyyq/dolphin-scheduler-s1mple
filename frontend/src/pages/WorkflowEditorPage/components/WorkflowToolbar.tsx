@@ -13,6 +13,7 @@ import {
   setScheduleTimeRange,
   showYaml,
   saveWorkflow,
+  autoLayout,
 } from '../../../store/slices/workflowEditorSlice';
 
 const { RangePicker } = DatePicker;
@@ -62,7 +63,7 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({ }) => {
     if (graph) {
       // Assuming autoLayout is a method on the graph object from useGraph hook
       // This part needs to be connected to the actual auto-layout logic
-      console.log("Auto layout triggered");
+      dispatch(autoLayout())
     }
   };
 

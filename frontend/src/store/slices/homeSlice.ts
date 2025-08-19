@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { Workflow, WorkflowDetail, Task } from '../../types';
+import { Workflow, Task, LocalWorkflow } from '../../types';
 import api from '../../api';
-import yaml from 'yaml';
 import { Graph, Node as X6Node } from '@antv/x6';
 import { compileGraph } from '../../utils/graphUtils';
 
@@ -93,9 +92,40 @@ export const fetchWorkflows = createAsyncThunk(
     dispatch(setLoading(true));
     dispatch(setError(null));
     try {
-      const combinedWorkflows = await api.get<Workflow[]>('/api/workflow/combined');
-      const sortedWorkflows = combinedWorkflows.sort((a, b) => new Date(b.updateTime).getTime() - new Date(a.updateTime).getTime());
-      dispatch(setWorkflows(sortedWorkflows));
+      const res = await api.get<Workflow[]>('/api/workflow/combined');
+      console.log(res);
+      const { localWorkflows, dsWorkflows } = res as any as { localWorkflows: LocalWorkflow[], dsWorkflows: any[]};
+      // 处理本地的工作流
+      let workflows: Workflow[] = [];
+      const workflows_local = localWorkflows.filter(item => !item.processDefinitionCode).map(item => {
+        let res: Workflow = {
+          id: item.id,
+          process_definition_code: undefined,
+          updateTime: item.updateTime,
+          yaml_content: item.yaml_content,
+          version: item.version,
+          releaseState: 'OFFLINE'
+        }
+        return res;
+      })
+      const sortedWorkflows_local = workflows_local.sort((a, b) => new Date(b.updateTime).getTime() - new Date(a.updateTime).getTime());
+      workflows = [...sortedWorkflows_local];
+      // 处理已经上线的 包括已变更的
+      const workflows_online = localWorkflows.filter(item => item.processDefinitionCode).map(item => {
+        const ds_workflow = dsWorkflows.find(pred => pred.code == item.processDefinitionCode);
+        let res: Workflow = {
+          id: item.id,
+          updateTime: item.updateTime,
+          yaml_content: item.yaml_content,
+          process_definition_code: undefined,
+          version: 0,
+          related_ds_workflow: ds_workflow,
+          releaseState: item.version === ds_workflow.version ? "ONLINE": "MODIFIED"
+        }
+        return res;
+      })
+      const sortedWorkflows_ds = workflows_online.sort((a, b) => new Date(b.updateTime).getTime() - new Date(a.updateTime).getTime());
+      dispatch(setWorkflows([...sortedWorkflows_local, ...sortedWorkflows_ds]));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       dispatch(setError(errorMessage));
@@ -110,12 +140,12 @@ export const deleteWorkflow = createAsyncThunk(
   async (record: Workflow, { dispatch }) => {
     try {
       const params: { projectCode?: number; workflowCode?: number } = {};
-      if (record.projectCode && typeof record.code === 'number') {
-        params.projectCode = record.projectCode;
-        params.workflowCode = record.code;
+      if (record.related_ds_workflow?.code ) {
+        params.projectCode = record.related_ds_workflow?.projectCode;
+        params.workflowCode = record.related_ds_workflow?.code;
       }
 
-      await api.delete(`/api/workflow/${record.uuid}`, params);
+      await api.delete(`/api/workflow/${record.id}`, params);
       dispatch(fetchWorkflows());
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -129,9 +159,7 @@ export const onlineWorkflow = createAsyncThunk(
   async (record: Workflow, { dispatch }) => {
     try {
       // 1. Fetch the full YAML content and workflow details
-      const workflowDetail = await api.get<WorkflowDetail>(`/api/workflow/${record.uuid}`);
-      const yamlContent = workflowDetail.yaml_content;
-      const doc = yaml.parse(yamlContent);
+      const doc = record.yaml_content;
       const workflow = doc.workflow || {};
       
       // Create a temporary graph instance to compile the workflow
@@ -351,7 +379,7 @@ export const onlineWorkflow = createAsyncThunk(
 
       // 5. Build taskRelationJson and locations from COMPILED relations
       const taskRelationJson: any[] = [];
-      const originalLocations = workflowDetail.locations ? JSON.parse(workflowDetail.locations) : [];
+      const originalLocations = doc.locations;
       const originalLocationsMap = new Map(originalLocations.map((l: any) => [l.taskCode, { x: l.x, y: l.y }]));
       const payloadLocations: any[] = [];
 
@@ -493,8 +521,8 @@ export const onlineWorkflow = createAsyncThunk(
       }));
 
       const payload = {
-        uuid: record.uuid,
-        name: workflow.name || record.name,
+        uuid: record.id,
+        name: workflow.name,
         project: workflow.project || 'default',
         description: workflow.description || '',
         globalParams: JSON.stringify(globalParams),
