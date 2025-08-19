@@ -1,134 +1,145 @@
 package com.example.scheduler.service;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.example.scheduler.enums.WorkflowRunningStatusEnum;
+
+import com.example.scheduler.dto.ProcessWithTasks;
 import com.example.scheduler.enums.WorkflowQueryTimeTypeEnum;
-import com.example.scheduler.mapper.WorkflowInstanceMapper;
+import com.example.scheduler.enums.WorkflowRunningStatusEnum;
+import com.example.scheduler.model.TDsProcessDefinition;
+import com.example.scheduler.model.TDsProcessInstance;
 import com.example.scheduler.model.TDsTaskInstance;
+import com.example.scheduler.mapper.TDsProcessDefinitionMapper;
 import com.example.scheduler.mapper.TDsProcessInstanceMapper;
 import com.example.scheduler.mapper.TDsTaskInstanceMapper;
-import com.example.scheduler.mapper.TaskInstanceMapper;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 
 @Service
 public class MaintainService {
   private static final Logger logger = LoggerFactory.getLogger(MaintainService.class);
-  @Autowired
-  private DsService dsService;
-
-  @Autowired
-  private WorkflowInstanceMapper workflowInstanceMapper;
-
-  @Autowired
-  private TaskInstanceMapper taskInstanceMapper;
 
   @Autowired
   private TDsTaskInstanceMapper tdsTaskInstanceMapper;
 
   @Autowired
   private TDsProcessInstanceMapper tDsProcessInstanceMapper;
-  // This service can be used to implement maintenance tasks
-  // such as cleaning up old data, optimizing database, etc.
-  // Currently, it is empty and can be extended as needed.
 
-  public JSONObject getMaintenanceStatus(long[] projectCodes, String timeType, String[] timeRange)
+  @Autowired
+  private TDsProcessDefinitionMapper tDsProcessDefinitionMapper;
+
+  public JSONObject getMaintenanceStatus(Long[] projectCodes, String timeType, String[] timeRange)
       throws Exception {
-    // This method can return the status of maintenance tasks
-    JSONObject res = new JSONObject();
-    res.put("workflowStats", new JSONArray());
-    res.put("taskStats", new JSONArray());
-    // init response
-    for (WorkflowRunningStatusEnum status : WorkflowRunningStatusEnum.values()) {
-      res.getJSONArray("workflowStats")
-          .add(new JSONObject().fluentPut("statusDesc", status.getDesc()).fluentPut("count", 0).fluentPut("statusCode",
-              status.getCode()));
-      res.getJSONArray("taskStats")
-          .add(new JSONObject().fluentPut("statusDesc", status.getDesc()).fluentPut("count", 0).fluentPut("statusCode",
-              status.getCode()));
+    LambdaQueryWrapper<TDsProcessInstance> processQueryWrapper = new LambdaQueryWrapper<>();
+    // Ensure projectCodes is not null and has at least one element
+    if (projectCodes != null && projectCodes.length > 0) {
+      // Use the .in method with projectCodes
+      processQueryWrapper.in(TDsProcessInstance::getProjectCode, projectCodes);
     }
-    // loop query dsService.getWorkflowInstances
-    List<Map<String, Object>> instancesStats = this.getWorkflowInstancesStats(projectCodes, timeType, timeRange);
-    logger.info("Instances stats: " + instancesStats);
-    // update the response
-    for (Map<String, Object> instance : instancesStats) {
-      int statusCode = (int) instance.get("state");
-      int count = ((Long) instance.get("count")).intValue();
-      WorkflowRunningStatusEnum status = WorkflowRunningStatusEnum.fromCode(statusCode);
-      if (status != null) {
-        res.getJSONArray("workflowStats").stream()
-            .filter(stat -> ((JSONObject) stat).getInteger("statusCode") == status.getCode())
-            .findFirst()
-            .ifPresent(stat -> ((JSONObject) stat).put("count", ((JSONObject) stat).getInteger("count") + count));
-      }
-    }
-    List<Map<String, Object>> taskInstancesStats = this.getTaskInstancesStats(projectCodes, timeType,
-        timeRange);
-    logger.info("Task instances stats: " + taskInstancesStats);
-    // update the response
-    for (Map<String, Object> instance : taskInstancesStats) {
-      int statusCode = (int) instance.get("state");
-      int count = ((Long) instance.get("count")).intValue();
-      WorkflowRunningStatusEnum status = WorkflowRunningStatusEnum.fromCode(statusCode);
-      if (status != null) {
-        res.getJSONArray("taskStats").stream()
-            .filter(stat -> ((JSONObject) stat).getInteger("statusCode") == status.getCode())
-            .findFirst()
-            .ifPresent(stat -> ((JSONObject) stat).put("count", ((JSONObject) stat).getInteger("count") + count));
-      }
-    }
-    return res;
-  }
 
-  private List<Map<String, Object>> getWorkflowInstancesStats(long[] projectCodes, String timeType,
-      String[] timeRange) {
-    // This method can be used to get the statistics of workflow instances
-    // based on the project code, task status, and time range.
-    // Currently, it is not implemented and can be extended as needed.
-    logger.info("Getting workflow instances stats for project code: " + projectCodes + ", task status: " + ", time type: " + timeType + ", time range: " + String.join(", ", timeRange));
-    if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.SCHEDULE_TIME.getCode()) {
-      List<Map<String, Object>> res = this.workflowInstanceMapper
-          .queryProcessInstanceStatsByScheduleTime(timeRange[0], timeRange[1], projectCodes);
-      logger.info("Workflow instances stats: " + res);
-      return res;
-    } else if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.START_TIME.getCode()) {
-      List<Map<String, Object>> res = this.workflowInstanceMapper
-          .queryProcessInstanceStatsByStartTime(timeRange[0], timeRange[1], projectCodes);
-      logger.info("Workflow instances stats: " + res);
-      return res;
-    } else {
-      logger.error("Invalid time type code: " + timeType);
-      throw new IllegalArgumentException("Invalid time type code: " + timeType);
-    }
-  }
+    // Format dates
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-  private List<Map<String, Object>> getTaskInstancesStats(long[] projectCodes, String timeType,
-      String[] timeRange) {
-    // This method can be used to get the statistics of workflow instances
-    // based on the project code, task status, and time range.
-    // Currently, it is not implemented and can be extended as needed.
-    logger.info("Getting workflow instances stats for project code: " + projectCodes + ", task status: " + ", time type: " + timeType + ", time range: " + String.join(", ", timeRange));
-    if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.SCHEDULE_TIME.getCode()) {
-      List<Map<String, Object>> res = this.taskInstanceMapper
-          .queryTaskInstanceStatsByScheduleTime(timeRange[0], timeRange[1], projectCodes);
-      logger.info("Workflow instances stats: " + res);
-      return res;
-    } else if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.START_TIME.getCode()) {
-      List<Map<String, Object>> res = this.taskInstanceMapper
-          .queryTaskInstanceStatsByStartTime(timeRange[0], timeRange[1], projectCodes);
-      logger.info("Workflow instances stats: " + res);
-      return res;
-    } else {
-      logger.error("Invalid time type code: " + timeType);
-      throw new IllegalArgumentException("Invalid time type code: " + timeType);
+    // Parse start and end time from timeRange
+    Date startTime = formatter.parse(timeRange[0]);
+    Date endTime = formatter.parse(timeRange[1]);
+
+    // Check time type and apply between condition for the appropriate field
+    if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.START_TIME.getCode()) {
+      processQueryWrapper.between(TDsProcessInstance::getStartTime, startTime, endTime);
+    } else if (Integer.parseInt(timeType) == WorkflowQueryTimeTypeEnum.SCHEDULE_TIME.getCode()) {
+      processQueryWrapper.between(TDsProcessInstance::getScheduleTime, startTime, endTime);
     }
+
+    // Execute the query
+    List<TDsProcessInstance> tDsProcessInstanceList = this.tDsProcessInstanceMapper.selectList(processQueryWrapper);
+
+    // 查询关联的调度任务
+    Integer[] instanceIds = tDsProcessInstanceList.stream()
+        .map(TDsProcessInstance::getId)
+        .toArray(Integer[]::new);
+    List<TDsTaskInstance> tDsTaskInstanceList = this.tdsTaskInstanceMapper
+        .selectList(new LambdaQueryWrapper<TDsTaskInstance>().in(TDsTaskInstance::getProcessInstanceId, instanceIds));
+
+    // bind task to instance
+    // Create a map from process ID to a list of associated task instances
+    Map<Integer, List<TDsTaskInstance>> processToTasks = tDsTaskInstanceList.stream()
+        .collect(Collectors.groupingBy(TDsTaskInstance::getProcessInstanceId));
+
+    // Create a list of ProcessWithTasks objects
+    List<ProcessWithTasks> processesWithTasks = new ArrayList<>();
+
+    for (TDsProcessInstance process : tDsProcessInstanceList) {
+      Integer processId = process.getId();
+      List<TDsTaskInstance> tasks = processToTasks.getOrDefault(processId, new ArrayList<>());
+      processesWithTasks.add(new ProcessWithTasks(process, tasks));
+    }
+    JSONObject resultMap = new JSONObject();
+    // Add the result to the JSONObject
+    resultMap.put("processListWithTasks", processesWithTasks);
+    // stats calculate
+    // taskStats: { statusDesc: string; count: number; statusCode: number }[];
+    // workflowStats: { statusDesc: string; count: number; statusCode: number }[];
+    // processList unique
+    // Create workflowStats using groupingBy and counting
+    List<Map<String, Object>> workflowStats = processesWithTasks.stream()
+        .map(ProcessWithTasks::getProcessInstance)
+        .map(TDsProcessInstance::getState)
+        .collect(Collectors.groupingBy(
+            statusCode -> WorkflowRunningStatusEnum.values()[statusCode].getDesc(),
+            Collectors.counting()))
+        .entrySet().stream()
+        .map(entry -> {
+          Map<String, Object> stat = new HashMap<>();
+          stat.put("statusDesc", entry.getKey());
+          stat.put("count", entry.getValue());
+          stat.put("statusCode",
+              WorkflowRunningStatusEnum.valueOf(entry.getKey().toUpperCase().replace(" ", "_")).getCode());
+          return stat;
+        })
+        .collect(Collectors.toList());
+    resultMap.put("workflowStats", workflowStats);
+    List<Map<String, Object>> taskStats = processesWithTasks.stream()
+        .map(ProcessWithTasks::getTaskInstances) // Returns List<TDsTaskInstance>
+        .flatMap(taskInstances -> taskInstances.stream()) // Convert List<TDsTaskInstance> to Stream<TDsTaskInstance>
+        .map(TDsTaskInstance::getState) // Map to the state of each task instance
+        .collect(Collectors.groupingBy(
+            statusCode -> WorkflowRunningStatusEnum.values()[statusCode].getDesc(),
+            Collectors.counting()))
+        .entrySet().stream()
+        .map(entry -> {
+          Map<String, Object> stat = new HashMap<>();
+          stat.put("statusDesc", entry.getKey());
+          stat.put("count", entry.getValue());
+          stat.put("statusCode",
+              WorkflowRunningStatusEnum.valueOf(entry.getKey().toUpperCase().replace(" ", "_")).getCode());
+          return stat;
+        })
+        .collect(Collectors.toList());
+    resultMap.put("taskStats", taskStats);
+    // processList unique
+    Integer[] processDefinitionCodeList = processesWithTasks.stream()
+    .map(ProcessWithTasks::getProcessInstance)  // Get ProcessInstance
+    .map(TDsProcessInstance::getProcessDefinitionCode)  // Get processDefinitionCode (Long)
+    .map(Long::intValue)  // Convert Long to Integer directly
+    .toArray(Integer[]::new);  // Convert to Integer array
+    List<TDsProcessDefinition> tDsProcessDefinitionList = this.tDsProcessDefinitionMapper.selectList(
+        new LambdaQueryWrapper<TDsProcessDefinition>().in(TDsProcessDefinition::getId, processDefinitionCodeList));
+    resultMap.put("processDefinitionList", tDsProcessDefinitionList);
+    return resultMap;
   }
 
   public JSONArray getMaintenanceInstances(long[] projectCodes, String timeType, String[] timeRange) {
@@ -138,5 +149,5 @@ public class MaintainService {
     List<TDsTaskInstance> res = tdsTaskInstanceMapper.selectList(queryWrapper);
     return (JSONArray) JSONArray.toJSON(res);
   }
-  
+
 }

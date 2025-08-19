@@ -18,7 +18,7 @@ public class MaintainController {
   private MaintainService maintainService;
 
   @GetMapping("/stats")
-  public ResponseEntity<?> stats(@RequestParam(value = "projectCodes", required = false) long[] projectCodes,
+  public ResponseEntity<?> stats(@RequestParam(value = "projectCodes", required = false) Long[] projectCodes,
       @RequestParam(value = "timeType", required = false) String timeType,
       @RequestParam(value = "timeRange", required = false) String[] timeRange
   ) {
