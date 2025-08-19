@@ -39,13 +39,18 @@ const WorkflowRunningView: React.FC = () => {
     // call 
     // redirect to edit page 
   }, []);
+  const handleExecuteClick = useCallback(() => {
+    console.log('user clicked handleExecuteClick')
+    // call 
+    // redirect to edit page 
+  }, []);
   if (!selectedWorkflow) return <div className="workflow-running-view-not-found">
-     <Result
+    <Result
       status="404"
       title="404"
       subTitle="请选择一个工作流"
     />
-  </div> 
+  </div>
   return <div className="workflow-running-view">
     <div className="instances-panel">
       <div className="first-row">
@@ -64,10 +69,10 @@ const WorkflowRunningView: React.FC = () => {
         </div>
         <div className="workflow-opertaion-panel">
           <div>
-            <Button style={{ color: '#1677ff'}} onClick={handleCheckClick}>查看</Button>
+            <Button style={{ color: '#1677ff' }} onClick={handleCheckClick}>查看</Button>
           </div>
           <div>
-            <Button type="primary">立即执行</Button>
+            <Button type="primary" onClick={handleExecuteClick}>立即执行</Button>
           </div>
         </div>
       </div>
