@@ -1,5 +1,5 @@
 import { RootState } from "@/store";
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import './index.less'
 import { Button, Divider, Result, Table, TableColumnsType } from "antd";
@@ -8,7 +8,8 @@ import { DashboardTwoTone, PlayCircleTwoTone, QuestionCircleTwoTone, RedoOutline
 const WorkflowRunningView: React.FC = () => {
   const {
     selectedWorkflow,
-    workflows
+    workflows,
+    projects
   } = useSelector((state: RootState) => state.maintain);
   const dispatch = useDispatch();
   const columns: TableColumnsType<WorkflowDataType> = useMemo(() => {
@@ -30,6 +31,14 @@ const WorkflowRunningView: React.FC = () => {
       }
     ]
   }, []);
+  const projectName = useMemo(() => {
+    return projects.find(pred => pred.code === selectedWorkflow?.projectCode)?.name;
+  }, [projects, selectedWorkflow]);
+  const handleCheckClick = useCallback(() => {
+    console.log('user clicked check')
+    // call 
+    // redirect to edit page 
+  }, []);
   if (!selectedWorkflow) return <div className="workflow-running-view-not-found">
      <Result
       status="404"
@@ -46,22 +55,19 @@ const WorkflowRunningView: React.FC = () => {
           </div>
           <div>
             <div>工作流名称</div>
-            <div>{selectedWorkflow?.workflowName}</div>
+            <div>{selectedWorkflow?.name}</div>
           </div>
           <div>
             <div>项目名称</div>
-            <div>{selectedWorkflow?.projectName}</div>
+            <div>{projectName}</div>
           </div>
         </div>
         <div className="workflow-opertaion-panel">
           <div>
-            <RedoOutlined style={{ color: '#1677ff'}}></RedoOutlined>
+            <Button style={{ color: '#1677ff'}} onClick={handleCheckClick}>查看</Button>
           </div>
           <div>
-            <QuestionCircleTwoTone />
-          </div>
-          <div>
-            <PlayCircleTwoTone/>
+            <Button type="primary">立即执行</Button>
           </div>
         </div>
       </div>
@@ -77,7 +83,7 @@ const WorkflowRunningView: React.FC = () => {
         </div>
         <div>
           <div>任务流UUID</div>
-          <div>{selectedWorkflow?.workflowId}</div>
+          <div>{selectedWorkflow?.code}</div>
         </div>
       </div>
 

@@ -9,10 +9,10 @@ interface Project {
 }
 
 export interface WorkflowDataType {
-  key: React.Key;
-  workflowId: string;
-  workflowName: string;
-  projectName: string;
+  code: number;
+  id: number;
+  name: string;
+  projectCode: number;
 }
 
 interface MaintainState {
@@ -143,40 +143,11 @@ export const fetchStats = createAsyncThunk(
       console.log('Fetched stats:', stats);
       dispatch(setTaskStats(stats.taskStats));
       dispatch(setWorkflowStats(stats.workflowStats));
+      dispatch(setWorkflows(stats.processDefinitionList))
       dispatch(setError(null));
       dispatch(setLoading(false));
-      dispatch(fetchWorkflows())
       // Assuming stats is an object with the required properties
       // Dispatch actions to update the state with stats if needed
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
-      dispatch(setError(errorMessage));
-    } finally {
-      dispatch(setLoading(false));
-    }
-  }
-);
-export const fetchWorkflows = createAsyncThunk(
-  'home/fetchWorkflows',
-  async (_, { dispatch, getState }) => {
-    dispatch(setLoading(true));
-    dispatch(setError(null));
-    try {
-      const state = getState() as RootState;
-      // const combinedWorkflows = await api.get<Workflow[]>('/api/maintain/instances', {
-      //   page: 1, pageSize: 10, timeType: state.maintain.selectedTimeType,
-      //   timeRange: state.maintain.selectedTimeRange.map(t => dayjs(t).format('YYYY-MM-DD HH:mm:ss')),
-      //   projectCodes: state.maintain.selectedProject,
-      // });
-      const data: WorkflowDataType[] = Array(30).fill(1).map((_, index) => {
-        return {
-          key: `mockId${index}`,
-          workflowId: `mockId${index}`,
-          workflowName: `mockName${index}`,
-          projectName: 'default',
-        }
-      });
-      dispatch(setWorkflows(data));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
       dispatch(setError(errorMessage));

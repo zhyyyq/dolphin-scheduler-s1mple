@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
-import { Select, Segmented, DatePicker } from "antd";
+import { Select, Segmented, DatePicker, Divider } from "antd";
 import "./index.less";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
@@ -156,6 +156,7 @@ const MaintainPage: React.FC = () => {
           </div>
 
         </div>
+        <Divider>运行统计看板</Divider>
         <div className={`${p_refixCls}-stats-panel`}>
           <div>
             <Pie />

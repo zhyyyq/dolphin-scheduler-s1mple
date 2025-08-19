@@ -130,24 +130,16 @@ public class MaintainService {
         })
         .collect(Collectors.toList());
     resultMap.put("taskStats", taskStats);
-    // processList unique
-    Integer[] processDefinitionCodeList = processesWithTasks.stream()
+    // processList 
+    Long[] processDefinitionCodeList = processesWithTasks.stream()
     .map(ProcessWithTasks::getProcessInstance)  // Get ProcessInstance
     .map(TDsProcessInstance::getProcessDefinitionCode)  // Get processDefinitionCode (Long)
-    .map(Long::intValue)  // Convert Long to Integer directly
-    .toArray(Integer[]::new);  // Convert to Integer array
+    .toArray(Long[]::new); // Convert to Integer array
+    logger.info("processDefinitionCodeList" + processDefinitionCodeList.toString());
     List<TDsProcessDefinition> tDsProcessDefinitionList = this.tDsProcessDefinitionMapper.selectList(
-        new LambdaQueryWrapper<TDsProcessDefinition>().in(TDsProcessDefinition::getId, processDefinitionCodeList));
+        new LambdaQueryWrapper<TDsProcessDefinition>().in(TDsProcessDefinition::getCode, processDefinitionCodeList));
+    logger.info(tDsProcessDefinitionList.toString());
     resultMap.put("processDefinitionList", tDsProcessDefinitionList);
     return resultMap;
   }
-
-  public JSONArray getMaintenanceInstances(long[] projectCodes, String timeType, String[] timeRange) {
-    QueryWrapper<TDsTaskInstance> queryWrapper = new QueryWrapper<TDsTaskInstance>();
-    if (projectCodes != null && projectCodes.length > 0)
-      queryWrapper.in("project_code", projectCodes);
-    List<TDsTaskInstance> res = tdsTaskInstanceMapper.selectList(queryWrapper);
-    return (JSONArray) JSONArray.toJSON(res);
-  }
-
 }

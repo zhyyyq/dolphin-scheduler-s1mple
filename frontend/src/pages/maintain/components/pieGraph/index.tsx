@@ -40,7 +40,7 @@ const DemoMemo = () => {
   }
   return (
     <div>
-      <Pie width={400} height={400} {...config} data={data} />
+      <Pie width={300} height={300} {...config} data={data} />
     </div>
   );
 };
