@@ -96,7 +96,7 @@
                     </excludes>
                 </configuration>
             </plugin>
-            <!-- <plugin>
+            <plugin>
                 <groupId>org.mybatis.generator</groupId>
                 <artifactId>mybatis-generator-maven-plugin</artifactId>
                 <version>1.4.2</version>
@@ -107,7 +107,7 @@
                         <version>42.6.0</version>
                     </dependency>
                 </dependencies>
-            </plugin> -->
+            </plugin>
         </plugins>
     </build>
 
