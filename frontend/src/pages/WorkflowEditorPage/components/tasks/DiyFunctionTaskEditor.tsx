@@ -56,7 +56,7 @@ const DiyFunctionTaskEditor: DiyFunctionTaskEditorComponent = ({ task }) => {
       </Form.Item>
       <Modal
         title="View Function Code"
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={handleCancel}
         footer={[
           <Button key="back" onClick={handleCancel}>

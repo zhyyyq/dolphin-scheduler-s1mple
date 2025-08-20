@@ -165,7 +165,7 @@ const WorkflowInstanceDetailPage: React.FC = () => {
       </Row>
       <Modal
         title="查看日志"
-        visible={logVisible}
+        open={logVisible}
         onCancel={() => setLogVisible(false)}
         footer={[
           <Button key="back" onClick={() => setLogVisible(false)}>
