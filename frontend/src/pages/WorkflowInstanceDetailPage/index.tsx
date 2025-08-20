@@ -58,11 +58,11 @@ const WorkflowInstanceDetailPage: React.FC = () => {
     const findWorkflowUuid = async () => {
       if (instance && instance.dagData && instance.dagData.processDefinition) {
         try {
-          const workflows = await api.get<any[]>('/api/workflow/combined');
+          const res = await api.get<any>('/api/workflow/combined');
           const processDefinitionCode = instance.dagData.processDefinition.code;
-          const matchedWorkflow = workflows?.find(wf => String(wf.code) === String(processDefinitionCode));
+          const matchedWorkflow = res?.localWorkflows.find((wf:any) => String(wf.processDefinitionCode) === String(processDefinitionCode));
           if (matchedWorkflow) {
-            setWorkflowUuid(matchedWorkflow.uuid);
+            setWorkflowUuid(matchedWorkflow.id);
           }
         } catch (err) {
           console.error('Failed to fetch combined workflows', err);
