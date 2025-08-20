@@ -17,7 +17,7 @@ interface ContextMenuState {
   py: number;
 }
 
-export interface WorkflowData extends Workflow{
+export interface WorkflowData extends Workflow {
   yaml_content_raw: string
 }
 
@@ -118,14 +118,14 @@ export const initializeGraph = createAsyncThunk<void, HTMLDivElement, { state: R
 
     graphInstance.on('node:dblclick', ({ node }) => dispatch(handleNodeDoubleClick({ node })));
     graphInstance.on('edge:dblclick', ({ edge }) => {
-        const sourceNode = edge.getSourceNode();
-        if (sourceNode && sourceNode.getData().type === 'SWITCH') {
-          dispatch(setCurrentEdge(edge));
-        }
+      const sourceNode = edge.getSourceNode();
+      if (sourceNode && sourceNode.getData().type === 'SWITCH') {
+        dispatch(setCurrentEdge(edge));
+      }
     });
     graphInstance.on('blank:contextmenu', ({ e, x, y }) => {
-        e.preventDefault();
-        dispatch(setContextMenu({ visible: true, x: e.clientX, y: e.clientY, px: x, py: y }));
+      e.preventDefault();
+      dispatch(setContextMenu({ visible: true, x: e.clientX, y: e.clientY, px: x, py: y }));
     });
     graphInstance.on('node:contextmenu', ({ e }) => e.preventDefault());
     graphInstance.on('edge:contextmenu', ({ e }) => e.preventDefault());
@@ -174,7 +174,7 @@ export const workflowEditorSlice = createSlice({
     setScheduleTimeRange: (state, action: PayloadAction<[string | null, string | null]>) => {
       state.scheduleTimeRange = action.payload;
     },
-    setWorkflowData: (state, action: PayloadAction<WorkflowData| null>) => {
+    setWorkflowData: (state, action: PayloadAction<WorkflowData | null>) => {
       state.workflowData = action.payload;
     },
     setGraph: (state, action: PayloadAction<any | null>) => {
@@ -218,7 +218,7 @@ export const saveWorkflow = createAsyncThunk<
       scheduleTimeRangeISO[0] ? dayjs(scheduleTimeRangeISO[0]) : null,
       scheduleTimeRangeISO[1] ? dayjs(scheduleTimeRangeISO[1]) : null,
     ] as [dayjs.Dayjs | null, dayjs.Dayjs | null];
-    
+
 
 
     const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, workflowData?.yaml_content_raw, workflowData?.yaml_content.workflow?.projectName, workflowData?.yaml_content.workflow?.projectCode);
@@ -313,7 +313,7 @@ export const saveNode = createAsyncThunk<void, Task, { state: RootState }>(
     if (nodeToUpdate) {
       const existingData = nodeToUpdate.getData();
       const newData = { ...existingData, ...updatedNode };
-      
+
       if (newData.name) {
         newData.label = newData.name;
       }
@@ -347,34 +347,6 @@ export const fetchWorkflow = createAsyncThunk<WorkflowData, string, { state: Roo
   async (workflow_uuid: string, { dispatch }) => {
     const response = await api.get<WorkflowData>(`/api/workflow/${workflow_uuid}`);
     dispatch(setWorkflowData(response));
-
-    const { yaml_content_raw, yaml_content } = response;
-    dispatch(setWorkflowName(yaml_content.workflow.name));
-
-    try {
-      const doc = yaml.parseDocument(yaml_content_raw);
-      const schedule = doc.getIn(['workflow', 'schedule']);
-      const startTime = doc.getIn(['workflow', 'startTime']);
-      const endTime = doc.getIn(['workflow', 'endTime']);
-      if (schedule !== undefined && schedule !== null) {
-        let scheduleStr = String(schedule).replace(/\?/g, '*');
-        const parts = scheduleStr.split(' ');
-        if (parts.length === 6 || parts.length === 7) {
-          scheduleStr = `${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]}`;
-        }
-        dispatch(setWorkflowSchedule(scheduleStr));
-        dispatch(setIsScheduleEnabled(true));
-        if (startTime && endTime) {
-          dispatch(setScheduleTimeRange([dayjs(String(startTime)).toISOString(), dayjs(String(endTime)).toISOString()]));
-        }
-      } else {
-        dispatch(setIsScheduleEnabled(false));
-      }
-    } catch (error) {
-      // How to handle message.error? Maybe dispatch an error action.
-      console.error(`解析工作流元数据失败: ${(error as Error).message}`);
-    }
-
     dispatch(loadGraphContent());
     return response;
   }
@@ -389,11 +361,35 @@ export const loadGraphContent = createAsyncThunk<void, string | undefined, { sta
     if (!graph || (!yaml_content_p && !workflowData)) {
       return;
     }
-    const yaml_content_raw:any = yaml_content_p ? yaml_content_p : workflowData?.yaml_content_raw
+    const yaml_content_raw: any = yaml_content_p ? yaml_content_p : workflowData?.yaml_content_raw
     try {
-      const doc = yaml.parseDocument(yaml_content_raw) ;
+      const doc = yaml.parseDocument(yaml_content_raw);
+      // schedule and workflow name
+      const workflowName = doc.getIn(['workflow', 'name']);
+      const schedule = doc.getIn(['workflow', 'schedule']);
+      const startTime = doc.getIn(['workflow', 'startTime']);
+      const endTime = doc.getIn(['workflow', 'endTime']);
+      if (workflowName && typeof workflowName == 'string') {
+        dispatch(setWorkflowName(workflowName));
+      } else {
+        dispatch(setWorkflowName("workflowName"));
+      }
+      if (schedule !== undefined && schedule !== null) {
+        let scheduleStr = String(schedule).replace(/\?/g, '*');
+        const parts = scheduleStr.split(' ');
+        if (parts.length === 6 || parts.length === 7) {
+          scheduleStr = `${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]} ${parts[5]}`;
+        }
+        dispatch(setWorkflowSchedule(scheduleStr));
+        dispatch(setIsScheduleEnabled(true));
+        if (startTime && endTime) {
+          dispatch(setScheduleTimeRange([dayjs(String(startTime)).toISOString(), dayjs(String(endTime)).toISOString()]));
+        }
+      } else {
+        dispatch(setIsScheduleEnabled(false));
+      }
       const tasks = (doc.get('tasks') as any)?.toJSON() || [];
-      
+
       const diyFunctionPromises = tasks
         .filter((task: any) => task.type === 'DIY_FUNCTION')
         .map(async (task: any) => {
@@ -488,7 +484,7 @@ export const loadGraphContent = createAsyncThunk<void, string | undefined, { sta
           }
         }
       }
-      
+
       const nodeNameToIdMap = new Map<string, string>();
       graph.clearCells();
       allNodes.forEach((nodeData: any) => {
@@ -497,11 +493,11 @@ export const loadGraphContent = createAsyncThunk<void, string | undefined, { sta
           console.error(`未找到任务类型 "${nodeData.task_type}" 的编辑器配置。`);
           return;
         }
-  
-        const position = locations?.find((l:any) => l.taskCode === nodeData.name) || { x: 0, y: 0 };
-        
+
+        const position = locations?.find((l: any) => l.taskCode === nodeData.name) || { x: 0, y: 0 };
+
         const newNode = (taskEditor as any).createNode(graph, { ...nodeData, label: nodeData.name }, { px: position.x, py: position.y });
-  
+
         if (newNode) {
           nodeNameToIdMap.set(nodeData.name, newNode.id);
           newNode.setData(nodeData);
@@ -521,11 +517,11 @@ export const loadGraphContent = createAsyncThunk<void, string | undefined, { sta
             target: { cell: targetId, port: rel.targetPort },
             labels: rel.label ? [rel.label] : [],
             attrs: {
-                line: {
-                  stroke: '#8f8f8f',
-                  strokeWidth: 1,
-                },
+              line: {
+                stroke: '#8f8f8f',
+                strokeWidth: 1,
               },
+            },
             zIndex: -1,
             label: {
               text: '',

@@ -1,12 +1,13 @@
 package com.example.scheduler.service;
 
-import com.example.scheduler.model.DiySchedulerFunction;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.example.scheduler.mapper.DiySchedulerFunctionMapper;
+import com.example.scheduler.model.DiySchedulerFunction;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.apache.commons.io.FilenameUtils;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -18,7 +19,7 @@ public class DiySchedulerFunctionService {
     private DiySchedulerFunctionMapper diySchedulerFunctionMapper;
 
     public List<DiySchedulerFunction> getAllFunctions() {
-        return  diySchedulerFunctionMapper.selectList(new QueryWrapper<DiySchedulerFunction>().eq("deleted", false).orderByAsc("function_id"));
+        return diySchedulerFunctionMapper.selectList(new QueryWrapper<DiySchedulerFunction>().eq("deleted", false).orderByAsc("function_id"));
     }
 
     public DiySchedulerFunction getFunctionById(Long id) {
@@ -31,7 +32,7 @@ public class DiySchedulerFunctionService {
             throw new RuntimeException("Function with name '" + function.getFunctionName() + "' already exists.");
         }
         if (function.getFunctionContent() != null) {
-          function.setContentHash(String.valueOf(function.getFunctionContent().hashCode()));
+            function.setContentHash(String.valueOf(function.getFunctionContent().hashCode()));
         }
         diySchedulerFunctionMapper.insert(function);
         return function;
@@ -41,10 +42,17 @@ public class DiySchedulerFunctionService {
         String originalFilename = file.getOriginalFilename();
         String baseName = FilenameUtils.getBaseName(originalFilename);
         String content = new String(file.getBytes(), StandardCharsets.UTF_8);
+        // try to get existing function
+        DiySchedulerFunction diySchedulerFunction = this.diySchedulerFunctionMapper.selectOne(new QueryWrapper<DiySchedulerFunction>().eq("function_name", baseName));
 
-
-        if (diySchedulerFunctionMapper.exists(new QueryWrapper<DiySchedulerFunction>().eq("function_name", baseName))) {
+        if (diySchedulerFunction != null && !diySchedulerFunction.getDeleted()) {
             throw new RuntimeException("Function with name '" + baseName + "' already exists.");
+        } else if (diySchedulerFunction != null) {
+            diySchedulerFunction.setFunctionContent(content);
+            diySchedulerFunction.setContentHash(String.valueOf(content.hashCode()));
+            diySchedulerFunction.setDeleted(false);
+            diySchedulerFunctionMapper.updateById(diySchedulerFunction);
+            return diySchedulerFunction;
         } else {
             // If no function with this name has ever existed, create a new one.
             DiySchedulerFunction newFunction = new DiySchedulerFunction();
@@ -67,7 +75,7 @@ public class DiySchedulerFunctionService {
         if (functionDetails.getFunctionContent() != null) {
             curFunction.setContentHash(String.valueOf(functionDetails.getFunctionContent().hashCode()));
         }
-        
+
         diySchedulerFunctionMapper.updateById(curFunction);
         return curFunction;
     }

@@ -159,13 +159,12 @@ export const onlineWorkflow = createAsyncThunk(
   async (record: Workflow, { dispatch }) => {
     try {
       // 1. Fetch the full YAML content and workflow details
-      const doc = record.yaml_content;
+      const doc = JSON.parse(JSON.stringify(record.yaml_content));
       const workflow = doc.workflow || {};
       
       // Create a temporary graph instance to compile the workflow
       const tempGraph = new Graph({ container: document.createElement('div') });
       const originalTasks = doc.tasks || [];
-
       // Pre-process DIY_FUNCTION tasks
       const diyFunctionPromises = originalTasks
         .filter((task: any) => task.type === 'DIY_FUNCTION')
@@ -192,11 +191,11 @@ export const onlineWorkflow = createAsyncThunk(
       const funcs: any[] = await api.get<any>(`/api/diy-functions`);
       originalTasks
         .filter((task: any) => task.type === 'ALERT')
-        .map((task: any) => {
+        .forEach((task: any) => {
           // Mutate the task object in place
-          task.command = funcs.find(item => item?.functionName === task.task_params.channels).functionContent
           task.type = 'PYTHON'; 
           task.task_type = 'PYTHON';
+          task.command = funcs.find(item => item?.functionName === task.task_params.channels).functionContent
           // 手机号参数转化成 localparam
           let mobiles = task.task_params.mobiles;
           // 去重

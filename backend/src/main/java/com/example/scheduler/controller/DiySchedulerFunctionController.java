@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -24,7 +23,7 @@ public class DiySchedulerFunctionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<DiySchedulerFunction> getFunctionById(@PathVariable Long id) {
-      return ResponseEntity.ok(service.getFunctionById(id));
+        return ResponseEntity.ok(service.getFunctionById(id));
     }
 
     @PostMapping
@@ -33,14 +32,12 @@ public class DiySchedulerFunctionController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<DiySchedulerFunction> uploadFunction(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadFunction(@RequestParam("file") MultipartFile file) {
         try {
             DiySchedulerFunction newFunction = service.createFunctionFromUpload(file);
             return ResponseEntity.ok(newFunction);
-        } catch (IOException e) {
-            return ResponseEntity.status(500).build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
         }
     }
 
