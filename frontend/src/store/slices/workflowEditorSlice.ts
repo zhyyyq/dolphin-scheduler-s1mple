@@ -382,17 +382,17 @@ export const fetchWorkflow = createAsyncThunk<WorkflowData, string, { state: Roo
 
 export const loadGraphContent = createAsyncThunk<void, string | undefined, { state: RootState }>(
   'workflowEditor/loadGraphContent',
-  async ( yaml_content_p, { getState, dispatch }) => {
+  async (yaml_content_p, { getState, dispatch }) => {
+    debugger
     const state = getState();
     const { graph, workflowData } = state.workflowEditor;
     dispatch(setIsYamlModalVisible(false))
-    if (!graph || !workflowData) {
+    if (!graph || (!yaml_content_p && !workflowData)) {
       return;
     }
-
-    const { yaml_content_raw } = workflowData;
+    const yaml_content_raw:any = yaml_content_p ? yaml_content_p : workflowData?.yaml_content_raw
     try {
-      const doc = yaml.parseDocument(yaml_content_p ? yaml_content_p : yaml_content_raw) ;
+      const doc = yaml.parseDocument(yaml_content_raw) ;
       const tasks = (doc.get('tasks') as any)?.toJSON() || [];
       
       const diyFunctionPromises = tasks
@@ -448,7 +448,7 @@ export const loadGraphContent = createAsyncThunk<void, string | undefined, { sta
       });
 
       const allNodes = [...tasks, ...globalParamNodes, ...localParamNodes];
-      const locations = workflowData.yaml_content.locations;
+      const locations = workflowData?.yaml_content.locations || [];
       const relations: { from: string, to: string, sourcePort?: string, targetPort?: string, label?: string }[] = [];
       const conditionTasks = new Set(tasks.filter((t: any) => t.type === 'CONDITIONS').map((t: any) => t.name));
 
@@ -533,7 +533,10 @@ export const loadGraphContent = createAsyncThunk<void, string | undefined, { sta
             },
           });
         }
-      });
+      })
+      if (locations.length == 0) {
+        dispatch(autoLayout())
+      }
     } catch (error) {
       // How to handle message.error? Maybe dispatch an error action.
       console.error(`解析工作流 YAML 失败: ${(error as Error).message}`);

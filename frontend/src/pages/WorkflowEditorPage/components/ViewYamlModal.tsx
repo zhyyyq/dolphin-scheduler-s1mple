@@ -53,7 +53,6 @@ export const ViewYamlModal: React.FC = () => {
   };
 
   const items = useMemo(() => {
-    if (workflowData == null) return []
     return [
       {
         key: '1',
@@ -67,7 +66,7 @@ export const ViewYamlModal: React.FC = () => {
           />
         ),
       },
-      ...(workflowData.yaml_content_raw ? [{
+      ...(workflowData?.yaml_content_raw ? [{
         key: '2',
         label: '差异',
         children: renderDiff(),
