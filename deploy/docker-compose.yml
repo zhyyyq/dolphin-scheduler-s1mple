@@ -148,7 +148,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./application.properties:/app/application.properties
+      - ./backend/src/main/resources/application.prod.properties:/app/application.properties
       - workflow-repo-data:/app/workflow_repo
     networks:
       - dolphinscheduler
