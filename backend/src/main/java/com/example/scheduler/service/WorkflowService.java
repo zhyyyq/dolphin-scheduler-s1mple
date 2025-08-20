@@ -47,6 +47,13 @@ public class WorkflowService {
             workflowUuid = newDiyWorkflow.getId();
         } else {
             commitMessage = "update workflow " + workflowName;
+            DiyWorkflow diyWorkflow = this.diyWorkflowMapper.selectById(workflowUuid);
+            Integer version = diyWorkflow.getVersion();
+            if (version != null) {
+                // online workflow
+                diyWorkflow.setVersion(version + 1);
+                this.diyWorkflowMapper.updateById(diyWorkflow);
+            }
         }
 
 
@@ -163,8 +170,6 @@ public class WorkflowService {
         Integer version = workflow.getVersion();
         if (version == null) {
             version = 1;
-        } else {
-            version += 1;
         }
         workflow.setVersion(version);
         workflow.setProcessDefinitionCode((Long) dsResult.get("processDefinitionCode"));
@@ -235,8 +240,6 @@ public class WorkflowService {
     public Map<String, Object> reparseWorkflow(WorkflowDto workflowDto) throws IOException {
         Yaml yaml = new Yaml();
         Map<String, Object> data = yaml.load(workflowDto.getContent());
-        // Assuming a parseWorkflow equivalent exists or is not needed for now
-        // Map<String, Object> parsedData = parseWorkflow(workflowDto.getContent());
         Map<String, Object> result = new java.util.HashMap<>();
         result.put("parsed", data);
         return result;
@@ -257,12 +260,15 @@ public class WorkflowService {
         return gitService.getFileAtCommit(filename, commitHash);
     }
 
-    public List<Map<String, Object>> getDeletedWorkflows() throws GitAPIException, IOException {
-        return gitService.getDeletedFiles();
-    }
 
     public void revertToCommit(String workflowUuid, String commitHash) throws GitAPIException, IOException {
         String filename = workflowUuid + ".yaml";
         gitService.revertFileToCommit(filename, commitHash);
+        DiyWorkflow diyWorkflow = this.diyWorkflowMapper.selectById(workflowUuid);
+        Integer version = diyWorkflow.getVersion();
+        if (version != null) {
+            diyWorkflow.setVersion(version + 1);
+            this.diyWorkflowMapper.updateById(diyWorkflow);
+        }
     }
 }

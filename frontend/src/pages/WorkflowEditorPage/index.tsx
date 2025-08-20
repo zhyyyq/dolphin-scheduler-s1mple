@@ -51,7 +51,7 @@ const WorkflowEditorPage: React.FC = () => {
       if (projectName && projectCode) {
         const initialWorkflowData: WorkflowData = {
           id: '',
-          process_definition_code: undefined,
+          processDefinitionCode: undefined,
           version: 0,
           releaseState: '',
           updateTime: '',

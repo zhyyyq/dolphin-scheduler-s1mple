@@ -32,6 +32,7 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({ }) => {
     workflowSchedule,
     isScheduleEnabled,
     scheduleTimeRange: scheduleTimeRangeISO,
+    workflowData,
     graph,
   } = useSelector((state: RootState) => state.workflowEditor);
 
@@ -92,7 +93,7 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({ }) => {
       <div style={{ position: 'absolute', top: '10px', left: '10px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '8px', background: 'white', padding: '8px', borderRadius: '6px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ marginRight: '8px', fontWeight: '500', width: '120px' }}>工作流名称:</span>
-          <Input value={workflowName} onChange={e => onWorkflowNameChange(e.target.value)} style={{ width: '200px' }} />
+          <Input disabled={!!workflowData?.version}  value={workflowName} onChange={e => onWorkflowNameChange(e.target.value)} style={{ width: '200px' }} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ marginRight: '8px', fontWeight: '500', width: '120px' }}>定时设置 (Cron):</span>
