@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
-import { Select, Segmented, DatePicker, Divider, Result } from "antd";
+import { Select, Segmented, DatePicker, Divider, Result, Button } from "antd";
 import "./index.less";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
@@ -157,7 +157,7 @@ const MaintainPage: React.FC = () => {
               onChange={handleTimeRangeChange}
             />
           </div>
-
+          <div className={`${p_refixCls}-overview-panel-refresh-btn`}><Button type="primary" onClick={()=>{dispatch(fetchStats())}}>刷新</Button></div>
         </div>
         <Divider>运行统计看板</Divider>
         {
