@@ -24,8 +24,18 @@ var config = {
 };
 
 const DemoMemo = () => {
-  const { taskStats } = useSelector((state: RootState) => state.maintain);
+  const { taskStats, workflowStats, selectedDisplayType } = useSelector((state: RootState) => state.maintain);
   const data = useMemo(() => {
+    if (selectedDisplayType === "0") {
+      return workflowStats
+      ? workflowStats
+          .filter((item) => item.count > 0)
+          .map((item) => ({
+            type: get_chinese_workflow_instance_status(item.statusCode),
+            value: item.count,
+          }))
+      : [];
+    }
     return taskStats
       ? taskStats
           .filter((item) => item.count > 0)
@@ -34,13 +44,13 @@ const DemoMemo = () => {
             value: item.count,
           }))
       : [];
-  }, [taskStats]);
+  }, [taskStats, selectedDisplayType, workflowStats]);
   if (data.length === 0) {
     return <div>No data available</div>;
   }
   return (
     <div>
-      <Pie width={200} height={200} {...config} data={data} />
+      <Pie width={300} height={300} {...config} data={data} />
     </div>
   );
 };
