@@ -34,9 +34,7 @@ interface WorkflowEditorState {
   workflowSchedule: string;
   isScheduleEnabled: boolean;
   scheduleTimeRange: [string | null, string | null];
-  workflowUuid: string | null;
   workflowData: WorkflowData | null;
-  originalYaml: string;
   graph: Graph | null;
 }
 
@@ -54,9 +52,7 @@ const initialState: WorkflowEditorState = {
   workflowSchedule: '0 0 * * *',
   isScheduleEnabled: true,
   scheduleTimeRange: [dayjs().toISOString(), dayjs().add(100, 'year').toISOString()],
-  workflowUuid: null,
   workflowData: null,
-  originalYaml: '',
 };
 
 import { Keyboard } from '@antv/x6-plugin-keyboard';
@@ -178,22 +174,14 @@ export const workflowEditorSlice = createSlice({
     setScheduleTimeRange: (state, action: PayloadAction<[string | null, string | null]>) => {
       state.scheduleTimeRange = action.payload;
     },
-    setWorkflowUuid: (state, action: PayloadAction<string | null>) => {
-      state.workflowUuid = action.payload;
-    },
     setWorkflowData: (state, action: PayloadAction<WorkflowData| null>) => {
       state.workflowData = action.payload;
-    },
-    setOriginalYaml: (state, action: PayloadAction<string>) => {
-      state.originalYaml = action.payload;
     },
     setGraph: (state, action: PayloadAction<any | null>) => {
       state.graph = action.payload;
     },
     clearWorkflow: (state) => {
-      state.workflowUuid = null;
       state.workflowData = null;
-      state.originalYaml = '';
       state.workflowName = 'my-workflow';
       state.workflowSchedule = '0 0 * * *';
       state.isScheduleEnabled = true;
@@ -219,8 +207,6 @@ export const saveWorkflow = createAsyncThunk<
       isScheduleEnabled,
       workflowSchedule,
       scheduleTimeRange: scheduleTimeRangeISO,
-      originalYaml,
-      workflowUuid,
       workflowData,
     } = state.workflowEditor;
 
@@ -235,7 +221,7 @@ export const saveWorkflow = createAsyncThunk<
     
 
 
-    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml, workflowData?.yaml_content.workflow?.projectName, workflowData?.yaml_content.workflow?.projectCode);
+    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, workflowData?.yaml_content_raw, workflowData?.yaml_content.workflow?.projectName, workflowData?.yaml_content.workflow?.projectCode);
     if (!yamlStr) {
       throw new Error('Canvas is empty or not initialized.');
     }
@@ -244,13 +230,11 @@ export const saveWorkflow = createAsyncThunk<
     const response = await api.post<{ filename: string; uuid: string }>('/api/workflow/yaml', {
       name: workflowName,
       content: yamlStr,
-      original_filename: workflowUuid ? `${workflowUuid}.yaml` : undefined,
-      uuid: workflowUuid,
+      original_filename: workflowData?.id ? `${workflowData?.id}.yaml` : undefined,
+      uuid: workflowData?.id,
       projectCode: workflowData?.yaml_content.workflow.projectCode,
       projectName: workflowData?.yaml_content.workflow.projectName,
     });
-
-    dispatch(setWorkflowUuid(response.uuid));
     return response;
   }
 );
@@ -363,11 +347,9 @@ export const fetchWorkflow = createAsyncThunk<WorkflowData, string, { state: Roo
   async (workflow_uuid: string, { dispatch }) => {
     const response = await api.get<WorkflowData>(`/api/workflow/${workflow_uuid}`);
     dispatch(setWorkflowData(response));
-    dispatch(setOriginalYaml(response.yaml_content_raw));
 
-    const { id, yaml_content_raw, yaml_content } = response;
+    const { yaml_content_raw, yaml_content } = response;
     dispatch(setWorkflowName(yaml_content.workflow.name));
-    dispatch(setWorkflowUuid(id));
 
     try {
       const doc = yaml.parseDocument(yaml_content_raw);
@@ -569,7 +551,6 @@ export const showYaml = createAsyncThunk<void, void, { state: RootState }>(
       isScheduleEnabled,
       workflowSchedule,
       scheduleTimeRange: scheduleTimeRangeISO,
-      originalYaml,
       workflowData,
     } = state.workflowEditor;
     if (!graph) {
@@ -580,7 +561,7 @@ export const showYaml = createAsyncThunk<void, void, { state: RootState }>(
       scheduleTimeRangeISO[0] ? dayjs(scheduleTimeRangeISO[0]) : null,
       scheduleTimeRangeISO[1] ? dayjs(scheduleTimeRangeISO[1]) : null,
     ] as [dayjs.Dayjs | null, dayjs.Dayjs | null];
-    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, originalYaml, workflowData?.yaml_content.workflow.projectName, workflowData?.yaml_content.workflow.projectCode);
+    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, workflowData?.yaml_content_raw, workflowData?.yaml_content.workflow.projectName, workflowData?.yaml_content.workflow.projectCode);
     dispatch(setYamlContent(yamlStr));
     dispatch(setIsYamlModalVisible(true));
   }
@@ -647,9 +628,7 @@ export const {
   setWorkflowSchedule,
   setIsScheduleEnabled,
   setScheduleTimeRange,
-  setWorkflowUuid,
   setWorkflowData,
-  setOriginalYaml,
   setGraph,
   clearWorkflow,
 } = workflowEditorSlice.actions;

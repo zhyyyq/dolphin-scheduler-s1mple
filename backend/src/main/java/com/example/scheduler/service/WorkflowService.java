@@ -108,7 +108,7 @@ public class WorkflowService {
                 .collect(Collectors.toList());
     }
 
-    public Map<String, Object> getWorkflowDetails(String workflowUuid) throws IOException {
+    public JSONObject getWorkflowDetails(String workflowUuid) throws IOException {
         DiyWorkflow workflow = diyWorkflowMapper.selectById(workflowUuid);
 
         String filename = workflowUuid + ".yaml";
@@ -120,11 +120,11 @@ public class WorkflowService {
         Yaml yaml = new Yaml();
         Map<String, Object> data = yaml.load(content);
         Map<String, Object> map = new java.util.HashMap<>();
-        map.put("uuid", workflow.getId());
-        map.put("filename", filename);
-        map.put("yaml_content", data);
-        map.put("yaml_content_raw", content);
-        return map;
+        JSONObject res = new JSONObject();
+        res.putAll((JSONObject) JSONObject.toJSON(workflow));
+        res.put("yaml_content", data);
+        res.put("yaml_content_raw", content);
+        return res;
     }
 
     public JSONObject getCombinedWorkflows() throws Exception {

@@ -100,7 +100,7 @@ export const fetchWorkflows = createAsyncThunk(
       const workflows_local = localWorkflows.filter(item => !item.processDefinitionCode).map(item => {
         let res: Workflow = {
           id: item.id,
-          process_definition_code: undefined,
+          processDefinitionCode: undefined,
           updateTime: item.updateTime,
           yaml_content: item.yaml_content,
           version: item.version,
@@ -117,7 +117,7 @@ export const fetchWorkflows = createAsyncThunk(
           id: item.id,
           updateTime: item.updateTime,
           yaml_content: item.yaml_content,
-          process_definition_code: undefined,
+          processDefinitionCode: undefined,
           version: 0,
           related_ds_workflow: ds_workflow,
           releaseState: item.version === ds_workflow.version ? "ONLINE": "MODIFIED"
@@ -519,7 +519,7 @@ export const onlineWorkflow = createAsyncThunk(
         direct: p.direction,
         type: p.type,
       }));
-
+      
       const payload = {
         uuid: record.id,
         name: workflow.name,
@@ -531,10 +531,9 @@ export const onlineWorkflow = createAsyncThunk(
         taskDefinitionJson: JSON.stringify(taskDefinitionJson),
         taskRelationJson: JSON.stringify(taskRelationJson),
         locations: JSON.stringify(payloadLocations),
-        isNew: record.releaseState === 'UNSUBMITTED',
+        isNew: record.releaseState === 'OFFLINE',
         schedule: undefined as any,
       };
-
       if (workflow.schedule) {
         const cronParts = String(workflow.schedule).split(' ');
         let dsCron = workflow.schedule;
@@ -561,6 +560,7 @@ export const onlineWorkflow = createAsyncThunk(
       }
 
       await api.createOrUpdateDsWorkflow(payload);
+
       dispatch(fetchWorkflows());
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';

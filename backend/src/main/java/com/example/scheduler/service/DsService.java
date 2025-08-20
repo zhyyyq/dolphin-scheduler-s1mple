@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -790,6 +791,23 @@ public class DsService {
             throw new Exception("DS API error (log detail): " + logData.getString("msg"));
         }
         return logData.getString("data");
+    }
+
+    public String executeProcessReRun(Long projectCode, Integer processInstanceId) throws Exception {
+        URI uri = new URIBuilder(dsUrl + "/projects/" + projectCode + "/executors/execute")
+                .addParameter("processInstanceId", String.valueOf(processInstanceId))
+                .addParameter("executeType", "REPEAT_RUNNING")
+                .build();
+        logger.info(uri.toString());
+        HttpPost logRequest = new HttpPost(uri);
+        logRequest.addHeader("token", token);
+        CloseableHttpResponse logResponse = httpClient.execute(logRequest);
+        String logResponseString = EntityUtils.toString(logResponse.getEntity());
+        JSONObject logData = JSON.parseObject(logResponseString);
+        if (logData.getIntValue("code") != 0) {
+            throw new Exception("DS API error (log detail): " + logData.getString("msg"));
+        }
+        return logData.toJSONString();
     }
 
     private void resolveFilePlaceholdersRecursive(Object object) {

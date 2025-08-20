@@ -6,6 +6,8 @@ import { Button, Divider, Result, Table, TableColumnsType } from "antd";
 import { setIsBackfillModalOpen, WorkflowDataType } from "@/store/slices/maintainSlice";
 import { DashboardTwoTone } from "@ant-design/icons";
 import { Link, useNavigate  } from 'react-router-dom';
+import { get_chinese_workflow_instance_status } from "../../config";
+import api from "@/api";
 const WorkflowRunningView: React.FC = () => {
   const {
     selectedWorkflow,
@@ -19,7 +21,13 @@ const WorkflowRunningView: React.FC = () => {
     const processInstances = processListWithTasks.filter(pred => pred.processInstance.processDefinitionCode === selectedWorkflow?.processDefinitionCode).map(item => item.processInstance);
     return processInstances;
   }, [processListWithTasks, selectedWorkflow]);
-  const columns: TableColumnsType<WorkflowDataType> = useMemo(() => {
+  const handleRerunClick = useCallback(async (record: any) => {
+    console.log(record);
+    // GET /process/{projectCode}/{processInstanceId}/rerun
+    const response = await api.get(`/api/ds/process/${record.projectCode}/${record.id}/rerun`);
+    console.log(response)
+  }, []);
+  const columns: TableColumnsType<any> = useMemo(() => {
     return [
       {
         title: '工作流ID',
@@ -34,16 +42,25 @@ const WorkflowRunningView: React.FC = () => {
         render: (_, item) =>
           projects.find(pred => pred.code == item.projectCode)?.name
       },
-      { title: '状态', dataIndex: 'state', key: 'state' },
+      {
+        title: '状态', dataIndex: 'state', key: 'state',
+        render: (_, record) => {
+          return get_chinese_workflow_instance_status(_);
+        }
+       },
       {
         title: '操作',
         key: 'action',
         render: (_: any, record: any) => (
-          <Link to={`/instances/${record.projectCode}/${record.id}`}>查看详情</Link>
+          <>
+            <Link to={`/instances/${record.projectCode}/${record.id}`}>查看详情</Link>
+            <Button type="primary" style={{margin: '0 10px'} } onClick={()=>handleRerunClick(record)}>重跑</Button>
+          </>
+          
         ),
     },
     ]
-  }, []);
+  }, [projects]);
   const handleCheckClick = useCallback(() => {
     console.log('user clicked check')
     navigate(`/workflow/edit/${selectedWorkflow?.id}`)

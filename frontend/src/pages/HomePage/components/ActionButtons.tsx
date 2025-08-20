@@ -35,7 +35,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({ record }) => {
       await dispatch(onlineWorkflow(record)).unwrap();
       message.success('工作流上线/同步成功。');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      const errorMessage = err?.message || 'An unknown error occurred';
       message.error(`上线工作流时出错: ${errorMessage}`);
     }
   }, [dispatch, record, message]);
