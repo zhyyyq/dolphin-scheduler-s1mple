@@ -383,7 +383,6 @@ export const fetchWorkflow = createAsyncThunk<WorkflowData, string, { state: Roo
 export const loadGraphContent = createAsyncThunk<void, string | undefined, { state: RootState }>(
   'workflowEditor/loadGraphContent',
   async (yaml_content_p, { getState, dispatch }) => {
-    debugger
     const state = getState();
     const { graph, workflowData } = state.workflowEditor;
     dispatch(setIsYamlModalVisible(false))
@@ -534,9 +533,7 @@ export const loadGraphContent = createAsyncThunk<void, string | undefined, { sta
           });
         }
       })
-      if (locations.length == 0) {
-        dispatch(autoLayout())
-      }
+      dispatch(autoLayout())
     } catch (error) {
       // How to handle message.error? Maybe dispatch an error action.
       console.error(`解析工作流 YAML 失败: ${(error as Error).message}`);
