@@ -151,8 +151,12 @@ public class MaintainService {
                 .map(TDsProcessInstance::getProcessDefinitionCode)  // Get processDefinitionCode (Long)
                 .toArray(Long[]::new); // Convert to Integer array
         logger.info("processDefinitionCodeList{}", Arrays.toString(processDefinitionCodeList));
-        List<TDsProcessDefinition> tDsProcessDefinitionList = this.tDsProcessDefinitionMapper.selectList(
-                new LambdaQueryWrapper<TDsProcessDefinition>().in(TDsProcessDefinition::getCode, Arrays.asList(processDefinitionCodeList)));
+        List<TDsProcessDefinition> tDsProcessDefinitionList = new ArrayList<>();
+        if (processDefinitionCodeList.length > 0) {
+            tDsProcessDefinitionList = this.tDsProcessDefinitionMapper.selectList(
+                    new LambdaQueryWrapper<TDsProcessDefinition>().in(TDsProcessDefinition::getCode, Arrays.asList(processDefinitionCodeList)));
+        }
+
         logger.info(tDsProcessDefinitionList.toString());
         resultMap.put("processDefinitionList", tDsProcessDefinitionList);
         return resultMap;

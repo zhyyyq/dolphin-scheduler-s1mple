@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
-import { Select, Segmented, DatePicker, Divider } from "antd";
+import { Select, Segmented, DatePicker, Divider, Result } from "antd";
 import "./index.less";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
@@ -54,7 +54,6 @@ const MaintainPage: React.FC = () => {
     selectedProject,
     selectedTimeRange,
     workflowStats,
-    selectedTaskType,
     isBackfillModalOpen,
     selectedWorkflow
   } = useSelector((state: RootState) => state.maintain);
@@ -161,27 +160,39 @@ const MaintainPage: React.FC = () => {
 
         </div>
         <Divider>运行统计看板</Divider>
-        <div className={`${p_refixCls}-stats-panel`}>
-          <div>
-            <Pie />
-          </div>
-          <div>
-            <div>
-              <Segmented<string>
-                options={SegmentedConfig2}
-                value={selectedDisplayType}
-                onChange={handleDisplayTypeChange}
-              />
+        {
+          taskStats.length === 0 ? <Result
+            status="404"
+            title="404"
+            subTitle="暂无数据"
+          /> : <>
+            <div className={`${p_refixCls}-stats-panel`}>
+              <div>
+                <Pie />
+              </div>
+              <div>
+                <div>
+                  <Segmented<string>
+                    options={SegmentedConfig2}
+                    value={selectedDisplayType}
+                    onChange={handleDisplayTypeChange}
+                  />
+                </div>
+                {renderStats}
+              </div>
             </div>
-            {renderStats}
+          </>
+        }
+      </div>
+      {
+        taskStats.length > 0 && (
+          <div className={`${p_refixCls}-workflows-workspace`}>
+            <WorkflowList />
+            <WorkflowRunningView />
           </div>
-        </div>
-      </div>
+        )
+      }
 
-      <div className={`${p_refixCls}-workflows-workspace`}>
-        <WorkflowList />
-        <WorkflowRunningView />
-      </div>
       <BackfillModal
         open={isBackfillModalOpen}
         workflow={selectedWorkflow}

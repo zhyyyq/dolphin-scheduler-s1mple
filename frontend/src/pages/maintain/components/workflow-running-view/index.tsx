@@ -2,7 +2,7 @@ import { RootState } from "@/store";
 import React, { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import './index.less'
-import { Button, Divider, Result, Table, TableColumnsType } from "antd";
+import { Button, Divider, message, Result, Table, TableColumnsType } from "antd";
 import { setIsBackfillModalOpen, WorkflowDataType } from "@/store/slices/maintainSlice";
 import { DashboardTwoTone } from "@ant-design/icons";
 import { Link, useNavigate  } from 'react-router-dom';
@@ -24,8 +24,12 @@ const WorkflowRunningView: React.FC = () => {
   const handleRerunClick = useCallback(async (record: any) => {
     console.log(record);
     // GET /process/{projectCode}/{processInstanceId}/rerun
-    const response = await api.get(`/api/ds/process/${record.projectCode}/${record.id}/rerun`);
-    console.log(response)
+    const response: any = await api.get(`/api/ds/process/${record.projectCode}/${record.id}/rerun`);
+    if (response.code === 0) {
+      message.success("发起重跑成功");
+    } else {
+      message.error(response)
+    }
   }, []);
   const columns: TableColumnsType<any> = useMemo(() => {
     return [

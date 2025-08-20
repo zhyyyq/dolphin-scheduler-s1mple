@@ -7,7 +7,7 @@ import { AppDispatch, RootState } from "@/store";
 
 const WorkflowList: React.FC = () => {
   const {
-    workflows, projects
+    workflows, projects, selectedTaskType, processListWithTasks
   } = useSelector((state: RootState) => state.maintain);
   const dispatch: AppDispatch = useDispatch();
   const columns: TableColumnsType<WorkflowDataType> = useMemo(() => {
@@ -28,12 +28,20 @@ const WorkflowList: React.FC = () => {
       },
     ]
   }, [projects]);
+  const workflowsFilteredByStatusType = useMemo(() => {
+    if (selectedTaskType == -1 || !selectedTaskType) {
+      return workflows;
+    }
+    // get instance
+    const processDefinitionCodeList = new Set(processListWithTasks.map(item => item.processInstance).filter(item => item.state === selectedTaskType).map(item => item.processDefinitionCode));
+    return workflows.filter(item => processDefinitionCodeList.has(item.code));
+  }, [workflows,selectedTaskType, processListWithTasks]);
   return (
     <div className="workflows-list">
       <Table<WorkflowDataType>
         rowKey="id"
         columns={columns}
-        dataSource={workflows}
+        dataSource={workflowsFilteredByStatusType}
         pagination={
           {
             pageSize: 5

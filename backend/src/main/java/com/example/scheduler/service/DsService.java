@@ -793,7 +793,7 @@ public class DsService {
         return logData.getString("data");
     }
 
-    public String executeProcessReRun(Long projectCode, Integer processInstanceId) throws Exception {
+    public JSONObject executeProcessReRun(Long projectCode, Integer processInstanceId) throws Exception {
         URI uri = new URIBuilder(dsUrl + "/projects/" + projectCode + "/executors/execute")
                 .addParameter("processInstanceId", String.valueOf(processInstanceId))
                 .addParameter("executeType", "REPEAT_RUNNING")
@@ -807,7 +807,7 @@ public class DsService {
         if (logData.getIntValue("code") != 0) {
             throw new Exception("DS API error (log detail): " + logData.getString("msg"));
         }
-        return logData.toJSONString();
+        return logData;
     }
 
     private void resolveFilePlaceholdersRecursive(Object object) {
