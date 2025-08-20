@@ -6,6 +6,7 @@ import { AppDispatch, RootState } from "@/store";
 import {
   fetchProjects,
   fetchStats,
+  setIsBackfillModalOpen,
   setSelectedDisplayType,
   setSelectedProject,
   setSelectedTimeRange,
@@ -16,6 +17,7 @@ import Pie from "./components/pieGraph";
 import StatsItem from "./components/statsItem";
 import WorkflowRunningView from "./components/workflow-running-view";
 import WorkflowList from "./components/workflow-list";
+import BackfillModal from "@/components/BackfillModal";
 const { RangePicker } = DatePicker;
 
 const SegmentedConfig = [
@@ -53,6 +55,8 @@ const MaintainPage: React.FC = () => {
     selectedTimeRange,
     workflowStats,
     selectedTaskType,
+    isBackfillModalOpen,
+    selectedWorkflow
   } = useSelector((state: RootState) => state.maintain);
   const project_options = useMemo(() => {
     return projects.map((projects) => ({
@@ -178,6 +182,15 @@ const MaintainPage: React.FC = () => {
         <WorkflowList />
         <WorkflowRunningView />
       </div>
+      <BackfillModal
+        open={isBackfillModalOpen}
+        workflow={selectedWorkflow}
+        onCancel={() => dispatch(setIsBackfillModalOpen(false))}
+        onSuccess={() => {
+          dispatch(setIsBackfillModalOpen(false));
+          dispatch(fetchStats());
+        }}
+      />
     </div>
   );
 };

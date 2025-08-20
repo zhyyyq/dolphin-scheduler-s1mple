@@ -78,7 +78,7 @@ const BackfillModal: React.FC<BackfillModalProps> = ({
 
   return (
     <Modal
-      title={`执行工作流: ${workflow?.name}`}
+      title={`执行工作流: ${workflow?.yaml_content.workflow.name}`}
       open={open}
       onCancel={onCancel}
       footer={[

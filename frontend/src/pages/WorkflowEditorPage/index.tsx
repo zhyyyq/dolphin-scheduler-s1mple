@@ -21,7 +21,6 @@ import {
   initializeGraph,
   WorkflowData,
 } from '../../store/slices/workflowEditorSlice';
-import { Workflow } from '../../types';
 
 const WorkflowEditorPage: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();

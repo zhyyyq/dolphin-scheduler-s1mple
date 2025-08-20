@@ -5,17 +5,25 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.example.scheduler.dto.ProcessWithTasks;
 import com.example.scheduler.enums.WorkflowQueryTimeTypeEnum;
 import com.example.scheduler.enums.WorkflowRunningStatusEnum;
+import com.example.scheduler.mapper.DiyWorkflowMapper;
 import com.example.scheduler.mapper.TDsProcessDefinitionMapper;
 import com.example.scheduler.mapper.TDsProcessInstanceMapper;
 import com.example.scheduler.mapper.TDsTaskInstanceMapper;
+import com.example.scheduler.model.DiyWorkflow;
 import com.example.scheduler.model.TDsProcessDefinition;
 import com.example.scheduler.model.TDsProcessInstance;
 import com.example.scheduler.model.TDsTaskInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.Yaml;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,6 +40,12 @@ public class MaintainService {
 
     @Autowired
     private TDsProcessDefinitionMapper tDsProcessDefinitionMapper;
+
+    @Autowired
+    private DiyWorkflowMapper diyWorkflowMapper;
+
+    @Value("${workflow.repo.dir}")
+    private String workflowRepoDir;
 
     public JSONObject getMaintenanceStatus(Long[] projectCodes, String timeType, String[] timeRange)
             throws Exception {
@@ -142,5 +156,25 @@ public class MaintainService {
         logger.info(tDsProcessDefinitionList.toString());
         resultMap.put("processDefinitionList", tDsProcessDefinitionList);
         return resultMap;
+    }
+
+    public JSONObject getWorkflowDetails(Long processDefinitionCode) throws IOException {
+        DiyWorkflow workflow = diyWorkflowMapper.selectOne(new LambdaQueryWrapper<DiyWorkflow>().eq(DiyWorkflow::getProcessDefinitionCode, processDefinitionCode));
+
+        if (workflow == null) {
+            throw new RuntimeException("workflow does not exist!");
+        }
+        String filename = workflow.getId() + ".yaml";
+        Path filePath = Paths.get(workflowRepoDir, filename);
+        if (!Files.exists(filePath)) {
+            throw new RuntimeException("Workflow file not found, though a DB record exists.");
+        }
+        String content = new String(Files.readAllBytes(filePath));
+        Yaml yaml = new Yaml();
+        Map<String, Object> data = yaml.load(content);
+        JSONObject res = new JSONObject();
+        res.putAll((JSONObject) JSONObject.toJSON(workflow));
+        res.put("yaml_content", data);
+        return res;
     }
 }

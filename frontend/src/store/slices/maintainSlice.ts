@@ -3,6 +3,7 @@ import api from '../../api';
 import dayjs from 'dayjs';
 import { RootState } from '..';
 import { WorkflowData } from './workflowEditorSlice';
+import { Workflow } from '@/types';
 
 interface Project {
   code: number;
@@ -24,13 +25,14 @@ interface MaintainState {
   isRestoreModalOpen: boolean;
   isBackfillModalOpen: boolean;
   selectedTimeType: string;
-  selectedWorkflow: WorkflowDataType | null;
+  selectedWorkflow: Workflow | null;
   selectedProject: number[]
   selectedTimeRange: [string, string];
   selectedDisplayType: string;
   selectedTaskType?: number;
   taskStats: { statusDesc: string; count: number; statusCode: number }[];
   workflowStats: { statusDesc: string; count: number; statusCode: number }[];
+  processListWithTasks: { processInstance: any , taskInstances: any[]}[]
 }
 
 const initialState: MaintainState = {
@@ -47,7 +49,8 @@ const initialState: MaintainState = {
   taskStats: [],
   workflowStats: [],
   selectedDisplayType: '0', // '0' for workflow instance stats, '1' for task stats
-  selectedTaskType: undefined
+  selectedTaskType: undefined,
+  processListWithTasks: []
 };
 
 export const maintainSlice = createSlice({
@@ -75,7 +78,7 @@ export const maintainSlice = createSlice({
     setIsBackfillModalOpen: (state, action: PayloadAction<boolean>) => {
       state.isBackfillModalOpen = action.payload;
     },
-    setSelectedWorkflow: (state, action: PayloadAction<WorkflowDataType | null>) => {
+    setSelectedWorkflow: (state, action: PayloadAction<Workflow | null>) => {
       state.selectedWorkflow = action.payload;
     },
     setSelectedTimeRange: (state, action: PayloadAction<[dayjs.Dayjs, dayjs.Dayjs] | undefined>) => {
@@ -95,7 +98,10 @@ export const maintainSlice = createSlice({
     },
     setSelectedTaskType: (state, action: PayloadAction<number | undefined>) => {
       state.selectedTaskType = action.payload;
-    }
+    },
+    setProcessListWithTasks: (state, action: PayloadAction<MaintainState['processListWithTasks']>) => {
+      state.processListWithTasks = action.payload;
+    },
   },
 });
 
@@ -113,7 +119,8 @@ export const {
   setSelectedTimeType,
   setSelectedDisplayType,
   setWorkflowStats,
-  setSelectedTaskType
+  setSelectedTaskType,
+  setProcessListWithTasks
 } = maintainSlice.actions;
 
 export const fetchProjects = createAsyncThunk(
@@ -144,7 +151,8 @@ export const fetchStats = createAsyncThunk(
       console.log('Fetched stats:', stats);
       dispatch(setTaskStats(stats.taskStats));
       dispatch(setWorkflowStats(stats.workflowStats));
-      dispatch(setWorkflows(stats.processDefinitionList))
+      dispatch(setWorkflows(stats.processDefinitionList));
+      dispatch(setProcessListWithTasks(stats.processListWithTasks));
       dispatch(setError(null));
       dispatch(setLoading(false));
       // Assuming stats is an object with the required properties
@@ -164,9 +172,9 @@ export const fetchWorkflowDetail = createAsyncThunk<void, number, { state: RootS
     dispatch(setLoading(true));
     dispatch(setError(null));
     try {
-      const response = await api.get<WorkflowData>(`/api/workflow/${workflowId}`);
+      const response = await api.get<Workflow>(`/api/maintain/workflowDetail/${workflowId}`);
       console.log('Fetched fetchWorkflowDetail:', response);
-
+      dispatch(setSelectedWorkflow(response))
       dispatch(setError(null));
       dispatch(setLoading(false));
       // Assuming stats is an object with the required properties

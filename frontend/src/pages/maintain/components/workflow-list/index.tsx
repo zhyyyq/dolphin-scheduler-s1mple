@@ -15,7 +15,7 @@ const WorkflowList: React.FC = () => {
       {
         title: '工作流ID',
         dataIndex: 'id',
-        render: (text, record) => <a onClick={() => { dispatch(fetchWorkflowDetail(record.id)) }}>{text}</a>,
+        render: (text, record) => <a onClick={() => { dispatch(fetchWorkflowDetail(record.code)) }}>{text}</a>,
       },
       {
         title: '工作流名称',
