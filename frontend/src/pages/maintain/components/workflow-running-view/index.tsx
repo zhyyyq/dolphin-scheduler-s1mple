@@ -23,10 +23,21 @@ const WorkflowRunningView: React.FC = () => {
   }, [processListWithTasks, selectedWorkflow]);
   const handleRerunClick = useCallback(async (record: any) => {
     console.log(record);
+    let executionType = 'REPEAT_RUNNING'
+    let executionTypeZh = '重跑'
+    switch (record.state) {
+      case 1:
+        executionType = 'STOP'
+        executionTypeZh = '停止'
+        break;
+    
+      default:
+        break;
+    }
     // GET /process/{projectCode}/{processInstanceId}/rerun
-    const response: any = await api.get(`/api/ds/process/${record.projectCode}/${record.id}/rerun`);
+    const response: any = await api.get(`/api/ds/process/${record.projectCode}/${record.id}/${executionType}`);
     if (response.code === 0) {
-      message.success("发起重跑成功");
+      message.success(`发起${executionTypeZh}成功`);
     } else {
       message.error(response)
     }
@@ -58,7 +69,7 @@ const WorkflowRunningView: React.FC = () => {
         render: (_: any, record: any) => (
           <>
             <Link to={`/instances/${record.projectCode}/${record.id}`}>查看详情</Link>
-            <Button type="primary" style={{margin: '0 10px'} } onClick={()=>handleRerunClick(record)}>重跑</Button>
+            <Button danger={record.state === 1} type='primary' style={{ margin: '0 10px' }} onClick={() => handleRerunClick(record)}>{ record.state === 1 ? '停止': '重跑' }</Button>
           </>
           
         ),

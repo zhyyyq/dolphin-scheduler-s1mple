@@ -9,7 +9,8 @@ export enum workflow_instance_status {
   FAILURE = 6,
   SUCCESS = 7,
   SERIAL_WAIT = 14,
-  FAILOVER = 18
+  FAILOVER = 18,
+  FORCED_STOP = 9
 }
 
 export const get_chinese_workflow_instance_status = (status: number): string => {
@@ -28,6 +29,8 @@ export const get_chinese_workflow_instance_status = (status: number): string => 
       return '准备停止';
     case workflow_instance_status.STOP:
       return '已停止';
+    case workflow_instance_status.FORCED_STOP:
+      return '强制停止';
     case workflow_instance_status.FAILURE:
       return '失败';
     case workflow_instance_status.SUCCESS:

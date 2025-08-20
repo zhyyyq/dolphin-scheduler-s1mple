@@ -133,10 +133,10 @@ public class DsController {
         }
     }
 
-    @GetMapping("/process/{projectCode}/{processInstanceId}/rerun")
-    public ResponseEntity<?> rerunProcessInstance(@PathVariable Long projectCode, @PathVariable Integer processInstanceId) {
+    @GetMapping("/process/{projectCode}/{processInstanceId}/{executionType}")
+    public ResponseEntity<?> rerunProcessInstance(@PathVariable Long projectCode, @PathVariable Integer processInstanceId, @PathVariable String executionType) {
         try {
-            return ResponseEntity.ok(dsService.executeProcessReRun(projectCode, processInstanceId));
+            return ResponseEntity.ok(dsService.executeProcessReRun(projectCode, processInstanceId, executionType));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }

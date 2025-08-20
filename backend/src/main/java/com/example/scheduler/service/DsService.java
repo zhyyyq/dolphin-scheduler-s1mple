@@ -793,10 +793,12 @@ public class DsService {
         return logData.getString("data");
     }
 
-    public JSONObject executeProcessReRun(Long projectCode, Integer processInstanceId) throws Exception {
+    // "REPEAT_RUNNING" rerun
+    //
+    public JSONObject executeProcessReRun(Long projectCode, Integer processInstanceId, String executionType) throws Exception {
         URI uri = new URIBuilder(dsUrl + "/projects/" + projectCode + "/executors/execute")
                 .addParameter("processInstanceId", String.valueOf(processInstanceId))
-                .addParameter("executeType", "REPEAT_RUNNING")
+                .addParameter("executeType", executionType)
                 .build();
         logger.info(uri.toString());
         HttpPost logRequest = new HttpPost(uri);
