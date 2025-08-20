@@ -48,19 +48,19 @@ const HomePage: React.FC = () => {
     {
       title: '项目',
       render: (_, record) => {
-        return record.yaml_content.workflow.project || 'default'
+        return record.yaml_content?.workflow?.project || 'default'
       }
     },
     {
       title: '工作流名称',
       render: (_, record) => {
-        return record.yaml_content.workflow.name
+        return record.yaml_content?.workflow?.name
       }
     },
     {
       title: '定时设置',
       render: (_, record) => {
-        return record.yaml_content.workflow.schedule
+        return record.yaml_content?.workflow?.schedule
       }
     },
     {
