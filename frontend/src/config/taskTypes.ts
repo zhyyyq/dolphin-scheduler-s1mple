@@ -10,8 +10,10 @@ import DependentTaskEditor from '../pages/WorkflowEditorPage/components/tasks/de
 import LogicGateTaskEditor from '../pages/WorkflowEditorPage/components/tasks/logic/LogicGateTaskEditor';
 import SubWorkflowTaskEditor from '../pages/WorkflowEditorPage/components/tasks/logic/SubProcessTaskEditor';
 import DiyFunctionTaskEditor from '../pages/WorkflowEditorPage/components/tasks/DiyFunctionTaskEditor';
-import AlertTaskEditor from '@/pages/WorkflowEditorPage/components/tasks/general/AlertTaskEditor';
+import AlertSmsTaskEditor from '@/pages/WorkflowEditorPage/components/tasks/alert/AlertSmsTaskEditor';
 import JavaTaskEditor from '@/pages/WorkflowEditorPage/components/tasks/general/JavaTaskEditor';
+import AlertQyxwTaskEditor from '@/pages/WorkflowEditorPage/components/tasks/alert/AlertQywxTaskEditor';
+import AlertOaTaskEditor from '@/pages/WorkflowEditorPage/components/tasks/alert/AlertOaTaskEditor';
 
 const AndTask = { taskInfo: LogicGateTaskEditor.taskInfo.AND };
 const OrTask = { taskInfo: LogicGateTaskEditor.taskInfo.OR };
@@ -30,7 +32,9 @@ const editors = [
   DiyFunctionTaskEditor,
   AndTask,
   OrTask,
-  AlertTaskEditor,
+  AlertSmsTaskEditor,
+  AlertQyxwTaskEditor,
+  AlertOaTaskEditor,
   JavaTaskEditor
 ];
 
@@ -40,4 +44,5 @@ export const taskCategories = [
   { key: 'general', label: '通用' },
   { key: 'logic', label: '逻辑' },
   { key: '依赖', label: '依赖' },
+  { key: 'alert', label: '告警'}
 ];

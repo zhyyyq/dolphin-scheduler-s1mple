@@ -1,57 +1,29 @@
 import React from 'react';
-import { Form, Select, SelectProps, Input } from 'antd';
+import { Form, Input } from 'antd';
 import { Graph } from '@antv/x6';
 import { Task } from '@/types';
 import { CodeOutlined } from '@ant-design/icons';
-import { AlertEnum } from '@/utils/alertUtils';
 
-const options: SelectProps['options'] = [
-  {
-    label: "短信",
-    value: AlertEnum.sms
-  },
-  // {
-  //   label: 'OA',
-  //   value: AlertEnum.oa
-  // },
-  // {
-  //   label: '企业微信',
-  //   value: AlertEnum.wechat
-  // }
-];
-
-
-interface AlertTaskEditorProps {
+interface AlertQywxTaskEditorProps {
   isCustom?: boolean;
 }
 
-interface AlertTaskEditorComponent extends React.FC<AlertTaskEditorProps> {
+interface AlertQywxTaskEditorComponent extends React.FC<AlertQywxTaskEditorProps> {
   taskInfo: any;
 }
 
-const AlertTaskEditor: AlertTaskEditorComponent = ({ isCustom = false }) => {
+const AlertQyxwTaskEditor: AlertQywxTaskEditorComponent = ({ isCustom = false }) => {
   return (
     <>
       <Form.Item
-        label="告警渠道配置"
-        name="channels"
-        rules={[{ required: true, message: '请选择告警渠道' }]}
-      >
-        <Select
-          style={{ width: '100%' }}
-          placeholder="请选择告警渠道"
-          options={options}
-        />
-      </Form.Item>
-      <Form.Item
-        label="手机号配置"
-        name="mobiles"
+        label="柜员号配置"
+        name="userIds"
         help="支持配置多个，换行输入"
-        rules={[{ required: true, message: '请配置手机号' }]}
+        rules={[{ required: true, message: '请配置柜员号' }]}
       >
         <Input.TextArea
           style={{ width: '100%' }}
-          placeholder="请配置手机号"
+          placeholder="请配置柜员号"
         />
       </Form.Item>
       <Form.Item
@@ -69,19 +41,18 @@ const AlertTaskEditor: AlertTaskEditorComponent = ({ isCustom = false }) => {
   );
 };
 
-AlertTaskEditor.taskInfo = {
-  label: 'alert',
-  type: 'ALERT',
+AlertQyxwTaskEditor.taskInfo = {
+  label: '企业微信',
+  type: 'ALERT_QYWX',
   default_params: {
     failRetryTimes: 0,
     failRetryInterval: 1,
-    channels: 'sms',
-    mobiles: '',
+    userIds: '',
     msg: ''
   },
-  category: 'general',
+  category: 'alert',
   icon: CodeOutlined,
-  editor: AlertTaskEditor,
+  editor: AlertQyxwTaskEditor,
   createNode: (graph: Graph, task: any, contextMenu: { px: number, py: number }) => {
     const existingNodes = graph.getNodes();
     let newNodeName = task.label;
@@ -110,4 +81,4 @@ AlertTaskEditor.taskInfo = {
   },
 };
 
-export default AlertTaskEditor;
+export default AlertQyxwTaskEditor;
