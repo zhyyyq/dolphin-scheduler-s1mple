@@ -190,12 +190,12 @@ export const onlineWorkflow = createAsyncThunk(
       // pre-process ALERT tasks
       const funcs: any[] = await api.get<any>(`/api/diy-functions`);
       originalTasks
-        .filter((task: any) => task.type === 'ALERT')
+        .filter((task: any) => task.type === 'ALERT_SMS')
         .forEach((task: any) => {
           // Mutate the task object in place
           task.type = 'PYTHON'; 
           task.task_type = 'PYTHON';
-          task.command = funcs.find(item => item?.functionName === task.task_params.channels).functionContent
+          task.command = funcs.find(item => item?.functionName === 'sms').functionContent
           // 手机号参数转化成 localparam
           let mobiles = task.task_params.mobiles;
           // 去重
@@ -206,6 +206,62 @@ export const onlineWorkflow = createAsyncThunk(
             direct: 'IN',
             type: 'VARCHAR',
             value: JSON.stringify(mobiles),
+          })
+          // 自定义消息
+          let msg = task.task_params.msg;
+          localParams.push({
+            prop: "msg",
+            direct: 'IN',
+            type: 'VARCHAR',
+            value: msg,
+          })
+          task.task_params.localParams = localParams
+        });
+      originalTasks
+        .filter((task: any) => task.type === 'ALERT_QYWX')
+        .forEach((task: any) => {
+          // Mutate the task object in place
+          task.type = 'PYTHON'; 
+          task.task_type = 'PYTHON';
+          task.command = funcs.find(item => item?.functionName === 'qywx').functionContent
+          // 手机号参数转化成 localparam
+          let userIds = task.task_params.userIds;
+          // 去重
+          userIds = new Set(userIds.split("\n")).values().toArray()
+          const localParams = task.task_params.localParams || [];
+          localParams.push({
+            prop: "userIds",
+            direct: 'IN',
+            type: 'VARCHAR',
+            value: JSON.stringify(userIds),
+          })
+          // 自定义消息
+          let msg = task.task_params.msg;
+          localParams.push({
+            prop: "msg",
+            direct: 'IN',
+            type: 'VARCHAR',
+            value: msg,
+          })
+          task.task_params.localParams = localParams
+        });
+      originalTasks
+        .filter((task: any) => task.type === 'ALERT_OA')
+        .forEach((task: any) => {
+          // Mutate the task object in place
+          task.type = 'PYTHON'; 
+          task.task_type = 'PYTHON';
+          task.command = funcs.find(item => item?.functionName === 'oa').functionContent
+          // 手机号参数转化成 localparam
+          let userIds = task.task_params.userIds;
+          // 去重
+          userIds = new Set(userIds.split("\n")).values().toArray()
+          const localParams = task.task_params.localParams || [];
+          localParams.push({
+            prop: "userIds",
+            direct: 'IN',
+            type: 'VARCHAR',
+            value: JSON.stringify(userIds),
           })
           // 自定义消息
           let msg = task.task_params.msg;
