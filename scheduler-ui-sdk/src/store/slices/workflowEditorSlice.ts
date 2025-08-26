@@ -245,7 +245,7 @@ export const fetchDiyFunctions = createAsyncThunk<any[], void, { state: RootStat
   async (_, { getState, dispatch }) => {
     
     const funcs = await api.get<any[]>(`/api/diy-functions`);
-    dispatch(setDiyFunctions(funcs.filter(func => func.functionName !== AlertEnum.oa && func.functionName !== AlertEnum.sms && func.functionName !== AlertEnum.wechat)));
+    dispatch(setDiyFunctions(funcs.filter(func => func.functionName !== AlertEnum.oa && func.functionName !== AlertEnum.sms && func.functionName !== AlertEnum.qywx)));
     return funcs;
   }
 );
