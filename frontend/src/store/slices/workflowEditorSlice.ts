@@ -244,7 +244,7 @@ export const fetchDiyFunctions = createAsyncThunk<any[], void, { state: RootStat
   'workflowEditor/fetchDiyFunctions',
   async (_, { dispatch }) => {
     const funcs = await api.get<any[]>('/api/diy-functions');
-    dispatch(setDiyFunctions(funcs.filter(func => func.functionName !== AlertEnum.oa && func.functionName !== AlertEnum.sms && func.functionName !== AlertEnum.wechat)));
+    dispatch(setDiyFunctions(funcs.filter(func => func.functionName !== AlertEnum.oa && func.functionName !== AlertEnum.sms && func.functionName !== AlertEnum.qywx)));
     return funcs;
   }
 );
