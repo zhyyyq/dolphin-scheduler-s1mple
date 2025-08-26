@@ -50,13 +50,15 @@ const WorkflowEditorPage: React.FC = () => {
       const projectCode = searchParams.get('projectCode');
       if (projectName && projectCode) {
         const initialWorkflowData: WorkflowData = {
-          id: '',
           processDefinitionCode: undefined,
           version: 0,
           releaseState: '',
           updateTime: '',
           yaml_content: {
-            workflow: undefined,
+            workflow: {
+              projectName,
+              projectCode
+            },
             tasks: [],
             locations: undefined,
             parameters: undefined

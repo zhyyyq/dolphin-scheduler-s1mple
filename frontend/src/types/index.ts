@@ -1,5 +1,5 @@
 export interface Workflow {
-  id: string;
+  id?: string;
   processDefinitionCode: any;
   version: number;
   releaseState: string;

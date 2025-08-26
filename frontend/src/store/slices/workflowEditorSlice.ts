@@ -552,12 +552,11 @@ export const showYaml = createAsyncThunk<void, void, { state: RootState }>(
     if (!graph) {
       throw new Error('Graph not initialized');
     }
-
     const scheduleTimeRange = [
       scheduleTimeRangeISO[0] ? dayjs(scheduleTimeRangeISO[0]) : null,
       scheduleTimeRangeISO[1] ? dayjs(scheduleTimeRangeISO[1]) : null,
     ] as [dayjs.Dayjs | null, dayjs.Dayjs | null];
-    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, workflowData?.yaml_content_raw, workflowData?.yaml_content.workflow.projectName, workflowData?.yaml_content.workflow.projectCode);
+    const yamlStr = generateYaml(graph, workflowName, isScheduleEnabled, workflowSchedule, scheduleTimeRange, workflowData?.yaml_content_raw, workflowData?.yaml_content.workflow?.projectName, workflowData?.yaml_content.workflow?.projectCode);
     dispatch(setYamlContent(yamlStr));
     dispatch(setIsYamlModalVisible(true));
   }

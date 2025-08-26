@@ -60,7 +60,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({ record }) => {
       {
         // to={`/workflow/${workflowUuid}/history`}
       }
-      <Button onClick={()=>{window.schedulerSdk.check_workflow_changes(workflowUuid)}}>历史</Button>
+      <Button onClick={()=>{window.schedulerSdk.check_workflow_changes(workflowUuid!)}}>历史</Button>
       <Button type="link" danger onClick={handleDelete}>删除</Button>
     </Space>
   );

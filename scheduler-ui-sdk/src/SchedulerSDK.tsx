@@ -381,6 +381,8 @@ class SchedulerEditorComponent extends HTMLElement {
   root: Root | undefined;
   connectedCallback() {
     const workflow_id = this.getAttribute("workflow_id");
+    const projectCode = this.getAttribute("projectCode");
+    const projectName = this.getAttribute("projectName");
     const modal_mode = this.parentElement == document.body;
     const root = createRoot(this);
     root.render(<React.StrictMode>
@@ -407,7 +409,7 @@ class SchedulerEditorComponent extends HTMLElement {
             }}
           >
             <AntApp style={{flex: 1}}>
-              <SchedulerEditor modal_mode={modal_mode} workflow_id={workflow_id} />
+              <SchedulerEditor modal_mode={modal_mode} workflow_id={workflow_id} projectCode={projectCode} projectName={projectName} />
             </AntApp>
           </ConfigProvider>
 
@@ -443,12 +445,14 @@ export class SchedulerSDK {
     customElements.define(SchedulerEditFunctionComponent.component_name, SchedulerEditFunctionComponent);
     customElements.define(SchedulerInstanceDetailComponent.component_name, SchedulerInstanceDetailComponent);
   }
-  async create_or_modify_workflow(workflow_id?: string, mount_ref?: HTMLElement | null) {
+  async create_or_modify_workflow(workflow_id?: string, mount_ref?: HTMLElement | null, projectCode?: string, projectName?: string) {
     // 低代码形式
     // 创建组件
     console.log(workflow_id);
     const editor = document.createElement(SchedulerEditorComponent.component_name);
     workflow_id && editor.setAttribute("workflow_id", workflow_id);
+    projectCode && editor.setAttribute("projectCode", projectCode);
+    projectName && editor.setAttribute("projectName", projectName);
     // 挂载组件
     if (mount_ref) {
       mount_ref.append(editor);

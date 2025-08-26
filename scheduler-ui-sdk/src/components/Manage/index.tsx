@@ -152,7 +152,11 @@ const HomePage: React.FC = () => {
               </Select.Option>
             ))}
           </Select>
-          <Button type="primary" onClick={()=>{window.schedulerSdk.change_route("/workflow/edit")}}>新建工作流</Button>
+          <Button type="primary" onClick={async () => {
+            const res = await window.schedulerSdk.create_or_modify_workflow();
+            console.log(res);
+            dispatch(fetchWorkflows());
+          }}>新建工作流</Button>
         </Space>
       </div>
       <Table

@@ -15,16 +15,16 @@ import {
   setContextMenu,
   fetchDiyFunctions,
   fetchWorkflow,
-  setWorkflowData,
   clearWorkflow,
   initializeGraph,
   WorkflowData,
+  setWorkflowData,
 } from '@/store/slices/workflowEditorSlice';
 
-const SchedulerEditor: React.FC<{ modal_mode: boolean, workflow_id: string | null } > = (props) => {
+const SchedulerEditor: React.FC<{ modal_mode: boolean, workflow_id: string | null, projectName: string | null, projectCode: string | null } > = (props) => {
   const dispatch: AppDispatch = useDispatch();
   const { message } = AntApp.useApp();
-  const { workflow_id } = props;
+  const { workflow_id, projectName, projectCode } = props;
   const {
     contextMenu,
   } = useSelector((state: RootState) => state.workflowEditor);
@@ -40,18 +40,17 @@ const SchedulerEditor: React.FC<{ modal_mode: boolean, workflow_id: string | nul
       dispatch(fetchWorkflow(workflow_id));
     } else {
       dispatch(clearWorkflow());
-      const searchParams = new URLSearchParams(location.search);
-      const projectName = searchParams.get('projectName');
-      const projectCode = searchParams.get('projectCode');
       if (projectName && projectCode) {
         const initialWorkflowData: WorkflowData = {
-          id: '',
           processDefinitionCode: undefined,
           version: 0,
           releaseState: '',
           updateTime: '',
           yaml_content: {
-            workflow: undefined,
+            workflow: {
+              projectCode,
+              projectName
+            },
             tasks: [],
             locations: undefined,
             parameters: undefined
