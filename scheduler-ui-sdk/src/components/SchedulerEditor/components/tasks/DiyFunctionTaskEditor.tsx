@@ -20,7 +20,6 @@ const DiyFunctionTaskEditor: DiyFunctionTaskEditorComponent = ({ task }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
-
   const showModal = async () => {
     const functionId = task?.task_params?.functionId;
     if (!functionId) {

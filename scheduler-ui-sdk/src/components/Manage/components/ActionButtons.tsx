@@ -1,0 +1,67 @@
+import React, { useCallback } from 'react';
+import { Button, Space, App as AntApp } from 'antd';
+import { useDispatch } from 'react-redux';
+import { Workflow } from '../../../types';
+import { AppDispatch } from '../../../store';
+import { deleteWorkflow, onlineWorkflow, setSelectedWorkflow, setIsBackfillModalOpen } from '../../../store/slices/homeSlice';
+
+interface ActionButtonsProps {
+  record: Workflow;
+}
+
+export const ActionButtons: React.FC<ActionButtonsProps> = ({ record }) => {
+  const dispatch: AppDispatch = useDispatch();
+  const { message } = AntApp.useApp();
+  const workflowUuid = record.id;
+
+  const handleDelete = useCallback(async () => {
+    try {
+      await dispatch(deleteWorkflow(record)).unwrap();
+      message.success('工作流删除成功。');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      message.error(errorMessage);
+    }
+  }, [dispatch, record, message]);
+
+  const handleExecute = useCallback(() => {
+    dispatch(setSelectedWorkflow(record));
+    dispatch(setIsBackfillModalOpen(true));
+  }, [dispatch, record]);
+
+  const handleOnline = useCallback(async () => {
+    try {
+      await dispatch(onlineWorkflow(record)).unwrap();
+      message.success('工作流上线/同步成功。');
+    } catch (err:any) {
+      const errorMessage = err?.message || 'An unknown error occurred';
+      message.error(`上线工作流时出错: ${errorMessage}`);
+    }
+  }, [dispatch, record, message]);
+
+  const handleSubmit = useCallback(() => {
+    handleOnline();
+  }, [handleOnline]);
+  return (
+    <Space size="middle">
+      {record.releaseState === 'MODIFIED' ? (
+        <Button type="primary" onClick={handleOnline}>同步</Button>
+      ) : record.releaseState === 'ONLINE' ? (
+        <Button type="primary" onClick={handleExecute}>立即执行</Button>
+      ) : null}
+      
+      {record.releaseState === 'UNSUBMITTED' && (
+        <Button type="primary" onClick={handleSubmit}>提交</Button>
+      )}
+      {record.releaseState === 'OFFLINE' && (
+        <Button type="primary" onClick={handleOnline}>上线</Button>
+      )}
+      <Button onClick={()=>{window.schedulerSdk.create_or_modify_workflow(workflowUuid)}}>编辑</Button>
+      {
+        // to={`/workflow/${workflowUuid}/history`}
+      }
+      <Button onClick={()=>{window.schedulerSdk.check_workflow_changes(workflowUuid)}}>历史</Button>
+      <Button type="link" danger onClick={handleDelete}>删除</Button>
+    </Space>
+  );
+};

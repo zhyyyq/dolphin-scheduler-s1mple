@@ -52,7 +52,7 @@ const initialState: WorkflowEditorState = {
   workflowSchedule: '0 0 * * *',
   isScheduleEnabled: true,
   scheduleTimeRange: [dayjs().toISOString(), dayjs().add(100, 'year').toISOString()],
-  workflowData: null,
+  workflowData: null
 };
 
 import { Keyboard } from '@antv/x6-plugin-keyboard';
@@ -189,7 +189,7 @@ export const workflowEditorSlice = createSlice({
       if (state.graph) {
         state.graph.clearCells();
       }
-    },
+    }
   },
 });
 
@@ -242,8 +242,9 @@ export const saveWorkflow = createAsyncThunk<
 
 export const fetchDiyFunctions = createAsyncThunk<any[], void, { state: RootState }>(
   'workflowEditor/fetchDiyFunctions',
-  async (_, { dispatch }) => {
-    const funcs = await api.get<any[]>('/api/diy-functions');
+  async (_, { getState, dispatch }) => {
+    
+    const funcs = await api.get<any[]>(`/api/diy-functions`);
     dispatch(setDiyFunctions(funcs.filter(func => func.functionName !== AlertEnum.oa && func.functionName !== AlertEnum.sms && func.functionName !== AlertEnum.wechat)));
     return funcs;
   }
@@ -529,7 +530,9 @@ export const loadGraphContent = createAsyncThunk<void, string | undefined, { sta
           });
         }
       })
-      dispatch(autoLayout())
+      setTimeout(() => {
+        dispatch(autoLayout())
+      }, 200);
     } catch (error) {
       // How to handle message.error? Maybe dispatch an error action.
       console.error(`解析工作流 YAML 失败: ${(error as Error).message}`);
@@ -569,7 +572,6 @@ export const autoLayout = createAsyncThunk<void, void, { state: RootState }>(
     const state = getState();
     const { graph } = state.workflowEditor;
     if (!graph) return;
-
     const dagre = await import('dagre');
     const graphNodes = graph.getNodes();
     const graphEdges = graph.getEdges();
@@ -626,7 +628,7 @@ export const {
   setScheduleTimeRange,
   setWorkflowData,
   setGraph,
-  clearWorkflow,
+  clearWorkflow
 } = workflowEditorSlice.actions;
 
 export default workflowEditorSlice.reducer;

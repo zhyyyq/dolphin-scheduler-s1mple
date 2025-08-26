@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "main": "./dist/index.umd.js",
+  "module": "./dist/index.es.js",
+  "typings": "./dist/index.d.ts",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -23,6 +26,7 @@
     "@antv/x6-react-shape": "^2.2.3",
     "@monaco-editor/react": "^4.7.0",
     "@reduxjs/toolkit": "^2.8.2",
+    "@rollup/plugin-typescript": "^12.1.4",
     "@types/diff": "^7.0.2",
     "@types/js-yaml": "^4.0.9",
     "antd": "^5.26.5",
@@ -40,6 +44,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.7.0",
     "react-simple-code-editor": "^0.14.1",
+    "tslib": "^2.8.1",
     "yaml": "^2.4.5"
   },
   "devDependencies": {

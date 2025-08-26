@@ -50,8 +50,12 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({ }) => {
 
   const onSave = async () => {
     try {
-      await dispatch(saveWorkflow()).unwrap();
+      const res = await dispatch(saveWorkflow()).unwrap();
       message.success('工作流保存成功！');
+      const event = new CustomEvent('workflow_edit_end', {
+        detail: res
+      });
+      document.querySelector("scheduler-editor")?.dispatchEvent(event);
     } catch (error: any) {
       message.error(`保存工作流时出错: ${error.message}`);
     }
@@ -59,8 +63,6 @@ export const WorkflowToolbar: React.FC<WorkflowToolbarProps> = ({ }) => {
 
   const onAutoLayout = () => {
     if (graph) {
-      // Assuming autoLayout is a method on the graph object from useGraph hook
-      // This part needs to be connected to the actual auto-layout logic
       dispatch(autoLayout())
     }
   };

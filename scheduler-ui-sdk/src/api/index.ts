@@ -26,10 +26,10 @@ const handleResponse = async (response: Response) => {
   }
   return response.text();
 };
-
+const get_base_url = () => window.schedulerSdk.api_endpoint; 
 const api = {
   async get<T>(path: string, params?: Record<string, any>): Promise<T> {
-    const url = new URL(path, window.location.origin);
+    const url = new URL(get_base_url() + path, window.location.origin);
     if (params) {
       Object.keys(params).forEach(key => {
         if (params[key] !== undefined && params[key] !== null) {
@@ -49,7 +49,7 @@ const api = {
       headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(path, {
+    const response = await fetch(get_base_url() + path, {
       method: 'POST',
       headers: headers,
       body: isFormData ? data : JSON.stringify(data),
@@ -58,7 +58,7 @@ const api = {
   },
 
   async put<T>(path: string, data?: any): Promise<T> {
-    const response = await fetch(path, {
+    const response = await fetch(get_base_url() + path, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ const api = {
   },
   
   async delete<T>(path: string, params?: Record<string, any>): Promise<T> {
-    const url = new URL(path, window.location.origin);
+    const url = new URL(get_base_url() + path, window.location.origin);
     if (params) {
       Object.keys(params).forEach(key => {
         if (params[key] !== undefined && params[key] !== null) {

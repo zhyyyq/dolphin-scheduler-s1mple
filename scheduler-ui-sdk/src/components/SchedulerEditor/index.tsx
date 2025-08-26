@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import './index.less';
-import { App as AntApp } from 'antd';
+import { App as AntApp, Modal } from 'antd';
 import './components/TaskNode'; // Register custom node
 import EditorDagGraph from './components/EditorDagGraph';
 import { WorkflowToolbar } from './components/WorkflowToolbar';
@@ -21,10 +21,10 @@ import {
   WorkflowData,
 } from '@/store/slices/workflowEditorSlice';
 
-const SchedulerEditor: React.FC = () => {
+const SchedulerEditor: React.FC<{ modal_mode: boolean, workflow_id: string | null } > = (props) => {
   const dispatch: AppDispatch = useDispatch();
   const { message } = AntApp.useApp();
-
+  const { workflow_id } = props;
   const {
     contextMenu,
   } = useSelector((state: RootState) => state.workflowEditor);
@@ -34,12 +34,10 @@ const SchedulerEditor: React.FC = () => {
       dispatch(initializeGraph(node));
     }
   }, [dispatch]);
-  let workflow_uuid = ''
   useEffect(() => {
     dispatch(fetchDiyFunctions()).unwrap().catch(() => message.error('加载自定义组件失败'));
-
-    if (workflow_uuid) {
-      dispatch(fetchWorkflow(workflow_uuid));
+    if (workflow_id) {
+      dispatch(fetchWorkflow(workflow_id));
     } else {
       dispatch(clearWorkflow());
       const searchParams = new URLSearchParams(location.search);
@@ -63,11 +61,30 @@ const SchedulerEditor: React.FC = () => {
         dispatch(setWorkflowData(initialWorkflowData));
       }
     }
-  }, [workflow_uuid, message, dispatch, location.search]);
-
+  }, [workflow_id, message, dispatch, location.search]);
+  if (props.modal_mode) {
+    return <Modal open={true} width="80%" title="工作流编辑器" footer={null} onCancel={() => {
+      const event = new CustomEvent('workflow_edit_end', {
+        detail: "user canceled"
+      });
+      document.querySelector("scheduler-editor")?.dispatchEvent(event);
+    }}>
+      <div style={{ display: 'flex', height: '70vh' }}>
+        <div style={{ flex: 1, position: 'relative' }} onClick={() => dispatch(setContextMenu({ ...contextMenu, visible: false }))}>
+          <WorkflowToolbar />
+          <EditorDagGraph containerRef={containerRefCallback} />
+          <EditTaskModal />
+          <EditParamNodeModal />
+          <EditEdgeLabelModal />
+          <ViewYamlModal />
+          <WorkflowContextMenu />
+        </div>
+      </div>
+    </Modal>
+  }
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
+    <div style={{ display: 'flex', height: '100%' }}>
       <div style={{ flex: 1, position: 'relative' }} onClick={() => dispatch(setContextMenu({ ...contextMenu, visible: false }))}>
         <WorkflowToolbar />
         <EditorDagGraph containerRef={containerRefCallback} />
@@ -78,6 +95,7 @@ const SchedulerEditor: React.FC = () => {
         <WorkflowContextMenu />
       </div>
     </div>
+
   );
 };
 
