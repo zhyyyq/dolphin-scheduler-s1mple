@@ -1,6 +1,6 @@
+import AlertSmsTaskEditor from "@/components/SchedulerEditor/components/tasks/alert/AlertSmsTaskEditor";
 import DependentTaskEditor from "../components/SchedulerEditor/components/tasks/dependent/DependentTaskEditor";
 import DiyFunctionTaskEditor from "../components/SchedulerEditor/components/tasks/DiyFunctionTaskEditor";
-import AlertTaskEditor from "../components/SchedulerEditor/components/tasks/general/AlertTaskEditor";
 import HttpTaskEditor from "../components/SchedulerEditor/components/tasks/general/HttpTaskEditor";
 import JavaTaskEditor from "../components/SchedulerEditor/components/tasks/general/JavaTaskEditor";
 import ParamsTaskEditor from "../components/SchedulerEditor/components/tasks/general/ParamsTaskEditor";
@@ -12,6 +12,8 @@ import ConditionsTaskEditor from "../components/SchedulerEditor/components/tasks
 import LogicGateTaskEditor from "../components/SchedulerEditor/components/tasks/logic/LogicGateTaskEditor";
 import SwitchTaskEditor from "../components/SchedulerEditor/components/tasks/logic/SwitchTaskEditor";
 import SubWorkflowTaskEditor from "../components/SchedulerEditor/components/tasks/SubWorkflowTaskEditor";
+import AlertOaTaskEditor from "@/components/SchedulerEditor/components/tasks/alert/AlertOaTaskEditor";
+import AlertQyxwTaskEditor from "@/components/SchedulerEditor/components/tasks/alert/AlertQywxTaskEditor";
 
 
 const AndTask = { taskInfo: LogicGateTaskEditor.taskInfo.AND };
@@ -31,7 +33,9 @@ const editors = [
   DiyFunctionTaskEditor,
   AndTask,
   OrTask,
-  AlertTaskEditor,
+  AlertSmsTaskEditor,
+  AlertQyxwTaskEditor,
+  AlertOaTaskEditor,
   JavaTaskEditor
 ];
 
@@ -41,4 +45,5 @@ export const taskCategories = [
   { key: 'general', label: '通用' },
   { key: 'logic', label: '逻辑' },
   { key: '依赖', label: '依赖' },
+  { key: 'alert', label: '告警'}
 ];
