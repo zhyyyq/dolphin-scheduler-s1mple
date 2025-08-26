@@ -1,5 +1,6 @@
 package com.example.scheduler.model;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -14,8 +15,8 @@ public class DiySchedulerFunction {
      *
      * @mbg.generated
      */
-    @TableId("function_id")
-    private Long functionId;
+    @TableId(value = "function_id", type = IdType.AUTO)
+    private Integer functionId;
 
     /**
      *
