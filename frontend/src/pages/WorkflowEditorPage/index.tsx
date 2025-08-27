@@ -57,7 +57,7 @@ const WorkflowEditorPage: React.FC = () => {
           yaml_content: {
             workflow: {
               projectName,
-              projectCode
+              projectCode: parseInt(projectCode)
             },
             tasks: [],
             locations: undefined,

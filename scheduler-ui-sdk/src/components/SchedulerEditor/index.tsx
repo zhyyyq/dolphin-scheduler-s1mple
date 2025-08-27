@@ -21,7 +21,7 @@ import {
   setWorkflowData,
 } from '@/store/slices/workflowEditorSlice';
 
-const SchedulerEditor: React.FC<{ modal_mode: boolean, workflow_id: string | null, projectName: string | null, projectCode: string | null } > = (props) => {
+const SchedulerEditor: React.FC<{ modal_mode: boolean, workflow_id: string | null, projectName: string | null, projectCode: number | null } > = (props) => {
   const dispatch: AppDispatch = useDispatch();
   const { message } = AntApp.useApp();
   const { workflow_id, projectName, projectCode } = props;

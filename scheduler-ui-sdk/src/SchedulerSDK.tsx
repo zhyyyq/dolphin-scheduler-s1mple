@@ -409,7 +409,7 @@ class SchedulerEditorComponent extends HTMLElement {
             }}
           >
             <AntApp style={{flex: 1}}>
-              <SchedulerEditor modal_mode={modal_mode} workflow_id={workflow_id} projectCode={projectCode} projectName={projectName} />
+              <SchedulerEditor modal_mode={modal_mode} workflow_id={workflow_id} projectCode={projectCode ? parseInt(projectCode) : null} projectName={projectName} />
             </AntApp>
           </ConfigProvider>
 
