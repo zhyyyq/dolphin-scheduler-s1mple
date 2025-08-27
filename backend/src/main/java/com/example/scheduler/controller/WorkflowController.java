@@ -76,6 +76,16 @@ public class WorkflowController {
         }
     }
 
+    @GetMapping("/{workflowUuid}/offline")
+    public ResponseEntity<?> offlineWorkflow(@PathVariable String workflowUuid) {
+        try {
+            workflowService.offlineWorkflow(workflowUuid);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("Error offline workflow {}", workflowUuid, e);
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+    }
 
     @PostMapping("/{workflowUuid}/execute")
     public ResponseEntity<?> executeWorkflow(@PathVariable String workflowUuid, @RequestBody Map<String, Object> payload) {

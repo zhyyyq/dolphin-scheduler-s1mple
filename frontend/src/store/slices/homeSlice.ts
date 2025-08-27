@@ -120,7 +120,7 @@ export const fetchWorkflows = createAsyncThunk(
           processDefinitionCode: undefined,
           version: 0,
           related_ds_workflow: ds_workflow,
-          releaseState: item.version === ds_workflow.version ? "ONLINE": "MODIFIED"
+          releaseState: item.version === ds_workflow?.version ? "ONLINE": "MODIFIED"
         }
         return res;
       })
@@ -146,6 +146,19 @@ export const deleteWorkflow = createAsyncThunk(
       }
 
       await api.delete(`/api/workflow/${record.id}`, params);
+      dispatch(fetchWorkflows());
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      throw new Error(errorMessage);
+    }
+  }
+);
+
+export const offlineWorkflow = createAsyncThunk(
+  'home/offlineWorkflow',
+  async (record: Workflow, { dispatch }) => {
+    try {
+      await api.get(`/api/workflow/${record.id}/offline`);
       dispatch(fetchWorkflows());
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';

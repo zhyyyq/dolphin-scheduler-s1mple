@@ -1,6 +1,7 @@
 package com.example.scheduler.service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.example.scheduler.dto.WorkflowDto;
 import com.example.scheduler.mapper.DiyWorkflowMapper;
 import com.example.scheduler.model.DiyWorkflow;
@@ -180,7 +181,6 @@ public class WorkflowService {
 
     public void deleteWorkflow(String workflowUuid, Long projectCode, Long workflowCode)
             throws Exception {
-        boolean deletedSomething = false;
         DiyWorkflow diyWorkflow = this.diyWorkflowMapper.selectById(workflowUuid);
         if (diyWorkflow == null) {
             throw new Exception("workflow not found");
@@ -214,6 +214,33 @@ public class WorkflowService {
         }
 
 
+    }
+
+    public void offlineWorkflow(String workflowUuid)
+            throws Exception {
+        DiyWorkflow diyWorkflow = this.diyWorkflowMapper.selectById(workflowUuid);
+        if (diyWorkflow == null || diyWorkflow.getProcessDefinitionCode() == null) {
+            throw new Exception("workflow not found");
+        }
+        dsService.getWorkflows().stream()
+                .filter(wf -> wf.get("code").equals(diyWorkflow.getProcessDefinitionCode()))
+                .findFirst()
+                .ifPresent(dsWf -> {
+                    try {
+                        Long pCode = Long.parseLong(dsWf.get("projectCode").toString());
+                        Long wCode = Long.parseLong(dsWf.get("code").toString());
+                        dsService.deleteDsWorkflow(pCode, wCode);
+                    } catch (Exception e) {
+                        // Log and ignore if DS deletion fails, as it might not exist
+                    }
+                });
+        // reset processDefinitionCode null
+        UpdateWrapper<DiyWorkflow> updateWrapper = new UpdateWrapper<>();
+        updateWrapper
+                .set("process_definition_code", null)  // 明确设置为 null
+                .eq("id", diyWorkflow.getId()); // 主键条件
+
+        this.diyWorkflowMapper.update(updateWrapper);
     }
 
     public String executeWorkflow(String workflowUuid, Map<String, Object> payload) throws Exception {
