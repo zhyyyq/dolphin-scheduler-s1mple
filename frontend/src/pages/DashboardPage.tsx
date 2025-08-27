@@ -5,6 +5,67 @@ import dayjs from 'dayjs';
 import api from '../api';
 import LogViewer from '../components/LogViewer';
 
+interface DashboradDataType {
+  taskStats: {
+    count: number,
+    taskInstanceStatusCounts: { count: number, state: string }[]
+  },
+  workflowStats: {
+    count: 0,
+    workflowInstanceStatusCounts: { count: number, state: string }[]
+  },
+}
+
+
+// 状态信息映射配置
+const statusConfig = {
+    // 工作流实例状态
+    WORKFLOW_STATUS: {
+        STOP: { chinese: '停止', color: '#FF5722' },
+        SUCCESS: { chinese: '成功', color: '#4CAF50' },
+        SUBMITTED_SUCCESS: { chinese: '提交成功', color: '#8BC34A' },
+        RUNNING_EXECUTION: { chinese: '执行中', color: '#2196F3' },
+        READY_PAUSE: { chinese: '准备暂停', color: '#FFC107' },
+        PAUSE: { chinese: '已暂停', color: '#FF9800' },
+        READY_STOP: { chinese: '准备停止', color: '#F44336' },
+        FAILURE: { chinese: '失败', color: '#D32F2F' },
+        DELAY_EXECUTION: { chinese: '延迟执行', color: '#9C27B0' },
+        SERIAL_WAIT: { chinese: '串行等待', color: '#607D8B' },
+        READY_BLOCK: { chinese: '准备阻塞', color: '#795548' },
+        BLOCK: { chinese: '已阻塞', color: '#455A64' },
+        WAIT_TO_RUN: { chinese: '等待运行', color: '#9E9E9E' }
+    },
+    
+    // 任务实例状态
+    TASK_STATUS: {
+        KILL: { chinese: '已杀死', color: '#795548' },
+        SUCCESS: { chinese: '成功', color: '#4CAF50' },
+        SUBMITTED_SUCCESS: { chinese: '提交成功', color: '#8BC34A' },
+        RUNNING_EXECUTION: { chinese: '执行中', color: '#2196F3' },
+        PAUSE: { chinese: '已暂停', color: '#FF9800' },
+        STOP: { chinese: '停止', color: '#FF5722' },
+        FAILURE: { chinese: '失败', color: '#D32F2F' },
+        NEED_FAULT_TOLERANCE: { chinese: '需要容错', color: '#FFC107' },
+        DELAY_EXECUTION: { chinese: '延迟执行', color: '#9C27B0' },
+        FORCED_SUCCESS: { chinese: '强制成功', color: '#CDDC39' },
+        DISPATCH: { chinese: '分发中', color: '#00BCD4' }
+    }
+};
+
+/**
+ * 获取状态对应的中文和颜色信息
+ * @param {string} status - 状态英文名称
+ * @param {string} type - 状态类型: 'workflow' 或 'task'
+ * @returns {Object} 包含中文名称和颜色的对象，如果状态不存在则返回null
+ */
+function getStatusInfo(status: any, type = 'workflow') {
+    const statusMap = type === 'workflow' 
+        ? statusConfig.WORKFLOW_STATUS 
+        : statusConfig.TASK_STATUS;
+    // @ts-ignore
+    return statusMap[status] || null;
+}
+
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
@@ -12,9 +73,15 @@ const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [projects, setProjects] = useState<{ code: number; name: string }[]>([]);
-  const [dashboardData, setDashboardData] = useState<any>({
-    workflowStatusCount: { success: 0, failure: 0, running: 0, waiting: 0 },
-    taskStatusCount: { success: 0, failure: 0, running: 0, waiting: 0 },
+  const [dashboardData, setDashboardData] = useState<DashboradDataType>({
+    taskStats: {
+      count: 0,
+      taskInstanceStatusCounts: []
+    },
+    workflowStats: {
+      count: 0,
+      workflowInstanceStatusCounts: []
+    },
   });
   const [filters, setFilters] = useState<{
     timeRange: [dayjs.Dayjs, dayjs.Dayjs];
@@ -62,7 +129,7 @@ const DashboardPage: React.FC = () => {
         params.projectCode = filters.projectCode;
       }
       const data = await api.get('/api/dashboard/stats', params);
-      setDashboardData(data);
+      setDashboardData(data as DashboradDataType);
     } catch (err) {
       setError('Failed to fetch dashboard data');
     } finally {
@@ -214,20 +281,18 @@ const DashboardPage: React.FC = () => {
           <Col span={12}>
             <Card title="工作流实例概览">
               <Row>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('workflow', 'success')}><Statistic title="成功" value={dashboardData.workflowStatusCount.success} valueStyle={{ color: '#3f8600' }} /></Col>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('workflow', 'failure')}><Statistic title="失败" value={dashboardData.workflowStatusCount.failure} valueStyle={{ color: '#cf1322' }} /></Col>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('workflow', 'RUNNING_EXECUTION')}><Statistic title="执行中" value={dashboardData.workflowStatusCount.running} valueStyle={{ color: '#1890ff' }} /></Col>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('workflow', 'SERIAL_WAIT')}><Statistic title="等待" value={dashboardData.workflowStatusCount.waiting} valueStyle={{ color: '#d4b106' }} /></Col>
+                {
+                  dashboardData.workflowStats.workflowInstanceStatusCounts.map(item => <Col key={item.state} span={8} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('workflow', item.state)}><Statistic title={getStatusInfo(item.state)?.chinese} value={item.count} valueStyle={{ color: getStatusInfo(item.state)?.color }} /></Col>)
+                }
               </Row>
             </Card>
           </Col>
           <Col span={12}>
             <Card title="任务实例概览">
               <Row>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('task', 'success')}><Statistic title="成功" value={dashboardData.taskStatusCount.success} valueStyle={{ color: '#3f8600' }} /></Col>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('task', 'failure')}><Statistic title="失败" value={dashboardData.taskStatusCount.failure} valueStyle={{ color: '#cf1322' }} /></Col>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('task', 'RUNNING_EXECUTION')}><Statistic title="执行中" value={dashboardData.taskStatusCount.running} valueStyle={{ color: '#1890ff' }} /></Col>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('task', 'SERIAL_WAIT')}><Statistic title="等待" value={dashboardData.taskStatusCount.waiting} valueStyle={{ color: '#d4b106' }} /></Col>
+                {
+                  dashboardData.taskStats.taskInstanceStatusCounts.map(item => <Col key={item.state} span={8} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('task', item.state)}><Statistic title={getStatusInfo(item.state, 'task')?.chinese} value={item.count} valueStyle={{ color: getStatusInfo(item.state, 'task')?.color }} /></Col>)
+                }
               </Row>
             </Card>
           </Col>

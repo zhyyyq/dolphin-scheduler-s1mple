@@ -1,6 +1,6 @@
 package com.example.scheduler.controller;
 
-import com.example.scheduler.dto.DashboardStatsDto;
+import com.alibaba.fastjson.JSONObject;
 import com.example.scheduler.service.DashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,12 +18,12 @@ public class DashboardController {
     private DashboardService dashboardService;
 
     @GetMapping("/stats")
-    public DashboardStatsDto getStats(
+    public JSONObject getStats(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime,
             @RequestParam(required = false) String projectCode,
-            @RequestParam(required = false) String workflowCode) {
-        
+            @RequestParam(required = false) String workflowCode) throws Exception {
+
         LocalDateTime start = null;
         if (startTime != null && !startTime.isEmpty() && !"undefined".equals(startTime)) {
             start = LocalDateTime.parse(startTime);
