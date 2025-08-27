@@ -635,5 +635,16 @@ export const onlineWorkflow = createAsyncThunk(
     }
   }
 );
-
+export const offlineWorkflow = createAsyncThunk(
+  'home/offlineWorkflow',
+  async (record: Workflow, { dispatch }) => {
+    try {
+      await api.get(`/api/workflow/${record.id}/offline`);
+      dispatch(fetchWorkflows());
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      throw new Error(errorMessage);
+    }
+  }
+);
 export default homeSlice.reducer;

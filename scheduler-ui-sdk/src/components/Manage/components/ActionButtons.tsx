@@ -3,7 +3,7 @@ import { Button, Space, App as AntApp } from 'antd';
 import { useDispatch } from 'react-redux';
 import { Workflow } from '../../../types';
 import { AppDispatch } from '../../../store';
-import { deleteWorkflow, onlineWorkflow, setSelectedWorkflow, setIsBackfillModalOpen } from '../../../store/slices/homeSlice';
+import { deleteWorkflow, onlineWorkflow, setSelectedWorkflow, setIsBackfillModalOpen, offlineWorkflow } from '../../../store/slices/homeSlice';
 
 interface ActionButtonsProps {
   record: Workflow;
@@ -42,6 +42,15 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({ record }) => {
   const handleSubmit = useCallback(() => {
     handleOnline();
   }, [handleOnline]);
+  const handleOffline = useCallback(async () => {
+    try {
+      await dispatch(offlineWorkflow(record)).unwrap();
+      message.success('工作流上线/同步成功。');
+    } catch (err: any) {
+      const errorMessage = err?.message || 'An unknown error occurred';
+      message.error(`上线工作流时出错: ${errorMessage}`);
+    }
+  }, []);
   return (
     <Space size="middle">
       {record.releaseState === 'MODIFIED' ? (
@@ -49,7 +58,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({ record }) => {
       ) : record.releaseState === 'ONLINE' ? (
         <Button type="primary" onClick={handleExecute}>立即执行</Button>
       ) : null}
-      
+      { record.releaseState === 'ONLINE' && <Button danger type='primary' onClick={handleOffline}>下线</Button>}
       {record.releaseState === 'UNSUBMITTED' && (
         <Button type="primary" onClick={handleSubmit}>提交</Button>
       )}
