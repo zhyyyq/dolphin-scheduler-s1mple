@@ -216,8 +216,8 @@ const DashboardPage: React.FC = () => {
               <Row>
                 <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('workflow', 'success')}><Statistic title="成功" value={dashboardData.workflowStatusCount.success} valueStyle={{ color: '#3f8600' }} /></Col>
                 <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('workflow', 'failure')}><Statistic title="失败" value={dashboardData.workflowStatusCount.failure} valueStyle={{ color: '#cf1322' }} /></Col>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('workflow', 'running')}><Statistic title="执行中" value={dashboardData.workflowStatusCount.running} valueStyle={{ color: '#1890ff' }} /></Col>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('workflow', 'waiting')}><Statistic title="等待" value={dashboardData.workflowStatusCount.waiting} valueStyle={{ color: '#d4b106' }} /></Col>
+                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('workflow', 'RUNNING_EXECUTION')}><Statistic title="执行中" value={dashboardData.workflowStatusCount.running} valueStyle={{ color: '#1890ff' }} /></Col>
+                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('workflow', 'SERIAL_WAIT')}><Statistic title="等待" value={dashboardData.workflowStatusCount.waiting} valueStyle={{ color: '#d4b106' }} /></Col>
               </Row>
             </Card>
           </Col>
@@ -226,8 +226,8 @@ const DashboardPage: React.FC = () => {
               <Row>
                 <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('task', 'success')}><Statistic title="成功" value={dashboardData.taskStatusCount.success} valueStyle={{ color: '#3f8600' }} /></Col>
                 <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('task', 'failure')}><Statistic title="失败" value={dashboardData.taskStatusCount.failure} valueStyle={{ color: '#cf1322' }} /></Col>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('task', 'running')}><Statistic title="执行中" value={dashboardData.taskStatusCount.running} valueStyle={{ color: '#1890ff' }} /></Col>
-                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('task', 'waiting')}><Statistic title="等待" value={dashboardData.taskStatusCount.waiting} valueStyle={{ color: '#d4b106' }} /></Col>
+                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('task', 'RUNNING_EXECUTION')}><Statistic title="执行中" value={dashboardData.taskStatusCount.running} valueStyle={{ color: '#1890ff' }} /></Col>
+                <Col span={6} style={{ cursor: 'pointer' }} onClick={() => handleStatusClick('task', 'SERIAL_WAIT')}><Statistic title="等待" value={dashboardData.taskStatusCount.waiting} valueStyle={{ color: '#d4b106' }} /></Col>
               </Row>
             </Card>
           </Col>
