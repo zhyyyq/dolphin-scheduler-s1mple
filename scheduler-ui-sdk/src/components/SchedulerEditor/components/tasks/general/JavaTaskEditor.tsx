@@ -18,7 +18,7 @@ const JavaTaskEditor: JavaTaskEditorComponent = ({ isCustom = false }) => {
   return (
     <Form.Item
       label="Java Definition"
-      name="command"
+      name="java_code"
       rules={[{ required: true, message: '请输入 Java 代码' }]}
     >
       <TextArea
@@ -37,15 +37,13 @@ JavaTaskEditor.taskInfo = {
   default_params: {
     failRetryTimes: 0,
     failRetryInterval: 1,
-    command: `
-    public class Main {
+    java_code: `public class Main {
 
-      public static void main(String[] args) {
-        System.out.println("test");
-      }
+  public static void main(String[] args) {
+    System.out.println("test");
+  }
 
-    }
-    `
+}`
   },
   category: 'general',
   icon: CodeOutlined,

@@ -399,7 +399,19 @@ export const onlineWorkflow = createAsyncThunk(
             localParams,
             resourceList: [],
           };
-        } else {
+        } else if (task.type === 'JAVA') { 
+          const params = { ...originalTaskParams, ...(task.task_params || {}) };
+          taskParams = {
+            localParams: originalTaskParams.localParams || [],
+            "isModulePath": false,
+            "jvmArgs": "",
+            "mainArgs": "",
+            "rawScript": params.java_code,
+            "resourceList": [
+            ],
+            "runType": "JAVA"
+          };
+        }else {
           const rawScript = task.command || task.task_params?.rawScript || '';
           const localParams = originalTaskParams.localParams || [];
           taskParams = {
