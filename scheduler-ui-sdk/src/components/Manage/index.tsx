@@ -153,7 +153,14 @@ const HomePage: React.FC = () => {
             ))}
           </Select>
           <Button type="primary" onClick={async () => {
-            const res = await window.schedulerSdk.create_or_modify_workflow();
+            `/workflow/edit${selectedProject && selectedProject !== 'all' ? `?projectName=${projects.find(p => p.code === selectedProject)?.name}&projectCode=${selectedProject}` : ''}`
+            let projectCode = undefined;
+            let projectName = undefined;
+            if (selectedProject !== 'all') {
+              projectCode = selectedProject as any;
+              projectName = projects.find(p => p.code === selectedProject)?.name;
+            }
+            const res = await window.schedulerSdk.create_or_modify_workflow(undefined, undefined, projectCode, projectName);
             console.log(res);
             dispatch(fetchWorkflows());
           }}>新建工作流</Button>
