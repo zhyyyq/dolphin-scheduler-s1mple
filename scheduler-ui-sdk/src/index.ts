@@ -1,8 +1,7 @@
-import { SchedulerSDK } from './SchedulerSDK'
+export { SchedulerSDK } from './SchedulerSDK'
 
 // const sdk = new SchedulerSDK();
 
 
 
 
-export default SchedulerSDK;

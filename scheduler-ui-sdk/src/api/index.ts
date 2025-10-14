@@ -1,3 +1,5 @@
+const TokenKey = 'dybank_token'
+
 class HttpError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -37,14 +39,22 @@ const api = {
         }
       });
     }
-    const response = await fetch(url.toString());
+    const headers: HeadersInit = {
+      "X-Token": sessionStorage.getItem(TokenKey) || ''
+    };
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: headers,
+    });
     return handleResponse(response);
   },
 
   async post<T>(path: string, data?: any): Promise<T> {
     const isFormData = data instanceof FormData;
 
-    const headers: HeadersInit = {};
+    const headers: HeadersInit = {
+      "X-Token": sessionStorage.getItem(TokenKey) || ''
+    };
     if (!isFormData) {
       headers['Content-Type'] = 'application/json';
     }
