@@ -1,5 +1,5 @@
 # Stage 1: Build Python
-FROM apache/dolphinscheduler-worker:3.2.2 AS builder
+FROM apache/dolphinscheduler-worker:3.3.1 AS builder
 
 # Install build dependencies
 RUN apt-get update && \
@@ -26,7 +26,7 @@ RUN tar -xvf /Python-3.13.5.tgz -C / && \
     make install
 
 # Stage 2: Final image
-FROM apache/dolphinscheduler-worker:3.2.2
+FROM apache/dolphinscheduler-worker:3.3.1
 
 # Copy Python from the builder stage
 COPY --from=builder /usr/local/ /usr/local/
@@ -38,6 +38,9 @@ RUN ln -s /usr/local/bin/python3 /usr/bin/python
 # allow python gateway
 COPY application.yaml /opt/dolphinscheduler/conf
 
+# drop default libs
+RUN rm -rf /opt/dolphinscheduler/libs/commons-text-*.jar
+RUN rm -rf /opt/dolphinscheduler/libs/hive-*.jar
 # copy libs
 COPY ./libs/*.jar /opt/dolphinscheduler/libs/
 COPY requirements.txt .
