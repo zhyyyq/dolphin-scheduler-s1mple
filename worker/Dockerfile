@@ -1,5 +1,5 @@
 # Stage 1: Build Python
-FROM apache/dolphinscheduler-worker:3.2.2 AS builder
+FROM apache/dolphinscheduler-worker:3.4.1 AS builder
 
 # Install build dependencies
 RUN apt-get update && \
@@ -26,7 +26,7 @@ RUN tar -xvf /Python-3.13.5.tgz -C / && \
     make install
 
 # Stage 2: Final image
-FROM apache/dolphinscheduler-worker:3.2.2
+FROM apache/dolphinscheduler-worker:3.4.1
 
 # Copy Python from the builder stage
 COPY --from=builder /usr/local/ /usr/local/
@@ -34,14 +34,18 @@ COPY --from=builder /usr/local/ /usr/local/
 # Create symlink
 RUN ln -s /usr/local/bin/python3 /usr/bin/python
 
-# allow default tenant
-# allow python gateway
-COPY application.yaml /opt/dolphinscheduler/conf
+# copy plugin_config
+COPY ./plugins_config /opt/dolphinscheduler/conf/
+# install plugins
+RUN /opt/dolphinscheduler/bin/install-plugins.sh
 
 # drop default libs
-RUN rm -rf /opt/dolphinscheduler/libs/commons-text-*.jar
-RUN rm -rf /opt/dolphinscheduler/libs/hive-*.jar
-# copy libs
-COPY ./libs/*.jar /opt/dolphinscheduler/libs/
+RUN rm -rf /opt/dolphinscheduler/api-server/libs/hive-*.jar
+RUN rm -rf /opt/dolphinscheduler/worker-server/libs/hive-*.jar
+# copy libs worker-server/libs api-server/libs
+COPY ./libs/*.jar /opt/dolphinscheduler/api-server/libs/
+COPY ./libs/*.jar /opt/dolphinscheduler/worker-server/libs/
+
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt --index-url https://pypi.tuna.tsinghua.edu.cn/simple --extra-index-url https://download.pytorch.org/whl/cpu
+RUN pip3 install --no-cache-dir -r requirements.txt
+
